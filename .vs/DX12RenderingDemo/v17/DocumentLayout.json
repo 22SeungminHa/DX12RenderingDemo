@@ -7,6 +7,14 @@
       "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\Camera.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\GameFramework.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\GameFramework.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\Scene.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\Scene.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
@@ -17,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\Mesh.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|solutionrelative:DX12RenderingDemo\\GameFramework.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{46D0CE14-027E-43B7-919B-750E014520B3}|DX12RenderingDemo\\DX12RenderingDemo.vcxproj|D:\\DX12RenderingDemo\\DX12RenderingDemo\\DX12RenderingDemo.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -46,7 +50,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
@@ -56,14 +60,14 @@
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Camera.h",
               "ToolTip": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Camera.h",
               "RelativeToolTip": "DX12RenderingDemo\\Camera.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-04-09T06:20:37.652Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "Scene.h",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Scene.h",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Scene.h",
@@ -71,12 +75,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\Scene.h",
               "ViewState": "AgIAAAkAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:17:14.247Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:17:14.247Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "Resource.h",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Resource.h",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Resource.h",
@@ -84,12 +87,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\Resource.h",
               "ViewState": "AgIAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:17:11.593Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:17:11.593Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Mesh.h",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Mesh.h",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Mesh.h",
@@ -97,12 +99,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\Mesh.h",
               "ViewState": "AgIAAD8AAAAAAAAAAAAAAFIAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:16:59.089Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:16:59.089Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "Timer.h",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Timer.h",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Timer.h",
@@ -110,25 +111,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\Timer.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:14:56.151Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:14:56.151Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "GameFramework.h",
-              "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h",
-              "RelativeDocumentMoniker": "DX12RenderingDemo\\GameFramework.h",
-              "ToolTip": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h",
-              "RelativeToolTip": "DX12RenderingDemo\\GameFramework.h",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAAABoAAAAeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:14:50.64Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "DX12RenderingDemo.h",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\DX12RenderingDemo.h",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\DX12RenderingDemo.h",
@@ -136,12 +123,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\DX12RenderingDemo.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-04-09T06:14:47.64Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:14:47.64Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "Camera.cpp",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\Camera.cpp",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\Camera.cpp",
@@ -149,12 +135,11 @@
               "RelativeToolTip": "DX12RenderingDemo\\Camera.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-04-09T06:14:39.323Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-09T06:14:39.323Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "DX12RenderingDemo.cpp",
               "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\DX12RenderingDemo.cpp",
               "RelativeDocumentMoniker": "DX12RenderingDemo\\DX12RenderingDemo.cpp",
@@ -162,7 +147,74 @@
               "RelativeToolTip": "DX12RenderingDemo\\DX12RenderingDemo.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-04-09T06:14:32.205Z",
+              "WhenOpened": "2026-04-09T06:14:32.205Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "72807e9d-f838-4370-a5b0-acafa39496c3",
+        "Display": 0,
+        "X": 322,
+        "Y": 660,
+        "Width": 716,
+        "Height": 698,
+        "WindowState": 0
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "GameFramework.h",
+              "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h",
+              "RelativeDocumentMoniker": "DX12RenderingDemo\\GameFramework.h",
+              "ToolTip": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.h",
+              "RelativeToolTip": "DX12RenderingDemo\\GameFramework.h",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAACMAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-04-09T06:14:50.64Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "f1750bee-7657-48fb-9200-f0bcdac82f53",
+        "Display": 0,
+        "X": -27,
+        "Y": 126,
+        "Width": 716,
+        "Height": 698,
+        "WindowState": 0
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "GameFramework.cpp",
+              "DocumentMoniker": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.cpp",
+              "RelativeDocumentMoniker": "DX12RenderingDemo\\GameFramework.cpp",
+              "ToolTip": "D:\\DX12RenderingDemo\\DX12RenderingDemo\\GameFramework.cpp",
+              "RelativeToolTip": "DX12RenderingDemo\\GameFramework.cpp",
+              "ViewState": "AgIAAOQAAAAAAAAAAAAAwEQBAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-04-09T07:27:45.867Z",
               "EditorCaption": ""
             }
           ]
