@@ -17,30 +17,38 @@ public:
     // 스왑 체인, 디바이스, 서술자 힙, 명령 큐/할당자/리스트를 생성하는 함수이다.
     void CreateSwapChain(HWND hWnd, int width, int height);
     void CreateDirect3DDevice();
-    void CreateDescHeaps();
+    void CreateDescriptorHeaps();
     void CreateCommandObjects();
-
     // 렌더 타겟 뷰와 깊이-스텐실 뷰를 생성하는 함수이다.
     void CreateRenderTargetViews();
     void CreateDepthStencilView();
 
+    void ChangeSwapChainState();
+
     void WaitForGpuComplete(); // CPU GPU 동기화
     void MoveToNextFrame();
-    void Present();
+    void Present(UINT syncInterval, UINT flags);
 
     void ResetCommandList();
     void ExecuteCommandList();
 
+    void BeginRender(const float clearColor[4]);
+    void EndRender();
+
     void Resize(UINT width, UINT height);
 
 public:
+    UINT GetClientWidth() const { return mClientWidth; }
+    UINT GetClientHeight() const { return mClientHeight; }
+    void SetClientWidth(UINT width) { mClientWidth = width; }
+    void SetClientHeight(UINT height) { mClientHeight = height; }
+
     ID3D12Device* GetDevice() const { return mD3DDevice; }
     IDXGISwapChain3* GetSwapChain() const { return mSwapChain; }
     ID3D12GraphicsCommandList* GetCommandList() const { return mCommandList; }
     ID3D12CommandQueue* GetCommandQueue() const { return mCommandQueue; }
 
-    ID3D12Resource* GetCurrentRenderTarget() const { return mRenderTargetBuffers[mSwapChainBufferIndex];
-    }
+    ID3D12Resource* GetCurrentRenderTarget() const { return mRenderTargetBuffers[mSwapChainBufferIndex]; }
     UINT GetCurrentBackBufferIndex() const { return mSwapChainBufferIndex; }
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRtvHandle() const;
