@@ -44,8 +44,8 @@ void CD3DCore::Shutdown()
 
 #if defined(_DEBUG)
 	IDXGIDebug1* debug = NULL;
-	DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&debug);
-	HRESULT hResult = debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
+	ThrowIfFailed(DXGIGetDebugInterface1(0, __uuidof(IDXGIDebug1), (void**)&debug));
+	ThrowIfFailed(debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL));
 	debug->Release();
 #endif
 }
@@ -74,10 +74,10 @@ void CD3DCore::CreateSwapChain(HWND hWnd, int width, int height)
 
 	//전체화면 모드에서 바탕화면의 해상도를 스왑체인(후면버퍼)의 크기에 맞게 변경한다.
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	HRESULT hResult = mDXGIFactory->CreateSwapChain(mCommandQueue, &swapChainDesc, (IDXGISwapChain**)&mSwapChain);
+	ThrowIfFailed(mDXGIFactory->CreateSwapChain(mCommandQueue, &swapChainDesc, (IDXGISwapChain**)&mSwapChain));
 
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
-	hResult = mDXGIFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
+	ThrowIfFailed(mDXGIFactory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER));
 #ifndef _WITH_SWAPCHAIN_FULLSCREEN_STATE
 	CreateRenderTargetViews();
 #endif
@@ -85,11 +85,10 @@ void CD3DCore::CreateSwapChain(HWND hWnd, int width, int height)
 
 void CD3DCore::CreateDirect3DDevice()
 {
-	HRESULT hResult;
 	UINT DXGIFactoryFlags = 0;
 #if defined(_DEBUG)
 	ID3D12Debug* debugController = NULL;
-	hResult = D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)&debugController);
+	ThrowIfFailed(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)&debugController));
 	if (debugController)
 	{
 		debugController->EnableDebugLayer();
@@ -98,7 +97,7 @@ void CD3DCore::CreateDirect3DDevice()
 	DXGIFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
 	//모든 하드웨어 어댑터 대하여 특성 레벨 12.0을 지원하는 하드웨어 디바이스를 생성한다. 
-	hResult = ::CreateDXGIFactory2(DXGIFactoryFlags, __uuidof(IDXGIFactory4), (void**)&mDXGIFactory);
+	ThrowIfFailed(::CreateDXGIFactory2(DXGIFactoryFlags, __uuidof(IDXGIFactory4), (void**)&mDXGIFactory));
 	IDXGIAdapter1* DXGIAdapter = NULL;
 	for (UINT i = 0; DXGI_ERROR_NOT_FOUND != mDXGIFactory->EnumAdapters1(i, &DXGIAdapter); i++) {
 		DXGI_ADAPTER_DESC1 DXGIAdapterDesc;
@@ -110,8 +109,8 @@ void CD3DCore::CreateDirect3DDevice()
 	//특성 레벨 12.0을 지원하는 하드웨어 디바이스를 생성할 수 없으면 WARP 디바이스를 생성한다. 
 	if (!DXGIAdapter)
 	{
-		mDXGIFactory->EnumWarpAdapter(_uuidof(IDXGIAdapter1), (void**)&DXGIAdapter);
-		D3D12CreateDevice(DXGIAdapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), (void**)&mD3DDevice);
+		ThrowIfFailed(mDXGIFactory->EnumWarpAdapter(_uuidof(IDXGIAdapter1), (void**)&DXGIAdapter));
+		ThrowIfFailed(D3D12CreateDevice(DXGIAdapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), (void**)&mD3DDevice));
 	}
 
 	//디바이스가 지원하는 다중 샘플의 품질 수준을 확인한다. 
@@ -120,13 +119,13 @@ void CD3DCore::CreateDirect3DDevice()
 	MSAAQualityLevels.SampleCount = 4; //Msaa4x 다중 샘플링
 	MSAAQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 	MSAAQualityLevels.NumQualityLevels = 0;
-	mD3DDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &MSAAQualityLevels, sizeof(D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS));
+	ThrowIfFailed(mD3DDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &MSAAQualityLevels, sizeof(D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS)));
 	mMSAAQualityLevels = MSAAQualityLevels.NumQualityLevels;
 
 	//다중 샘플의 품질 수준이 1보다 크면 다중 샘플링을 활성화한다.
 	mMSAAEnable = (mMSAAQualityLevels > 1) ? true : false;
 
-	hResult = mD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)&mFence);
+	ThrowIfFailed(mD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)&mFence));
 	for (UINT i = 0; i < swapChainBufferCount; ++i) mFenceValues[i] = 1;
 
 	// 펜스와 동기화를 위한 이벤트 객체를 생성한다(이벤트 객체의 초기값을 FALSE이다). 이벤트가 실행되면(Signal) 이벤트의 값을 자동적으로 FALSE가 되도록 생성한다.
@@ -143,7 +142,7 @@ void CD3DCore::CreateDescriptorHeaps()
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	descriptorHeapDesc.NodeMask = 0;
-	HRESULT hResult = mD3DDevice->CreateDescriptorHeap(&descriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&mRtvDescriptorHeap);
+	ThrowIfFailed(mD3DDevice->CreateDescriptorHeap(&descriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&mRtvDescriptorHeap));
 
 	//렌더 타겟 서술자 힙의 원소의 크기를 저장한다. 
 	mRtvDescriptorIncrementSize = mD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -151,7 +150,8 @@ void CD3DCore::CreateDescriptorHeaps()
 	//깊이-스텐실 서술자 힙(서술자의 개수는 1)을 생성한다.
 	descriptorHeapDesc.NumDescriptors = 1;
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	hResult = mD3DDevice->CreateDescriptorHeap(&descriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&mDsvDescriptorHeap);
+	ThrowIfFailed(mD3DDevice->CreateDescriptorHeap(&descriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&mDsvDescriptorHeap));
+	
 	//깊이-스텐실 서술자 힙의 원소의 크기를 저장한다.
 	mDsvDescriptorIncrementSize = mD3DDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
@@ -162,16 +162,16 @@ void CD3DCore::CreateCommandObjects()
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	HRESULT hResult = mD3DDevice->CreateCommandQueue(&commandQueueDesc, _uuidof(ID3D12CommandQueue), (void**)&mCommandQueue);
+	ThrowIfFailed(mD3DDevice->CreateCommandQueue(&commandQueueDesc, _uuidof(ID3D12CommandQueue), (void**)&mCommandQueue));
 
 	//직접(Direct) 명령 할당자를 생성한다. 
-	hResult = mD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)&mCommandAllocator);
+	ThrowIfFailed(mD3DDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, __uuidof(ID3D12CommandAllocator), (void**)&mCommandAllocator));
 
 	//직접(Direct) 명령 리스트를 생성한다.
-	hResult = mD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator, NULL, __uuidof(ID3D12GraphicsCommandList), (void**)&mCommandList);
+	ThrowIfFailed(mD3DDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator, NULL, __uuidof(ID3D12GraphicsCommandList), (void**)&mCommandList));
 
 	//명령 리스트는 생성되면 열린(Open) 상태이므로 닫힌(Closed) 상태로 만든다. 
-	hResult = mCommandList->Close();
+	ThrowIfFailed(mCommandList->Close());
 }
 
 //스왑체인의 각 후면 버퍼에 대한 렌더 타겟 뷰를 생성한다. 
@@ -180,7 +180,7 @@ void CD3DCore::CreateRenderTargetViews()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUDescriptorHandle = mRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	for (UINT i = 0; i < swapChainBufferCount; i++)
 	{
-		mSwapChain->GetBuffer(i, __uuidof(ID3D12Resource), (void**)&mRenderTargetBuffers[i]);
+		ThrowIfFailed(mSwapChain->GetBuffer(i, __uuidof(ID3D12Resource), (void**)&mRenderTargetBuffers[i]));
 		mD3DDevice->CreateRenderTargetView(mRenderTargetBuffers[i], NULL, rtvCPUDescriptorHandle);
 		rtvCPUDescriptorHandle.ptr += mRtvDescriptorIncrementSize;
 	}
@@ -211,7 +211,7 @@ void CD3DCore::CreateDepthStencilView()
 	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	clearValue.DepthStencil.Depth = 1.0f;
 	clearValue.DepthStencil.Stencil = 0;
-	mD3DDevice->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, __uuidof(ID3D12Resource), (void**)&mDepthStencilBuffer);
+	ThrowIfFailed(mD3DDevice->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue, __uuidof(ID3D12Resource), (void**)&mDepthStencilBuffer));
 
 	//깊이-스텐실 버퍼 뷰를 생성한다.
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvCPUDescriptorHandle = mDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -221,9 +221,11 @@ void CD3DCore::CreateDepthStencilView()
 void CD3DCore::ChangeSwapChainState()
 {
 	WaitForGpuComplete();
+
 	BOOL fullScreenState = FALSE;
-	mSwapChain->GetFullscreenState(&fullScreenState, NULL);
-	mSwapChain->SetFullscreenState(!fullScreenState, NULL);
+	ThrowIfFailed(mSwapChain->GetFullscreenState(&fullScreenState, NULL));
+	ThrowIfFailed(mSwapChain->SetFullscreenState(!fullScreenState, NULL));
+
 	DXGI_MODE_DESC targetParameters;
 	targetParameters.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	targetParameters.Width = mClientWidth;
@@ -232,28 +234,27 @@ void CD3DCore::ChangeSwapChainState()
 	targetParameters.RefreshRate.Denominator = 1;
 	targetParameters.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	targetParameters.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	mSwapChain->ResizeTarget(&targetParameters);
+	ThrowIfFailed(mSwapChain->ResizeTarget(&targetParameters));
 
-	for (int i = 0; i < swapChainBufferCount; i++) if (mRenderTargetBuffers[i])
-		mRenderTargetBuffers[i]->Release();
+	for (int i = 0; i < swapChainBufferCount; i++)
+		if (mRenderTargetBuffers[i])
+			mRenderTargetBuffers[i]->Release();
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
-	mSwapChain->GetDesc(&swapChainDesc);
-	mSwapChain->ResizeBuffers(swapChainBufferCount, mClientWidth, mClientHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
+	ThrowIfFailed(mSwapChain->GetDesc(&swapChainDesc));
+	ThrowIfFailed(mSwapChain->ResizeBuffers(swapChainBufferCount, mClientWidth, mClientHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
 
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
-
 	CreateRenderTargetViews();
 }
 
 void CD3DCore::WaitForGpuComplete()
 {
 	const UINT64 fenceValue = mFenceValues[mSwapChainBufferIndex];
-	HRESULT hResult = mCommandQueue->Signal(mFence, fenceValue);
+	ThrowIfFailed(mCommandQueue->Signal(mFence, fenceValue));
 
-	if (mFence->GetCompletedValue() < fenceValue)
-	{
-		hResult = mFence->SetEventOnCompletion(fenceValue, mFenceEvent);
+	if (mFence->GetCompletedValue() < fenceValue) {
+		ThrowIfFailed(mFence->SetEventOnCompletion(fenceValue, mFenceEvent));
 		::WaitForSingleObject(mFenceEvent, INFINITE);
 	}
 
@@ -263,12 +264,11 @@ void CD3DCore::WaitForGpuComplete()
 void CD3DCore::MoveToNextFrame()
 {
 	const UINT64 currentFenceValue = mFenceValues[mSwapChainBufferIndex];
-	HRESULT hResult = mCommandQueue->Signal(mFence, currentFenceValue);
+	ThrowIfFailed(mCommandQueue->Signal(mFence, currentFenceValue));
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
 
-	if (mFence->GetCompletedValue() < mFenceValues[mSwapChainBufferIndex])
-	{
-		hResult = mFence->SetEventOnCompletion(mFenceValues[mSwapChainBufferIndex], mFenceEvent);
+	if (mFence->GetCompletedValue() < mFenceValues[mSwapChainBufferIndex]) {
+		ThrowIfFailed(mFence->SetEventOnCompletion(mFenceValues[mSwapChainBufferIndex], mFenceEvent));
 		::WaitForSingleObject(mFenceEvent, INFINITE);
 	}
 
@@ -277,14 +277,14 @@ void CD3DCore::MoveToNextFrame()
 
 void CD3DCore::ResetCommandList()
 {
-	HRESULT hResult = mCommandAllocator->Reset();
-	hResult = mCommandList->Reset(mCommandAllocator, NULL);
+	ThrowIfFailed(mCommandAllocator->Reset());
+	ThrowIfFailed(mCommandList->Reset(mCommandAllocator, NULL));
 }
 
 void CD3DCore::ExecuteCommandList()
 {
 	//씬 객체를 생성하기 위하여 필요한 그래픽 명령 리스트들을 명령 큐에 추가한다.
-	HRESULT hResult = mCommandList->Close();
+	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* commandLists[] = { mCommandList };
 	mCommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
@@ -339,5 +339,5 @@ void CD3DCore::EndRender()
 
 void CD3DCore::Present(UINT syncInterval, UINT flags)
 {
-	mSwapChain->Present(syncInterval, flags);
+	ThrowIfFailed(mSwapChain->Present(syncInterval, flags));
 }
