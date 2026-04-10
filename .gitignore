@@ -1,0 +1,78 @@
+# =========================
+# Visual Studio 2022
+# =========================
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Build Results
+# =========================
+Debug/
+Release/
+x64/
+x86/
+out/
+build/
+[Bb]in/
+[Oo]bj/
+
+# =========================
+# C++ Intermediate Files
+# =========================
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.lastbuildstate
+
+# =========================
+# Executables / Libraries
+# =========================
+*.exe
+*.dll
+*.lib
+*.exp
+
+# =========================
+# Visual Studio DB / Cache
+# =========================
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# =========================
+# Logs / Temp
+# =========================
+*.log
+*.tmp
+*.temp
+
+# =========================
+# DirectX / Shader Cache
+# =========================
+*.cso   # compiled shader object
+*.pdb   # shader debug symbols
+
+# =========================
+# CMake (사용 시)
+# =========================
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+compile_commands.json
+
+# =========================
+# Package / Archive
+# =========================
+*.zip
+*.7z
+*.rar

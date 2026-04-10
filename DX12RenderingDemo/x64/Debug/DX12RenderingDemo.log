@@ -1,7 +1,0 @@
-﻿  DX12RenderingDemo.cpp
-  GameFramework.cpp
-  코드를 생성하고 있습니다...
-D:\DX12RenderingDemo\DX12RenderingDemo\DX12RenderingDemo.cpp(65,1): warning C4715: 'wWinMain': 모든 제어 경로에서 값을 반환하지는 않습니다.
-  DX12RenderingDemo.vcxproj -> D:\DX12RenderingDemo\x64\Debug\DX12RenderingDemo.exe
-  'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
-  배치 파일이 아닙니다.
