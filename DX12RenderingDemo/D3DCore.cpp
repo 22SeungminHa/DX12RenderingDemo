@@ -1,5 +1,5 @@
 #include "D3DCore.h"
-//
+
 CD3DCore::CD3DCore()
 {
 	mClientWidth = FRAME_BUFFER_WIDTH;
