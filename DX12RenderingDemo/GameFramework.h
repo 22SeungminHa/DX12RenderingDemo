@@ -13,17 +13,14 @@ private:
 	HINSTANCE m_hInstance;
 	HWND m_hWnd;
 
-	CScene* m_pScene;
-
-	ID3D12PipelineState* m_pd3dPipelineState;
-	// 그래픽스 파이프라인 상태 객체에 대한 인터페이스 포인터이다.
+	std::unique_ptr<CScene> m_pScene;
 
 public:
 	CGameFramework();
 	~CGameFramework();
 
 	CD3DCore mD3DCore;
-	CCamera* m_pCamera = NULL;
+	std::unique_ptr<CCamera> m_pCamera;
 
 	bool OnCreate(HINSTANCE hInstance, HWND hMainwnd);
 	// 프레임 워크 초기화 함수(주 윈도우 생성 시 호출)

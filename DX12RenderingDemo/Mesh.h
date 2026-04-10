@@ -29,18 +29,12 @@ public:
 	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~CMesh();
 
-private:
-	int m_nReferences = 0;
-
 public:
-	void AddRef() { m_nReferences++; }
-	void Release() { if (--m_nReferences <= 0) delete this; }
-
 	void ReleaseUploadBuffers();
 
 protected:
-	ID3D12Resource* m_pd3dVertexBuffer = NULL;
-	ID3D12Resource* m_pd3dVertexUploadBuffer = NULL;
+	ComPtr<ID3D12Resource> m_pd3dVertexBuffer = NULL;
+	ComPtr<ID3D12Resource> m_pd3dVertexUploadBuffer = NULL;
 
 	D3D12_VERTEX_BUFFER_VIEW m_d3dVertexBufferView;
 
@@ -51,8 +45,8 @@ protected:
 	UINT m_nStride = 0;
 	UINT m_nOffset = 0;
 
-	ID3D12Resource* m_pd3dIndexBuffer = NULL;
-	ID3D12Resource* m_pd3dIndexUploadBuffer = NULL;
+	ComPtr<ID3D12Resource> m_pd3dIndexBuffer = NULL;
+	ComPtr<ID3D12Resource> m_pd3dIndexUploadBuffer = NULL;
 
 	D3D12_INDEX_BUFFER_VIEW m_d3dIndexBufferView;
 	/*인덱스 버퍼(인덱스의 배열)와 인덱스 버퍼를 위한 업로드 버퍼에 대한 인터페이스 포인터이다. 
@@ -77,7 +71,6 @@ class CCubeMeshDiffused : public CMesh
 {
 public:
 	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다.
-	CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
-		* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
+	CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
 	virtual ~CCubeMeshDiffused();
 };

@@ -8,9 +8,9 @@ CScene::~CScene()
 {
 }
 
-ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevice)
+ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevice)
 {
-	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
+	ComPtr<ID3D12RootSignature> pd3dGraphicsRootSignature;
 	D3D12_ROOT_PARAMETER pd3dRootParameters[2];
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 	pd3dRootParameters[0].Constants.Num32BitValues = 16;
@@ -36,28 +36,25 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	d3dRootSignatureDesc.pStaticSamplers = NULL;
 	d3dRootSignatureDesc.Flags = d3dRootSignatureFlags;
 
-	ID3DBlob* pd3dSignatureBlob = NULL;
-	ID3DBlob* pd3dErrorBlob = NULL;
+	ComPtr<ID3DBlob> pd3dSignatureBlob = NULL;
+	ComPtr<ID3DBlob> pd3dErrorBlob = NULL;
 	ThrowIfFailed(D3D12SerializeRootSignature(
 		&d3dRootSignatureDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
-		&pd3dSignatureBlob,
-		&pd3dErrorBlob));
+		pd3dSignatureBlob.GetAddressOf(),
+		pd3dErrorBlob.GetAddressOf()));
 	ThrowIfFailed(pd3dDevice->CreateRootSignature(
 		0,
 		pd3dSignatureBlob->GetBufferPointer(),
 		pd3dSignatureBlob->GetBufferSize(),
-		__uuidof(ID3D12RootSignature),
-		(void**)&pd3dGraphicsRootSignature));
-	if (pd3dSignatureBlob) pd3dSignatureBlob->Release();
-	if (pd3dErrorBlob) pd3dErrorBlob->Release();
+		IID_PPV_ARGS(pd3dGraphicsRootSignature.GetAddressOf())));
 	return(pd3dGraphicsRootSignature);
 }
 
 
 ID3D12RootSignature* CScene::GetGraphicsRootSignature()
 {
-	return(m_pd3dGraphicsRootSignature);
+	return(m_pd3dGraphicsRootSignature.Get());
 }
 
 //void CScene::CreateGraphicsPipelineState(ID3D12Device* pd3dDevice)
@@ -135,38 +132,32 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 	//가로x세로x깊이가 12x12x12인 정육면체 메쉬를 생성한다.
 
-	CCubeMeshDiffused* pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList,
-		12.0f, 12.0f, 12.0f);
-	m_nObjects = 1;
-	m_ppObjects = new CGameObject * [m_nObjects];
+	auto pCubeMesh = std::make_unique<CCubeMeshDiffused>(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
 
-	CRotatingObject* pRotatingObject = new CRotatingObject();
-	pRotatingObject->SetMesh(pCubeMesh);
+	auto pRotatingObject = std::make_unique<CRotatingObject>();
+	pRotatingObject->SetMesh(pCubeMesh.release());
+	
+	auto pShader = std::make_unique<CDiffusedShader>();
 
-	CDiffusedShader* pShader = new CDiffusedShader();
-
-	pShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	pShader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature.Get());
 	pShader->CreateShaderVariables(pd3dDevice, pd3dCommandList);
-	pRotatingObject->SetShader(pShader);
-	m_ppObjects[0] = pRotatingObject;
+	pRotatingObject->SetShader(pShader.release());
+
+	m_ppObjects.clear();
+	m_ppObjects.push_back(std::move(pRotatingObject));
 }
 
 void CScene::ReleaseObjects()
 {
-	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
-	if (m_ppObjects)
-	{
-		for (int j = 0; j < m_nObjects; j++) if (m_ppObjects[j]) delete m_ppObjects[j];
-		delete[] m_ppObjects;
-	}
+	m_ppObjects.clear();
+	m_pd3dGraphicsRootSignature.Reset();
 }
 
 void CScene::ReleaseUploadBuffers()
 {
-	if (m_ppObjects)
+	for (auto& object : m_ppObjects)
 	{
-		for (int j = 0; j < m_nObjects; j++) if (m_ppObjects[j])
-			m_ppObjects[j]->ReleaseUploadBuffers();
+		if (object) object->ReleaseUploadBuffers();
 	}
 }
 
@@ -189,9 +180,9 @@ bool CScene::ProcessInput(UCHAR* pKeysBuffer)
 
 void CScene::AnimateObjects(float fTimeElapsed)
 {
-	for (int j = 0; j < m_nObjects; j++)
+	for (auto& object : m_ppObjects)
 	{
-		m_ppObjects[j]->Animate(fTimeElapsed);
+		if (object) object->Animate(fTimeElapsed);
 	}
 }
 
@@ -210,11 +201,11 @@ void CScene::AnimateObjects(float fTimeElapsed)
 void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
-	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
+	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature.Get());
 	if (pCamera) pCamera->UpdateShaderVariables(pd3dCommandList);
 	//씬을 렌더링하는 것은 씬을 구성하는 게임 객체(셰이더를 포함하는 객체)들을 렌더링하는 것이다.
-	for (int j = 0; j < m_nObjects; j++)
+	for (auto& object : m_ppObjects)
 	{
-		if (m_ppObjects[j]) m_ppObjects[j]->Render(pd3dCommandList, pCamera);
+		if (object) object->Render(pd3dCommandList, pCamera);
 	}
 }

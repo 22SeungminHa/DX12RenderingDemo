@@ -3,7 +3,7 @@
 
 CGameFramework::CGameFramework()
 {
-	m_pScene = NULL;
+	m_pScene = nullptr;
 
 	_tcscpy_s(m_pszFrameRate, _T("D3DX12Demo ("));
 }
@@ -47,14 +47,14 @@ void CGameFramework::BuildObjects()
 	UINT width = mD3DCore.GetClientWidth();
 	UINT height = mD3DCore.GetClientHeight();
 
-	m_pCamera = new CCamera();
+	m_pCamera = std::make_unique<CCamera>();
 	m_pCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
 	m_pCamera->SetScissorRect(0, 0, width, height);
 	m_pCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
 	m_pCamera->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 
 	//씬 객체를 생성하고 씬에 포함될 게임 객체들을 생성한다.
-	m_pScene = new CScene();
+	m_pScene = std::make_unique<CScene>();
 	m_pScene->BuildObjects(mD3DCore.GetDevice(), mD3DCore.GetCommandList());
 
 	mD3DCore.ExecuteCommandList();
@@ -70,7 +70,7 @@ void CGameFramework::BuildObjects()
 void CGameFramework::ReleaseObjects()
 {
 	if (m_pScene) m_pScene->ReleaseObjects();
-	if (m_pScene) delete m_pScene;
+	m_pScene.reset();
 }
 
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam,
@@ -164,7 +164,7 @@ void CGameFramework::FrameAdvance()
 	mD3DCore.ResetCommandList();
 	mD3DCore.BeginRender(clearColor);
 
-	if (m_pScene) m_pScene->Render(mD3DCore.GetCommandList(), m_pCamera);
+	if (m_pScene) m_pScene->Render(mD3DCore.GetCommandList(), m_pCamera.get());
 
 	mD3DCore.EndRender();
 	mD3DCore.ExecuteCommandList();

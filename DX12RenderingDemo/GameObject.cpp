@@ -9,26 +9,17 @@ CGameObject::CGameObject()
 
 CGameObject::~CGameObject()
 {
-	if (m_pMesh) m_pMesh->Release();
-	if (m_pShader)
-	{
-		m_pShader->ReleaseShaderVariables();
-		m_pShader->Release();
-	}
+	if (m_pShader) m_pShader->ReleaseShaderVariables();
 }
 
 void CGameObject::SetShader(CShader* pShader)
 {
-	if (m_pShader) m_pShader->Release();
-	m_pShader = pShader;
-	if (m_pShader) m_pShader->AddRef();
+	m_pShader.reset(pShader);
 }
 
 void CGameObject::SetMesh(CMesh* pMesh)
 {
-	if (m_pMesh) m_pMesh->Release();
-	m_pMesh = pMesh;
-	if (m_pMesh) m_pMesh->AddRef();
+	m_pMesh.reset(pMesh);
 }
 
 void CGameObject::ReleaseUploadBuffers()

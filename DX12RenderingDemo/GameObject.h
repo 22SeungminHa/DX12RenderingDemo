@@ -11,19 +11,13 @@ public:
     CGameObject();
     virtual ~CGameObject();
 
-private:
-    int m_nReferences = 0;
-
 public:
-    void AddRef() { m_nReferences++; }
-    void Release() { if (--m_nReferences <= 0) delete this; }
-
     void Rotate(const Vector3& axis, float angle);
 
 protected:
     Matrix m_xmf4x4World = Matrix::Identity;
-    CMesh* m_pMesh = NULL;
-    CShader* m_pShader = NULL;
+    std::unique_ptr<CMesh> m_pMesh = NULL;
+    std::unique_ptr<CShader> m_pShader = NULL;
 
 public:
     void ReleaseUploadBuffers();
