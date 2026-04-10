@@ -1,5 +1,5 @@
 #include "Timer.h"
-#include "stdafx.h"
+#include "pch.h"
 
 CGameTimer::CGameTimer()
 {

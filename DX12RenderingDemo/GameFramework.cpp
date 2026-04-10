@@ -1,11 +1,11 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "GameFramework.h"
 
 CGameFramework::CGameFramework()
 {
 	m_pScene = NULL;
 
-	_tcscpy_s(m_pszFrameRate, _T("LabProject ("));
+	_tcscpy_s(m_pszFrameRate, _T("D3DX12Demo ("));
 }
 
 CGameFramework::~CGameFramework()

@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include "pch.h"
 
 class CD3DCore
 {

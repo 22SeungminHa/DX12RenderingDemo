@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdafx.h"
+#include "pch.h"
 
 #define ASPECT_RATIO (float(FRAME_BUFFER_WIDTH) / float(FRAME_BUFFER_HEIGHT))
 
