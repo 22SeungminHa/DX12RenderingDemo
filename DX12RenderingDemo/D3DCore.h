@@ -5,7 +5,7 @@ class CD3DCore
 {
 public:
     // 스왑 체인 후면 버퍼의 개수
-    static const UINT mSwapChainBufferCount = 2;
+    static const UINT swapChainBufferCount = 2;
 
 public:
     CD3DCore();
@@ -27,7 +27,7 @@ public:
 
     void WaitForGpuComplete(); // CPU GPU 동기화
     void MoveToNextFrame();
-    void Present(UINT syncInterval, UINT flags);
+    void Present(UINT syncInterval = 0, UINT flags = 0);
 
     void ResetCommandList();
     void ExecuteCommandList();
@@ -35,13 +35,11 @@ public:
     void BeginRender(const float clearColor[4]);
     void EndRender();
 
-    void Resize(UINT width, UINT height);
+    void Resize(UINT width, UINT height) { mClientWidth = width; mClientHeight = height; };
 
 public:
     UINT GetClientWidth() const { return mClientWidth; }
     UINT GetClientHeight() const { return mClientHeight; }
-    void SetClientWidth(UINT width) { mClientWidth = width; }
-    void SetClientHeight(UINT height) { mClientHeight = height; }
 
     ID3D12Device* GetDevice() const { return mD3DDevice; }
     IDXGISwapChain3* GetSwapChain() const { return mSwapChain; }
@@ -73,7 +71,7 @@ private:
     UINT mSwapChainBufferIndex = 0;
 
     // 렌더 타겟 버퍼, 서술자 힙 인터페이스 포인터, 렌더 타겟 서술자 원소의 크기이다.
-    ID3D12Resource* mRenderTargetBuffers[mSwapChainBufferCount] = {};
+    ID3D12Resource* mRenderTargetBuffers[swapChainBufferCount] = {};
     ID3D12DescriptorHeap* mRtvDescriptorHeap = nullptr;
     UINT mRtvDescriptorIncrementSize = 0;
 
@@ -89,7 +87,7 @@ private:
 
     // 펜스 인터페이스 포인터, 펜스의 값, 이벤트 핸들이다.
     ID3D12Fence* mFence = nullptr;
-    UINT64 mFenceValues[mSwapChainBufferCount] = {}; // 후면 버퍼 마다 현재의 펜스 값을 관리
+    UINT64 mFenceValues[swapChainBufferCount] = {}; // 후면 버퍼 마다 현재의 펜스 값을 관리
     HANDLE mFenceEvent = nullptr;
 
     UINT mClientWidth = 0;

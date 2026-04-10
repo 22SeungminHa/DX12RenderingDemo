@@ -25,9 +25,11 @@ bool CD3DCore::Initialize(HWND hWnd, int width, int height)
 
 void CD3DCore::Shutdown()
 {
+	WaitForGpuComplete();
+
 	::CloseHandle(mFenceEvent);
 
-	for (int i = 0; i < mSwapChainBufferCount; i++) if (mRenderTargetBuffers[i]) mRenderTargetBuffers[i]->Release();
+	for (int i = 0; i < swapChainBufferCount; i++) if (mRenderTargetBuffers[i]) mRenderTargetBuffers[i]->Release();
 	if (mRtvDescriptorHeap) mRtvDescriptorHeap->Release();
 	if (mDepthStencilBuffer) mDepthStencilBuffer->Release();
 	if (mDsvDescriptorHeap) mDsvDescriptorHeap->Release();
@@ -56,7 +58,7 @@ void CD3DCore::CreateSwapChain(HWND hWnd, int width, int height)
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	::ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
 
-	swapChainDesc.BufferCount = mSwapChainBufferCount;
+	swapChainDesc.BufferCount = swapChainBufferCount;
 	swapChainDesc.BufferDesc.Width = mClientWidth;
 	swapChainDesc.BufferDesc.Height = mClientHeight;
 
@@ -126,6 +128,8 @@ void CD3DCore::CreateDirect3DDevice()
 	mMSAAEnable = (mMSAAQualityLevels > 1) ? true : false;
 
 	hResult = mD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)&mFence);
+	for (UINT i = 0; i < swapChainBufferCount; ++i)
+		mFenceValues[i] = 1;
 
 	// 펜스와 동기화를 위한 이벤트 객체를 생성한다(이벤트 객체의 초기값을 FALSE이다). 이벤트가 실행되면(Signal) 이벤트의 값을 자동적으로 FALSE가 되도록 생성한다.
 	mFenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -138,7 +142,7 @@ void CD3DCore::CreateDescriptorHeaps()
 	//렌더 타겟 서술자 힙(서술자의 개수는 스왑체인 버퍼의 개수)을 생성한다.
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc;
 	::ZeroMemory(&descriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
-	descriptorHeapDesc.NumDescriptors = mSwapChainBufferCount;
+	descriptorHeapDesc.NumDescriptors = swapChainBufferCount;
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	descriptorHeapDesc.NodeMask = 0;
@@ -178,7 +182,7 @@ void CD3DCore::CreateCommandObjects()
 void CD3DCore::CreateRenderTargetViews()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUDescriptorHandle = mRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	for (UINT i = 0; i < mSwapChainBufferCount; i++)
+	for (UINT i = 0; i < swapChainBufferCount; i++)
 	{
 		mSwapChain->GetBuffer(i, __uuidof(ID3D12Resource), (void**)&mRenderTargetBuffers[i]);
 		mD3DDevice->CreateRenderTargetView(mRenderTargetBuffers[i], NULL, rtvCPUDescriptorHandle);
@@ -235,12 +239,12 @@ void CD3DCore::ChangeSwapChainState()
 	targetParameters.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	mSwapChain->ResizeTarget(&targetParameters);
 
-	for (int i = 0; i < mSwapChainBufferCount; i++) if (mRenderTargetBuffers[i])
+	for (int i = 0; i < swapChainBufferCount; i++) if (mRenderTargetBuffers[i])
 		mRenderTargetBuffers[i]->Release();
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	mSwapChain->GetDesc(&swapChainDesc);
-	mSwapChain->ResizeBuffers(mSwapChainBufferCount, mClientWidth, mClientHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
+	mSwapChain->ResizeBuffers(swapChainBufferCount, mClientWidth, mClientHeight, swapChainDesc.BufferDesc.Format, swapChainDesc.Flags);
 
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
 
@@ -249,27 +253,39 @@ void CD3DCore::ChangeSwapChainState()
 
 void CD3DCore::WaitForGpuComplete()
 {
-	UINT64 fenceValue = ++mFenceValues[mSwapChainBufferIndex];
+	const UINT64 fenceValue = mFenceValues[mSwapChainBufferIndex];
+
 	HRESULT hResult = mCommandQueue->Signal(mFence, fenceValue);
+
 	if (mFence->GetCompletedValue() < fenceValue)
 	{
 		hResult = mFence->SetEventOnCompletion(fenceValue, mFenceEvent);
 		::WaitForSingleObject(mFenceEvent, INFINITE);
 	}
+
+	mFenceValues[mSwapChainBufferIndex]++;
 }
 
 void CD3DCore::MoveToNextFrame()
 {
+	// 현재 백 버퍼의 fence 값을 가져온다.
+	const UINT64 currentFenceValue = mFenceValues[mSwapChainBufferIndex];
+
+	// 현재 프레임의 커맨드들이 끝나면 이 fence 값에 도달하도록 signal 한다.
+	HRESULT hResult = mCommandQueue->Signal(mFence, currentFenceValue);
+
+	// Present 이후 스왑체인의 현재 백 버퍼 인덱스를 얻는다.
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
-	UINT64 fenceValue = ++mFenceValues[mSwapChainBufferIndex];
 
-	HRESULT hResult = mCommandQueue->Signal(mFence, fenceValue);
-
-	if (mFence->GetCompletedValue() < fenceValue)
+	// 새 백 버퍼가 아직 GPU에서 사용 중이면 기다린다.
+	if (mFence->GetCompletedValue() < mFenceValues[mSwapChainBufferIndex])
 	{
-		hResult = mFence->SetEventOnCompletion(fenceValue, mFenceEvent);
+		hResult = mFence->SetEventOnCompletion(mFenceValues[mSwapChainBufferIndex], mFenceEvent);
 		::WaitForSingleObject(mFenceEvent, INFINITE);
 	}
+
+	// 다음 프레임에서 사용할 fence 값을 준비한다.
+	mFenceValues[mSwapChainBufferIndex] = currentFenceValue + 1;
 }
 
 void CD3DCore::ResetCommandList()

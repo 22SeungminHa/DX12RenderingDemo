@@ -125,8 +125,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 	{
 	case WM_SIZE:
 	{
-		mD3DCore.SetClientWidth(LOWORD(lParam));
-		mD3DCore.SetClientHeight(HIWORD(lParam));
+		mD3DCore.Resize(LOWORD(lParam), HIWORD(lParam));
 		break;
 	}
 	case WM_LBUTTONDOWN:
@@ -169,7 +168,6 @@ void CGameFramework::FrameAdvance()
 
 	mD3DCore.EndRender();
 	mD3DCore.ExecuteCommandList();
-	mD3DCore.WaitForGpuComplete();
 	mD3DCore.Present(0, 0);
 	mD3DCore.MoveToNextFrame();
 
