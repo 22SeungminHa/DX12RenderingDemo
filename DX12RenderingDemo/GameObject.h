@@ -8,48 +8,48 @@ class CShader;
 class CGameObject
 {
 public:
-	CGameObject();
-	virtual ~CGameObject();
+    CGameObject();
+    virtual ~CGameObject();
 
 private:
-	int m_nReferences = 0;
+    int m_nReferences = 0;
 
 public:
-	void AddRef() { m_nReferences++; }
-	void Release() { if (--m_nReferences <= 0) delete this; }
-	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
+    void AddRef() { m_nReferences++; }
+    void Release() { if (--m_nReferences <= 0) delete this; }
+
+    void Rotate(const Vector3& axis, float angle);
 
 protected:
-	XMFLOAT4X4 m_xmf4x4World;
-	CMesh* m_pMesh = NULL;
-
-	CShader* m_pShader = NULL;
+    Matrix m_xmf4x4World = Matrix::Identity;
+    CMesh* m_pMesh = NULL;
+    CShader* m_pShader = NULL;
 
 public:
-	void ReleaseUploadBuffers();
+    void ReleaseUploadBuffers();
 
-	virtual void SetMesh(CMesh* pMesh);
-	virtual void SetShader(CShader* pShader);
+    virtual void SetMesh(CMesh* pMesh);
+    virtual void SetShader(CShader* pShader);
 
-	virtual void Animate(float fTimeElapsed);
+    virtual void Animate(float fTimeElapsed);
 
-	virtual void OnPrepareRender();
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+    virtual void OnPrepareRender();
+    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 };
 
 class CRotatingObject : public CGameObject
 {
 public:
-	CRotatingObject();
-	virtual ~CRotatingObject();
+    CRotatingObject();
+    virtual ~CRotatingObject();
+
 private:
-	XMFLOAT3 m_xmf3RotationAxis;
-	float m_fRotationSpeed;
+    Vector3 m_xmf3RotationAxis;
+    float m_fRotationSpeed;
+
 public:
-	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
-	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) {
-		m_xmf3RotationAxis =
-			xmf3RotationAxis;
-	}
-	virtual void Animate(float fTimeElapsed);
+    void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
+    void SetRotationAxis(const Vector3& xmf3RotationAxis) { m_xmf3RotationAxis = xmf3RotationAxis; }
+
+    virtual void Animate(float fTimeElapsed);
 };

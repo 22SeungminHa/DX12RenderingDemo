@@ -9,8 +9,9 @@ CShader::~CShader()
 {
 	if (m_ppd3dPipelineStates)
 	{
-		for (int i = 0; i < m_nPipelineStates; i++) if (m_ppd3dPipelineStates[i])
-			m_ppd3dPipelineStates[i]->Release();
+		for (int i = 0; i < m_nPipelineStates; i++)
+			if (m_ppd3dPipelineStates[i])
+				m_ppd3dPipelineStates[i]->Release();
 		delete[] m_ppd3dPipelineStates;
 	}
 }
@@ -18,9 +19,9 @@ CShader::~CShader()
 D3D12_RASTERIZER_DESC CShader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
-	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
 	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;  // D3D12_CULL_MODE_BACK, D3D12_CULL_MODE_NONE, D3D12_CULL_MODE_FRONT.
-	d3dRasterizerDesc.FrontCounterClockwise = FALSE;
+	d3dRasterizerDesc.FrontCounterClockwise = TRUE;
 	d3dRasterizerDesc.DepthBias = 0;
 	d3dRasterizerDesc.DepthBiasClamp = 0.0f;
 	d3dRasterizerDesc.SlopeScaledDepthBias = 0.0f;
@@ -157,12 +158,11 @@ void CShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComm
 void CShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
-void CShader::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4X4
-	* pxmf4x4World)
+
+void CShader::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, const Matrix& world)
 {
-	XMFLOAT4X4 xmf4x4World;
-	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(pxmf4x4World)));
-	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &xmf4x4World, 0);
+	Matrix transposedWorld = world.Transpose();
+	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &transposedWorld, 0);
 }
 
 void CShader::ReleaseShaderVariables()

@@ -2,8 +2,8 @@
 
 CCamera::CCamera()
 {
-	m_xmf4x4View = Matrix4x4::Identity();
-	m_xmf4x4Projection = Matrix4x4::Identity();
+	m_xmf4x4View = Matrix::Identity;
+	m_xmf4x4Projection = Matrix::Identity;
 	m_d3dViewport = { 0, 0, FRAME_BUFFER_WIDTH , FRAME_BUFFER_HEIGHT, 0.0f, 1.0f };
 	m_d3dScissorRect = { 0, 0, FRAME_BUFFER_WIDTH , FRAME_BUFFER_HEIGHT };
 }
@@ -13,8 +13,7 @@ CCamera::~CCamera()
 
 }
 
-void CCamera::SetViewport(int xTopLeft, int yTopLeft, int nWidth, int nHeight, float
-	fMinZ, float fMaxZ)
+void CCamera::SetViewport(int xTopLeft, int yTopLeft, int nWidth, int nHeight, float fMinZ, float fMaxZ)
 {
 	m_d3dViewport.TopLeftX = float(xTopLeft);
 	m_d3dViewport.TopLeftY = float(yTopLeft);
@@ -32,17 +31,14 @@ void CCamera::SetScissorRect(LONG xLeft, LONG yTop, LONG xRight, LONG yBottom)
 	m_d3dScissorRect.bottom = yBottom;
 }
 
-void CCamera::GenerateProjectionMatrix(float fNearPlaneDistance, float fFarPlaneDistance,
-	float fAspectRatio, float fFOVAngle)
+void CCamera::GenerateProjectionMatrix(float nearPlaneDistance, float farPlaneDistance, float aspectRatio, float fovAngle)
 {
-	m_xmf4x4Projection = Matrix4x4::PerspectiveFovLH(XMConvertToRadians(fFOVAngle),
-		fAspectRatio, fNearPlaneDistance, fFarPlaneDistance);
+	m_xmf4x4Projection = Matrix::CreatePerspectiveFieldOfView(XMConvertToRadians(fovAngle), aspectRatio, nearPlaneDistance, farPlaneDistance);
 }
 
-void CCamera::GenerateViewMatrix(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3LookAt, XMFLOAT3
-	xmf3Up)
+void CCamera::GenerateViewMatrix(const Vector3& position, const Vector3& lookAt, const Vector3& up)
 {
-	m_xmf4x4View = Matrix4x4::LookAtLH(xmf3Position, xmf3LookAt, xmf3Up);
+	m_xmf4x4View = Matrix::CreateLookAt(position, lookAt, up);
 }
 
 void CCamera::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
@@ -52,14 +48,11 @@ void CCamera::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComm
 
 void CCamera::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	XMFLOAT4X4 xmf4x4View;
-	XMStoreFloat4x4(&xmf4x4View, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4View)));
-	//루트 파라메터 인덱스 1의
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &xmf4x4View, 0);
-	XMFLOAT4X4 xmf4x4Projection;
-	XMStoreFloat4x4(&xmf4x4Projection,
-		XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4Projection)));
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &xmf4x4Projection, 16);
+	Matrix view = m_xmf4x4View.Transpose();
+	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &view, 0);
+
+	Matrix projection = m_xmf4x4Projection.Transpose();
+	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &projection, 16);
 }
 
 void CCamera::ReleaseShaderVariables()

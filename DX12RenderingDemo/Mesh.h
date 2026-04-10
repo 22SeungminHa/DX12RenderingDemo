@@ -4,22 +4,22 @@
 class CVertex
 {
 protected:
-	XMFLOAT3 m_xmf3Position;
+	Vector3 m_xmf3Position;
 public:
-	CVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); }
-	CVertex(XMFLOAT3 xmf3Position) { m_xmf3Position = xmf3Position; }
+	CVertex() { m_xmf3Position = Vector3::Zero;  }
+	CVertex(const Vector3& xmf3Position) { m_xmf3Position = xmf3Position; }
 	~CVertex() {}
 };
 
 class CDiffusedVertex : public CVertex
 {
 protected:
-	XMFLOAT4 m_xmf4Diffuse;
+	Vector4 m_xmf4Diffuse;
 
 public:
-	CDiffusedVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); m_xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f); }
-	CDiffusedVertex(float x, float y, float z, XMFLOAT4 xmf4Diffuse) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; }
-	CDiffusedVertex(XMFLOAT3 xmf3Position, XMFLOAT4 xmf4Diffuse) { m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; }
+	CDiffusedVertex() { m_xmf3Position = Vector3::Zero; m_xmf4Diffuse = Vector4::Zero; }
+	CDiffusedVertex(float x, float y, float z, const Vector4& xmf4Diffuse) { m_xmf3Position = Vector3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; }
+	CDiffusedVertex(const Vector3& xmf3Position, const Vector4& xmf4Diffuse) { m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; }
 	~CDiffusedVertex() { }
 };
 

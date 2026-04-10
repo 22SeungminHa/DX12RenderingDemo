@@ -4,7 +4,7 @@
 
 CGameObject::CGameObject()
 {
-	XMStoreFloat4x4(&m_xmf4x4World, XMMatrixIdentity());
+	m_xmf4x4World = Matrix::Identity;
 } 
 
 CGameObject::~CGameObject()
@@ -47,25 +47,26 @@ void CGameObject::OnPrepareRender()
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	OnPrepareRender();
+
 	if (m_pShader)
 	{
 		//게임 객체의 월드 변환 행렬을 셰이더의 상수 버퍼로 전달(복사)한다.
-		m_pShader->UpdateShaderVariable(pd3dCommandList, &m_xmf4x4World);
+		m_pShader->UpdateShaderVariable(pd3dCommandList, m_xmf4x4World);
 		m_pShader->Render(pd3dCommandList, pCamera);
 	}
+
 	if (m_pMesh) m_pMesh->Render(pd3dCommandList);
 }
 
-void CGameObject::Rotate(XMFLOAT3* pxmf3Axis, float fAngle)
+void CGameObject::Rotate(const Vector3& axis, float angle)
 {
-	XMMATRIX mtxRotate = XMMatrixRotationAxis(XMLoadFloat3(pxmf3Axis),
-		XMConvertToRadians(fAngle));
-	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
+	Matrix mtxRotate = Matrix::CreateFromAxisAngle(axis, XMConvertToRadians(angle));
+	m_xmf4x4World = mtxRotate * m_xmf4x4World;
 }
 
 CRotatingObject::CRotatingObject()
 {
-	m_xmf3RotationAxis = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	m_xmf3RotationAxis = Vector3::Up;
 	m_fRotationSpeed = 90.0f;
 }
 
@@ -75,5 +76,5 @@ CRotatingObject::~CRotatingObject()
 
 void CRotatingObject::Animate(float fTimeElapsed)
 {
-	CGameObject::Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
+	CGameObject::Rotate(m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
 }

@@ -51,7 +51,7 @@ void CGameFramework::BuildObjects()
 	m_pCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
 	m_pCamera->SetScissorRect(0, 0, width, height);
 	m_pCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
-	m_pCamera->GenerateViewMatrix(XMFLOAT3(0.0f, 15.0f, -25.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_pCamera->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 
 	//씬 객체를 생성하고 씬에 포함될 게임 객체들을 생성한다.
 	m_pScene = new CScene();
