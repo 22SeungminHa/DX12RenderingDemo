@@ -29,8 +29,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
-	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
+	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc{};
 	d3dRootSignatureDesc.NumParameters = _countof(pd3dRootParameters);
 	d3dRootSignatureDesc.pParameters = pd3dRootParameters;
 	d3dRootSignatureDesc.NumStaticSamplers = 0;
@@ -70,8 +69,7 @@ ID3D12RootSignature* CScene::GetGraphicsRootSignature()
 //		&pd3dPixelShaderBlob, NULL);
 //	//래스터라이저 상태를 설정한다.
 //
-//	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
-//	::ZeroMemory(&d3dRasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
+//	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
 //	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 //	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 //	d3dRasterizerDesc.FrontCounterClockwise = FALSE;
@@ -85,8 +83,7 @@ ID3D12RootSignature* CScene::GetGraphicsRootSignature()
 //	d3dRasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 //	//블렌드 상태를 설정한다.
 //
-//	D3D12_BLEND_DESC d3dBlendDesc;
-//	::ZeroMemory(&d3dBlendDesc, sizeof(D3D12_BLEND_DESC));
+//	D3D12_BLEND_DESC d3dBlendDesc{};
 //	d3dBlendDesc.AlphaToCoverageEnable = FALSE;
 //	d3dBlendDesc.IndependentBlendEnable = FALSE;
 //	d3dBlendDesc.RenderTarget[0].BlendEnable = FALSE;
@@ -101,8 +98,7 @@ ID3D12RootSignature* CScene::GetGraphicsRootSignature()
 //	d3dBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 //	//그래픽 파이프라인 상태를 설정한다.
 //
-//	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineStateDesc;
-//	::ZeroMemory(&d3dPipelineStateDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+//	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineStateDesc{};
 //	d3dPipelineStateDesc.pRootSignature = m_pd3dGraphicsRootSignature;
 //	d3dPipelineStateDesc.VS.pShaderBytecode = pd3dVertexShaderBlob->GetBufferPointer();
 //	d3dPipelineStateDesc.VS.BytecodeLength = pd3dVertexShaderBlob->GetBufferSize();

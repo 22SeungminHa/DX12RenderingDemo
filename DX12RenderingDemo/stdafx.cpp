@@ -4,16 +4,14 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 {
     ID3D12Resource* pd3dBuffer = NULL;
 
-    D3D12_HEAP_PROPERTIES d3dHeapPropertiesDesc;
-    ::ZeroMemory(&d3dHeapPropertiesDesc, sizeof(D3D12_HEAP_PROPERTIES));
+    D3D12_HEAP_PROPERTIES d3dHeapPropertiesDesc{};
     d3dHeapPropertiesDesc.Type = d3dHeapType;
     d3dHeapPropertiesDesc.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
     d3dHeapPropertiesDesc.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
     d3dHeapPropertiesDesc.CreationNodeMask = 1;
     d3dHeapPropertiesDesc.VisibleNodeMask = 1;
 
-    D3D12_RESOURCE_DESC d3dResourceDesc;
-    ::ZeroMemory(&d3dResourceDesc, sizeof(D3D12_RESOURCE_DESC));
+    D3D12_RESOURCE_DESC d3dResourceDesc{};
     d3dResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     d3dResourceDesc.Alignment = 0;
     d3dResourceDesc.Width = nBytes;
@@ -55,8 +53,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
                 (*ppd3dUploadBuffer)->Unmap(0, NULL);
                 //업로드 버퍼의 내용을 디폴트 버퍼에 복사한다.
                 pd3dCommandList->CopyResource(pd3dBuffer, *ppd3dUploadBuffer);
-                D3D12_RESOURCE_BARRIER d3dResourceBarrier;
-                ::ZeroMemory(&d3dResourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+                D3D12_RESOURCE_BARRIER d3dResourceBarrier{};
                 d3dResourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
                 d3dResourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
                 d3dResourceBarrier.Transition.pResource = pd3dBuffer;

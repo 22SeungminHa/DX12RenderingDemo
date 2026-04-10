@@ -55,8 +55,7 @@ void CD3DCore::CreateSwapChain(HWND hWnd, int width, int height)
 	mClientWidth = width;
 	mClientHeight = height;
 
-	DXGI_SWAP_CHAIN_DESC swapChainDesc;
-	::ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
+	DXGI_SWAP_CHAIN_DESC swapChainDesc{};
 
 	swapChainDesc.BufferCount = swapChainBufferCount;
 	swapChainDesc.BufferDesc.Width = mClientWidth;
@@ -128,8 +127,7 @@ void CD3DCore::CreateDirect3DDevice()
 	mMSAAEnable = (mMSAAQualityLevels > 1) ? true : false;
 
 	hResult = mD3DDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void**)&mFence);
-	for (UINT i = 0; i < swapChainBufferCount; ++i)
-		mFenceValues[i] = 1;
+	for (UINT i = 0; i < swapChainBufferCount; ++i) mFenceValues[i] = 1;
 
 	// 펜스와 동기화를 위한 이벤트 객체를 생성한다(이벤트 객체의 초기값을 FALSE이다). 이벤트가 실행되면(Signal) 이벤트의 값을 자동적으로 FALSE가 되도록 생성한다.
 	mFenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -140,8 +138,7 @@ void CD3DCore::CreateDirect3DDevice()
 void CD3DCore::CreateDescriptorHeaps()
 {
 	//렌더 타겟 서술자 힙(서술자의 개수는 스왑체인 버퍼의 개수)을 생성한다.
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc;
-	::ZeroMemory(&descriptorHeapDesc, sizeof(D3D12_DESCRIPTOR_HEAP_DESC));
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
 	descriptorHeapDesc.NumDescriptors = swapChainBufferCount;
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -162,8 +159,7 @@ void CD3DCore::CreateDescriptorHeaps()
 void CD3DCore::CreateCommandObjects()
 {
 	//직접(Direct) 명령 큐를 생성한다. 
-	D3D12_COMMAND_QUEUE_DESC commandQueueDesc;
-	::ZeroMemory(&commandQueueDesc, sizeof(D3D12_COMMAND_QUEUE_DESC));
+	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	commandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	HRESULT hResult = mD3DDevice->CreateCommandQueue(&commandQueueDesc, _uuidof(ID3D12CommandQueue), (void**)&mCommandQueue);
@@ -205,8 +201,7 @@ void CD3DCore::CreateDepthStencilView()
 	resourceDesc.SampleDesc.Quality = (mMSAAEnable) ? (mMSAAQualityLevels - 1) : 0;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-	D3D12_HEAP_PROPERTIES heapProperties;
-	::ZeroMemory(&heapProperties, sizeof(D3D12_HEAP_PROPERTIES));
+	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
@@ -254,7 +249,6 @@ void CD3DCore::ChangeSwapChainState()
 void CD3DCore::WaitForGpuComplete()
 {
 	const UINT64 fenceValue = mFenceValues[mSwapChainBufferIndex];
-
 	HRESULT hResult = mCommandQueue->Signal(mFence, fenceValue);
 
 	if (mFence->GetCompletedValue() < fenceValue)
@@ -268,23 +262,16 @@ void CD3DCore::WaitForGpuComplete()
 
 void CD3DCore::MoveToNextFrame()
 {
-	// 현재 백 버퍼의 fence 값을 가져온다.
 	const UINT64 currentFenceValue = mFenceValues[mSwapChainBufferIndex];
-
-	// 현재 프레임의 커맨드들이 끝나면 이 fence 값에 도달하도록 signal 한다.
 	HRESULT hResult = mCommandQueue->Signal(mFence, currentFenceValue);
-
-	// Present 이후 스왑체인의 현재 백 버퍼 인덱스를 얻는다.
 	mSwapChainBufferIndex = mSwapChain->GetCurrentBackBufferIndex();
 
-	// 새 백 버퍼가 아직 GPU에서 사용 중이면 기다린다.
 	if (mFence->GetCompletedValue() < mFenceValues[mSwapChainBufferIndex])
 	{
 		hResult = mFence->SetEventOnCompletion(mFenceValues[mSwapChainBufferIndex], mFenceEvent);
 		::WaitForSingleObject(mFenceEvent, INFINITE);
 	}
 
-	// 다음 프레임에서 사용할 fence 값을 준비한다.
 	mFenceValues[mSwapChainBufferIndex] = currentFenceValue + 1;
 }
 
@@ -316,8 +303,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE CD3DCore::GetDsvHandle() const
 
 void CD3DCore::BeginRender(const float clearColor[4])
 {
-	D3D12_RESOURCE_BARRIER resourceBarrier;
-	::ZeroMemory(&resourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+	D3D12_RESOURCE_BARRIER resourceBarrier{};
 
 	resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -339,8 +325,7 @@ void CD3DCore::BeginRender(const float clearColor[4])
 
 void CD3DCore::EndRender()
 {
-	D3D12_RESOURCE_BARRIER resourceBarrier;
-	::ZeroMemory(&resourceBarrier, sizeof(D3D12_RESOURCE_BARRIER));
+	D3D12_RESOURCE_BARRIER resourceBarrier{};
 
 	resourceBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	resourceBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
