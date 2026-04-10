@@ -104,8 +104,15 @@ D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR* pszFileName, L
 #if defined(_DEBUG)
 	nCompileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
-	::D3DCompileFromFile(pszFileName, NULL, NULL, pszShaderName, pszShaderProfile,
-		nCompileFlags, 0, ppd3dShaderBlob, NULL);
+	ComPtr<ID3DBlob> errors;
+	HRESULT hr = D3DCompileFromFile(pszFileName, NULL, NULL,
+		pszShaderName, pszShaderProfile,
+		nCompileFlags, 0,
+		ppd3dShaderBlob, &errors);
+
+	if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
+	ThrowIfFailed(hr);
+
 	D3D12_SHADER_BYTECODE d3dShaderByteCode;
 	d3dShaderByteCode.BytecodeLength = (*ppd3dShaderBlob)->GetBufferSize();
 	d3dShaderByteCode.pShaderBytecode = (*ppd3dShaderBlob)->GetBufferPointer();
@@ -132,8 +139,10 @@ void CShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature
 	d3dPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	d3dPipelineStateDesc.SampleDesc.Count = 1;
 	d3dPipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-	pd3dDevice->CreateGraphicsPipelineState(&d3dPipelineStateDesc,
-		__uuidof(ID3D12PipelineState), (void**)&m_ppd3dPipelineStates[0]);
+	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
+		&d3dPipelineStateDesc,
+		__uuidof(ID3D12PipelineState),
+		(void**)&m_ppd3dPipelineStates[0]));
 	if (pd3dVertexShaderBlob) pd3dVertexShaderBlob->Release();
 	if (pd3dPixelShaderBlob) pd3dPixelShaderBlob->Release();
 	if (d3dPipelineStateDesc.InputLayout.pInputElementDescs) delete[]
