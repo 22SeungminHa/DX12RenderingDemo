@@ -19,11 +19,10 @@ void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dVertexBufferView);
 
-	if (m_pd3dIndexBuffer)
-	{
+	if (m_pd3dIndexBuffer) {
+		//인덱스 버퍼가 있으면 인덱스 버퍼를 파이프라인(IA: 입력 조립기)에 연결하고 인덱스를 사용하여 렌더링한다.
 		pd3dCommandList->IASetIndexBuffer(&m_d3dIndexBufferView);
 		pd3dCommandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
-		//인덱스 버퍼가 있으면 인덱스 버퍼를 파이프라인(IA: 입력 조립기)에 연결하고 인덱스를 사용하여 렌더링한다.
 	}
 	else
 	{
@@ -40,9 +39,9 @@ CTriangleMesh::CTriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 
 	// 정점의 색상을 시계방향 순서대로 R, G, B 로 지정 RGBA로 색상을 표현.
 	CDiffusedVertex pVertices[3];
-	pVertices[0] = CDiffusedVertex(Vector3(0.0f, 0.5f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-	pVertices[1] = CDiffusedVertex(Vector3(0.5f, -0.5f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
-	pVertices[2] = CDiffusedVertex(Vector3(-0.5f, -0.5f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+	pVertices[0] = CDiffusedVertex(Vector3(0.0f, 6.0f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	pVertices[1] = CDiffusedVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+	pVertices[2] = CDiffusedVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 	
 	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, m_pd3dVertexUploadBuffer);
 
