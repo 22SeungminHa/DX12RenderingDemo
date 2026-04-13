@@ -1,15 +1,6 @@
 #include "SceneManager.h"
 #include "TestScene.h"
 
-CSceneManager::CSceneManager()
-{
-}
-
-CSceneManager::~CSceneManager()
-{
-	ReleaseScene();
-}
-
 std::unique_ptr<CScene> CSceneManager::CreateSceneByType(SCENE_TYPE sceneType)
 {
 	switch (sceneType) {
@@ -24,19 +15,20 @@ std::unique_ptr<CScene> CSceneManager::CreateSceneByType(SCENE_TYPE sceneType)
 
 void CSceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-	ReleaseScene();
-
 	mCurrentScene = CreateSceneByType(sceneType);
 
 	if (mCurrentScene) {
 		mCurrentSceneType = sceneType;
 		mCurrentScene->BuildObjects(device, cmdList);
 	}
+	else {
+		mCurrentSceneType = SCENE_TYPE::NONE;
+	}
 }
 
 void CSceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 {
-	if (nextScene == mCurrentSceneType)
+	if (mCurrentScene && nextScene == mCurrentSceneType)
 		return;
 
 	mSceneChangeRequested = true;
@@ -50,6 +42,7 @@ void CSceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsComma
 	ReleaseScene();
 	CreateScene(mNextSceneType, device, cmdList);
 	mSceneChangeRequested = false;
+	mNextSceneType = SCENE_TYPE::NONE;
 }
 
 void CSceneManager::ReleaseScene()
@@ -58,6 +51,8 @@ void CSceneManager::ReleaseScene()
 		mCurrentScene->ReleaseObjects();
 		mCurrentScene.reset();
 	}
+
+	mCurrentSceneType = SCENE_TYPE::NONE;
 }
 
 void CSceneManager::ReleaseUploadBuffers()
@@ -65,7 +60,7 @@ void CSceneManager::ReleaseUploadBuffers()
 	if (mCurrentScene) mCurrentScene->ReleaseUploadBuffers();
 }
 
-bool CSceneManager::ProcessInput(UCHAR* keysBuffer)
+bool CSceneManager::ProcessInput(const UCHAR* keysBuffer)
 {
 	if (mCurrentScene) return mCurrentScene->ProcessInput(keysBuffer);
 	return false;

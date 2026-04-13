@@ -4,6 +4,7 @@
 
 enum class SCENE_TYPE
 {
+	NONE,
 	TITLE,
 	GAME,
 	LOADING,
@@ -11,8 +12,7 @@ enum class SCENE_TYPE
 	TEST2
 };
 
-class CScene
-{
+class CScene {
 public:
 	CScene() = default;
 	virtual ~CScene() = default;
@@ -26,7 +26,7 @@ public:
 	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 	
-	virtual bool ProcessInput(UCHAR* keysBuffer);
+	virtual bool ProcessInput(const UCHAR* keysBuffer);
 	virtual void Animate(float deltaTime);
 	virtual void Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera);
 

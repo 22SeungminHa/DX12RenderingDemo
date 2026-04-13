@@ -28,9 +28,10 @@ ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* de
 	rootSignatureDesc.pStaticSamplers = NULL;
 	rootSignatureDesc.Flags = rootSignatureFlags;
 
-	ComPtr<ID3DBlob> signatureBlob = NULL;
-	ComPtr<ID3DBlob> errorBlob = NULL;
-	ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, signatureBlob.GetAddressOf(), errorBlob.GetAddressOf()));
+	ComPtr<ID3DBlob> signatureBlob;
+	ComPtr<ID3DBlob> errorBlob;
+
+	ThrowIfFailedWithBlob(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, signatureBlob.GetAddressOf(), errorBlob.GetAddressOf()), errorBlob.Get());
 	ThrowIfFailed(device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(rootSignature.GetAddressOf())));
 	
 	return(rootSignature);
@@ -38,6 +39,7 @@ ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* de
 
 void CScene::BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
+	mGraphicsRootSignature = CreateGraphicsRootSignature(device);
 }
 
 void CScene::ReleaseObjects()
@@ -96,7 +98,7 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wPara
 	return(false);
 }
 
-bool CScene::ProcessInput(UCHAR* keysBuffer)
+bool CScene::ProcessInput(const UCHAR* keysBuffer)
 {
 	return(false);
 }
@@ -110,9 +112,12 @@ void CScene::Animate(float deltaTime)
 
 void CScene::Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera)
 {
+	if (!cmdList || !camera || !mGraphicsRootSignature)
+		return;
+
 	camera->SetViewportsAndScissorRects(cmdList);
 	cmdList->SetGraphicsRootSignature(mGraphicsRootSignature.Get());
-	if (camera) camera->UpdateShaderVariables(cmdList);
+	camera->UpdateShaderVariables(cmdList);
 
 	//씬을 렌더링하는 것은 씬을 구성하는 게임 객체(셰이더를 포함하는 객체)들을 렌더링하는 것이다.
 	for (auto& object : mObjects) {

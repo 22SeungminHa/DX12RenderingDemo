@@ -53,8 +53,6 @@ void CGameFramework::OnResize()
 
 void CGameFramework::BuildObjects()
 {
-	mD3DCore.ResetCommandList();
-
 	// 카메라 객체를 생성하여 뷰포트, 씨저 사각형, 투영 변환 행렬, 카메라 변환 행렬을 생성하고 설정한다.
 	UINT width = mD3DCore.GetClientWidth();
 	UINT height = mD3DCore.GetClientHeight();
@@ -65,15 +63,8 @@ void CGameFramework::BuildObjects()
 	m_pCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
 	m_pCamera->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 
-	// 씬 객체를 생성하고 씬에 포함될 게임 객체들을 생성한다.
-	m_pSceneManager->CreateScene(SCENE_TYPE::TEST1, mD3DCore.GetDevice(), mD3DCore.GetCommandList());
-
-	// 그래픽 명령 리스트를 제출하고 모두 실행될 때까지 기다린다.
-	mD3DCore.ExecuteCommandList();
-	mD3DCore.WaitForGpuComplete();
-
-	//그래픽 리소스들을 생성하는 과정에 생성된 업로드 버퍼들을 소멸시킨다.
-	m_pSceneManager->ReleaseUploadBuffers();
+	// 씬 생성을 요청한다. FrameAdvance()에서 생성한다.
+	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
 
 	m_GameTimer.Reset();
 }
@@ -83,13 +74,13 @@ void CGameFramework::ReleaseObjects()
 	if (m_pSceneManager) m_pSceneManager->ReleaseScene();
 }
 
-void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam,
+void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam,
 	LPARAM lParam)
 {
-	if (m_pSceneManager && m_pSceneManager->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam))
+	if (m_pSceneManager && m_pSceneManager->OnProcessingMouseMessage(hWnd, msg, wParam, lParam))
 		return;
 	
-	switch (nMessageID)
+	switch (msg)
 	{
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -104,12 +95,12 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	}
 }
 
-void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
+void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pSceneManager && m_pSceneManager->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam))
+	if (m_pSceneManager && m_pSceneManager->OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam))
 		return;
 
-	switch (nMessageID) {
+	switch (msg) {
 	case WM_KEYUP:
 		switch (wParam) {
 		case VK_ESCAPE:
@@ -135,28 +126,28 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 	}
 }
 
-LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMessageID,
+LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT msg,
 	WPARAM wParam, LPARAM lParam)
 {	
-	switch (nMessageID) {
+	switch (msg) {
 	case WM_SIZE: {
 		mD3DCore.Resize(LOWORD(lParam), HIWORD(lParam));
 		OnResize();
-		break;
+		return 0;
 	}
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
-		break;
+		OnProcessingMouseMessage(hWnd, msg, wParam, lParam);
+		return 0;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
-		OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
-		break;
+		OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam);
+		return 0;
 	}
-	return(0);
+	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 void CGameFramework::ProcessInput()
@@ -193,22 +184,21 @@ void CGameFramework::FrameAdvance()
 {
 	m_GameTimer.Tick(0.0f);
 
+	ProcessSceneChange();
 	ProcessInput();
 	Animate();
 
-	float clearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	mD3DCore.ResetCommandList();
+
 	mD3DCore.BeginRender(clearColor);
-
 	if (m_pSceneManager) m_pSceneManager->Render(mD3DCore.GetCommandList(), m_pCamera.get());
-
 	mD3DCore.EndRender();
+
 	mD3DCore.ExecuteCommandList();
 	mD3DCore.Present(0, 0);
 	mD3DCore.MoveToNextFrame();
-
-	ProcessSceneChange();
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);

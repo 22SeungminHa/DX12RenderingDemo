@@ -5,8 +5,7 @@
 #include "D3DCore.h"
 #include "SceneManager.h"
 
-class CGameFramework
-{
+class CGameFramework {
 private:
 	CGameTimer m_GameTimer;
 	_TCHAR m_pszFrameRate[50];

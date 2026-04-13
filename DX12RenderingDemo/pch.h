@@ -92,7 +92,7 @@ public:
     DxException() = default;
     DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber);
 
-    std::wstring ToString()const;
+    std::wstring ToString() const;
 
     HRESULT ErrorCode = S_OK;
     std::wstring FunctionName;
@@ -101,14 +101,29 @@ public:
 };
 
 #ifndef ThrowIfFailed
-#define ThrowIfFailed(x)                                              \
-{                                                                     \
-    HRESULT hr__ = (x);                                               \
-    std::wstring wfn = AnsiToWString(__FILE__);                       \
+#define ThrowIfFailed(x)                                                  \
+{                                                                         \
+    HRESULT hr__ = (x);                                                   \
+    std::wstring wfn = AnsiToWString(__FILE__);                           \
     if (FAILED(hr__)) { throw DxException(hr__, L## #x, wfn, __LINE__); } \
 }
 #endif
 
 #ifndef ReleaseCom
 #define ReleaseCom(x) { if(x){ x->Release(); x = 0; } }
+#endif
+
+#ifndef ThrowIfFailedWithBlob
+#define ThrowIfFailedWithBlob(hrExpr, errorBlob)                                           \
+{                                                                                          \
+    HRESULT hr__ = (hrExpr);                                                               \
+    if (FAILED(hr__)) {                                                                    \
+        if ((errorBlob)) {                                                                 \
+            OutputDebugStringA(static_cast<const char*>((errorBlob)->GetBufferPointer())); \
+            OutputDebugStringA("\n");                                                      \
+        }                                                                                  \
+        std::wstring wfn = AnsiToWString(__FILE__);                                        \
+        throw DxException(hr__, L## #hrExpr, wfn, __LINE__);                               \
+    }                                                                                      \
+}
 #endif

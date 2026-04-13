@@ -1,8 +1,7 @@
 #pragma once
 #include "pch.h"
 
-class CD3DCore
-{
+class CD3DCore {
 public:
     static const UINT swapChainBufferCount = 2;
 
