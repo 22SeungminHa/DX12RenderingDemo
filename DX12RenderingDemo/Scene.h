@@ -20,7 +20,7 @@ public:
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	bool ProcessInput(UCHAR* pKeysBuffer);
-	void AnimateObjects(float fTimeElapsed);
+	void Animate(float fTimeElapsed);
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
 	void ReleaseUploadBuffers();

@@ -4,20 +4,21 @@
 
 class CSceneManager
 {
+private:
+    std::unique_ptr<CScene> m_pCurrentScene;
+
 public:
     CSceneManager();
     ~CSceneManager();
 
-    void SetScene(CScene* pScene);
-    CScene* GetScene() const { return mScene; }
+    CScene* GetScene() const { return m_pCurrentScene.get(); }
 
-    void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-    void ReleaseObjects();
+    void BuildScene(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+    void ReleaseScene();
+    void ReleaseUploadBuffers();
 
-    void ProcessInput(UCHAR* pKeysBuffer);
-    void AnimateObjects(float fTimeElapsed);
+    void Animate(float fTimeElapsed);
     void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-
-private:
-    CScene* mScene = nullptr;
+    
+    void ProcessInput(UCHAR* pKeysBuffer);
 };

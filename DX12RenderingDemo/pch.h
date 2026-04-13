@@ -63,14 +63,7 @@ using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
-extern ComPtr<ID3D12Resource> CreateBufferResource(
-    ID3D12Device* pd3dDevice,
-    ID3D12GraphicsCommandList* pd3dCommandList,
-    void* pData,
-    UINT nBytes,
-    D3D12_HEAP_TYPE d3dHeapType,
-    D3D12_RESOURCE_STATES d3dResourceStates,
-    ComPtr<ID3D12Resource>& pd3dUploadBuffer);
+extern ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ComPtr<ID3D12Resource>& pd3dUploadBuffer);
 
 inline std::wstring AnsiToWString(const std::string& str)
 {
@@ -82,41 +75,15 @@ inline std::wstring AnsiToWString(const std::string& str)
 class d3dUtil
 {
 public:
-
     static bool IsKeyDown(int vkeyCode);
-
     static std::string ToString(HRESULT hr);
 
-    static UINT CalcConstantBufferByteSize(UINT byteSize)
-    {
-        // 상수 버퍼의 크기는 반드시 최소 하드웨어 할당 크기(흔히 256바이트)의 배수여야 한다.
-        // 이 메서드는 주어진 크기에 가장 가까운 256의 배수를 구해서 반환한다.
-        // 이를 위해 이 메서드는 크기에 255를 더하고 비트마스크를 이용해서
-        // 하위 2바이트, 즉 256보다 작은 모든 비트를 0으로 만든다.
-        // 예: byteSize = 300이라 할 때
-        // (300 + 255) & ~255
-        // 555 & ~255
-        // 0x022B & ~0x00ff
-        // 0x022B & 0xff00
-        // 0x0200
-        // 512
-        return (byteSize + 255) & ~255;
-    }
+    // 상수 버퍼의 크기는 반드시 최소 하드웨어 할당 크기(흔히 256바이트)의 배수여야 한다.
+    static UINT CalcConstantBufferByteSize(UINT byteSize) { return (byteSize + 255) & ~255; }
 
     static Microsoft::WRL::ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
-
-    static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
-        ID3D12Device* device,
-        ID3D12GraphicsCommandList* cmdList,
-        const void* initData,
-        UINT64 byteSize,
-        Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
-
-    static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
-        const std::wstring& filename,
-        const D3D_SHADER_MACRO* defines,
-        const std::string& entrypoint,
-        const std::string& target);
+    static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* initData, UINT64 byteSize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
+    static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target);
 };
 
 class DxException

@@ -2,14 +2,7 @@
 #include <comdef.h>
 #include <fstream>
 
-ComPtr<ID3D12Resource> CreateBufferResource(
-    ID3D12Device* pd3dDevice,
-    ID3D12GraphicsCommandList* pd3dCommandList,
-    void* pData,
-    UINT nBytes,
-    D3D12_HEAP_TYPE d3dHeapType,
-    D3D12_RESOURCE_STATES d3dResourceStates,
-    ComPtr<ID3D12Resource>& pd3dUploadBuffer)
+ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ComPtr<ID3D12Resource>& pd3dUploadBuffer)
 {
     ComPtr<ID3D12Resource> pd3dBuffer;
     pd3dUploadBuffer.Reset();
@@ -40,20 +33,11 @@ ComPtr<ID3D12Resource> CreateBufferResource(
     else if (d3dHeapType == D3D12_HEAP_TYPE_READBACK)
         d3dResourceInitialStates = D3D12_RESOURCE_STATE_COPY_DEST;
 
-    ThrowIfFailed(pd3dDevice->CreateCommittedResource(
-        &d3dHeapPropertiesDesc,
-        D3D12_HEAP_FLAG_NONE,
-        &d3dResourceDesc,
-        d3dResourceInitialStates,
-        nullptr,
-        IID_PPV_ARGS(pd3dBuffer.GetAddressOf())));
+    ThrowIfFailed(pd3dDevice->CreateCommittedResource(&d3dHeapPropertiesDesc, D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, d3dResourceInitialStates, nullptr, IID_PPV_ARGS(pd3dBuffer.GetAddressOf())));
 
-    if (pData)
-    {
-        switch (d3dHeapType)
-        {
-        case D3D12_HEAP_TYPE_DEFAULT:
-        {
+    if (pData) {
+        switch (d3dHeapType) {
+        case D3D12_HEAP_TYPE_DEFAULT: {
             // 업로드 버퍼 생성
             d3dHeapPropertiesDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
 
@@ -86,8 +70,7 @@ ComPtr<ID3D12Resource> CreateBufferResource(
             pd3dCommandList->ResourceBarrier(1, &d3dResourceBarrier);
             break;
         }
-        case D3D12_HEAP_TYPE_UPLOAD:
-        {
+        case D3D12_HEAP_TYPE_UPLOAD: {
             D3D12_RANGE d3dReadRange{ 0, 0 };
             UINT8* pBufferDataBegin = nullptr;
             ThrowIfFailed(pd3dBuffer->Map(0, &d3dReadRange, reinterpret_cast<void**>(&pBufferDataBegin)));
@@ -135,39 +118,20 @@ ComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring& filename)
 }
 
 // 편의용 기본 버퍼 리소스 초기화 함수
-Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    const void* initData,
-    UINT64 byteSize,
-    Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer)
+ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* initData, UINT64 byteSize, ComPtr<ID3D12Resource>& uploadBuffer)
 {
     ComPtr<ID3D12Resource> defaultBuffer;
-
     CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
     CD3DX12_RESOURCE_DESC defaultBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
 
     // 실제 기본 버퍼 자원을 생성한다.
-    ThrowIfFailed(device->CreateCommittedResource(
-        &defaultHeapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &defaultBufferDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-        nullptr,
-        IID_PPV_ARGS(defaultBuffer.GetAddressOf())));
+    ThrowIfFailed(device->CreateCommittedResource(&defaultHeapProps, D3D12_HEAP_FLAG_NONE, &defaultBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(defaultBuffer.GetAddressOf())));
 
     CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC uploadBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(byteSize);
 
     // CPU 메모리의 리소스를 기본 버퍼에 복사하려면 임시 업로드 힙을 만들어야 한다.
-    ThrowIfFailed(device->CreateCommittedResource(
-        &uploadHeapProps,
-		D3D12_HEAP_FLAG_NONE,
-        &uploadBufferDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
-
+    ThrowIfFailed(device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &uploadBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
 
     // 기본 버퍼에 복사할 자료를 서술한다.
     D3D12_SUBRESOURCE_DATA subResourceData = {};
@@ -178,18 +142,12 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
     // 기본 버퍼 리소스로의 리소스 복사를 요청한다.
     // 개략적으로 말하자면, 보조 함수 UpdateSubresources는 CPU 메모리를 임시 업로드 힙에 복사하고,
     // ID3D12CommandList::CopySubresourceRegion을 이용해서 임시 업로드 힙의 자료를 mBuffer에 복사한다.
-    CD3DX12_RESOURCE_BARRIER barrier1 = CD3DX12_RESOURCE_BARRIER::Transition(
-        defaultBuffer.Get(),
-        D3D12_RESOURCE_STATE_COMMON,
-        D3D12_RESOURCE_STATE_COPY_DEST);
+    CD3DX12_RESOURCE_BARRIER barrier1 = CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
     cmdList->ResourceBarrier(1, &barrier1);
 
     UpdateSubresources<1>(cmdList, defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
 
-    CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(
-        defaultBuffer.Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_GENERIC_READ);
+    CD3DX12_RESOURCE_BARRIER barrier2 = CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
     cmdList->ResourceBarrier(1, &barrier2);
 
     // 주의: 위의 함수 호출 이후에도 uploadBuffer를 계속 유지해야 한다.
@@ -200,14 +158,11 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
 }
 
 // 실행 시점에서 셰이더 프로그램을 좀 더 손쉽게 컴파일하기 위한 보조 함수
-ComPtr<ID3DBlob> d3dUtil::CompileShader(
-	const std::wstring& filename,
-	const D3D_SHADER_MACRO* defines,
-	const std::string& entrypoint,
-	const std::string& target)
+ComPtr<ID3DBlob> d3dUtil::CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target)
 {
     // 디버그 모드에서는 디버깅 관련 플래그들을 사용한다.
 	UINT compileFlags = 0;
+
 #if defined(DEBUG) || defined(_DEBUG)  
 	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
@@ -216,15 +171,7 @@ ComPtr<ID3DBlob> d3dUtil::CompileShader(
 
 	ComPtr<ID3DBlob> byteCode = nullptr;
 	ComPtr<ID3DBlob> errors;
-	hr = D3DCompileFromFile(
-        filename.c_str(),
-        defines,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        entrypoint.c_str(),
-        target.c_str(),
-        compileFlags, 0,
-        &byteCode,
-        &errors);
+	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
 
     // 오류 메시지를 디버그 창에 출력한다.
 	if(errors != nullptr)

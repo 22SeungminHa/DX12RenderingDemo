@@ -178,7 +178,7 @@ bool CScene::ProcessInput(UCHAR* pKeysBuffer)
 	return(false);
 }
 
-void CScene::AnimateObjects(float fTimeElapsed)
+void CScene::Animate(float fTimeElapsed)
 {
 	for (auto& object : m_ppObjects)
 	{
