@@ -84,14 +84,6 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wPara
 	switch (messageID) {
 	case WM_KEYUP:
 		switch (wParam) {
-		case VK_ESCAPE:
-			break;
-		case VK_RETURN:
-			break;
-		case VK_F8:
-			break;
-		case VK_F9:
-			break;
 		default:
 			break;
 		}

@@ -5,6 +5,7 @@ CGameFramework::CGameFramework()
 {
 	m_pSceneManager = std::make_unique<CSceneManager>();
 	m_pRenderer = std::make_unique<CRenderer>();
+	m_pInputSystem = std::make_unique<CInputSystem>();
 
 	_tcscpy_s(m_pszFrameRate, _T("D3DX12Demo ("));
 }
@@ -27,6 +28,9 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 
 	// 시작 씬 전환 요청. FrameAdvance()에서 생성한다.
 	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
+
+	m_pInputSystem->Initialize(m_hWnd, m_pSceneManager.get(), m_pRenderer.get());
+
 	m_GameTimer.Reset();
 
 	return true;
@@ -54,89 +58,29 @@ void CGameFramework::OnResize()
 	if (m_pRenderer) m_pRenderer->Resize(width, height);
 }
 
-void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam,
-	LPARAM lParam)
-{
-	if (m_pSceneManager && m_pSceneManager->OnProcessingMouseMessage(hWnd, msg, wParam, lParam))
-		return;
-	
-	switch (msg)
-	{
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
-}
-
-void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	if (m_pSceneManager && m_pSceneManager->OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam))
-		return;
-
-	switch (msg) {
-	case WM_KEYUP:
-		switch (wParam) {
-		case VK_ESCAPE:
-			::PostQuitMessage(0);
-			break;
-		case VK_SPACE:
-			if (m_pSceneManager->GetSceneType() == SCENE_TYPE::TEST1)
-				m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST2);
-			else
-				m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
-			break;
-		case VK_F8:
-			break;
-		case VK_F9:
-			if (m_pRenderer) m_pRenderer->ChangeSwapChainState();
-			break;
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
 LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT msg,
 	WPARAM wParam, LPARAM lParam)
 {	
 	switch (msg) {
-	case WM_SIZE: {
+	case WM_SIZE:
 		OnResize();
 		return 0;
-	}
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		OnProcessingMouseMessage(hWnd, msg, wParam, lParam);
-		return 0;
+		if (m_pInputSystem && m_pInputSystem->OnProcessingMouseMessage(hWnd, msg, wParam, lParam))
+			return 0;
+		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
-		OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam);
-		return 0;
+		if (m_pInputSystem && m_pInputSystem->OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam))
+			return 0;
+		break;
 	}
+
 	return DefWindowProc(hWnd, msg, wParam, lParam);
-}
-
-void CGameFramework::ProcessInput()
-{
-	if (!m_pSceneManager) return;
-
-	UCHAR keysBuffer[256];
-	::GetKeyboardState(keysBuffer);
-
-	m_pSceneManager->ProcessInput(keysBuffer);
 }
 
 void CGameFramework::Animate()
@@ -161,7 +105,9 @@ void CGameFramework::FrameAdvance()
 	m_GameTimer.Tick(0.0f);
 
 	ProcessSceneChange();
-	ProcessInput();
+
+	if (m_pInputSystem) m_pInputSystem->ProcessInput();
+
 	Animate();
 
 	if (m_pRenderer && m_pSceneManager) m_pRenderer->Render(m_pSceneManager->GetScene());

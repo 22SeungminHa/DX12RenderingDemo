@@ -68,13 +68,52 @@ bool CSceneManager::ProcessInput(const UCHAR* keysBuffer)
 
 bool CSceneManager::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
 {
-	if (mCurrentScene) return mCurrentScene->OnProcessingKeyboardMessage(hWnd, messageID, wParam, lParam);
+	if (mCurrentScene && mCurrentScene->OnProcessingKeyboardMessage(hWnd, messageID, wParam, lParam))
+		return true;
+
+	switch (messageID) {
+	case WM_KEYUP:
+		switch (wParam) {
+		case VK_SPACE:
+			if (mCurrentSceneType == SCENE_TYPE::TEST1) {
+				RequestChangeScene(SCENE_TYPE::TEST2);
+				return true;
+			}
+			else if (mCurrentSceneType == SCENE_TYPE::TEST2) {
+				RequestChangeScene(SCENE_TYPE::TEST1);
+				return true;
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
 	return false;
 }
 
 bool CSceneManager::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
 {
-	if (mCurrentScene) return mCurrentScene->OnProcessingMouseMessage(hWnd, messageID, wParam, lParam);
+	if (mCurrentScene && mCurrentScene->OnProcessingMouseMessage(hWnd, messageID, wParam, lParam))
+		return true;
+
+	switch (messageID)
+	{
+	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+		break;
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+		break;
+	case WM_MOUSEMOVE:
+		break;
+	default:
+		break;
+	}
+
 	return false;
 }
 

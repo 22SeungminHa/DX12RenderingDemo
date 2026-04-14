@@ -3,6 +3,7 @@
 #include "Scene.h"
 #include "SceneManager.h"
 #include "Renderer.h"
+#include "InputSystem.h"
 
 class CGameFramework {
 private:
@@ -14,6 +15,7 @@ private:
 
 	std::unique_ptr<CSceneManager> m_pSceneManager;
 	std::unique_ptr<CRenderer> m_pRenderer;
+	std::unique_ptr<CInputSystem> m_pInputSystem;
 
 public:
 	CGameFramework();
@@ -24,14 +26,11 @@ public:
 	void OnDestroy();
 	void OnResize();
 
-	void ProcessInput();
 	void Animate();
 	void FrameAdvance();
 
 	void ProcessSceneChange();
 
 	//윈도우의 메시지(키보드, 마우스 입력)를 처리하는 함수이다. 
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 };
