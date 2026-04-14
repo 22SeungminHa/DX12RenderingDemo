@@ -19,7 +19,7 @@ void CSceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D
 
 	if (mCurrentScene) {
 		mCurrentSceneType = sceneType;
-		mCurrentScene->BuildObjects(device, cmdList);
+		mCurrentScene->Load(device, cmdList);
 	}
 	else {
 		mCurrentSceneType = SCENE_TYPE::NONE;
@@ -48,7 +48,7 @@ void CSceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsComma
 void CSceneManager::ReleaseScene()
 {
 	if (mCurrentScene) {
-		mCurrentScene->ReleaseObjects();
+		mCurrentScene->Unload();
 		mCurrentScene.reset();
 	}
 

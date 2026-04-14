@@ -17,7 +17,6 @@ bool CRenderer::Initialize(HWND hWnd, UINT width, UINT height)
 
 void CRenderer::Shutdown()
 {
-    mD3DCore.WaitForGpuComplete();
     mD3DCore.Shutdown();
 }
 
@@ -52,6 +51,7 @@ void CRenderer::ProcessSceneChange(CSceneManager* sceneManager)
 
     mD3DCore.ExecuteCommandList();
     mD3DCore.WaitForGpuComplete();
+
     sceneManager->ReleaseUploadBuffers();
 }
 

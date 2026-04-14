@@ -19,18 +19,17 @@ public:
 
 	virtual SCENE_TYPE GetSceneType() const = 0;
 
-	virtual void BuildObjects(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-	virtual void ReleaseObjects();
+	virtual void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+	virtual void Unload();
+	virtual void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
+	virtual bool ProcessInput(const UCHAR* keysBuffer);
 	virtual bool OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 	virtual bool OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 	
-	virtual bool ProcessInput(const UCHAR* keysBuffer);
 	virtual void Animate(float deltaTime);
 	virtual void Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera);
-
-	virtual void ReleaseUploadBuffers();
 
 protected:
 	//그래픽 루트 시그너쳐를 생성한다.

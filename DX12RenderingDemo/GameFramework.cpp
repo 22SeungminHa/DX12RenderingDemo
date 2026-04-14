@@ -22,10 +22,12 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	RECT clientRC;
 	::GetClientRect(m_hWnd, &clientRC);
 
+	// 렌더러를 초기화한다 (씬 매니저/씬 초기화, 객체 생성)
 	m_pRenderer->Initialize(m_hWnd, clientRC.right - clientRC.left, clientRC.bottom - clientRC.top);
 
-	//렌더링할 게임 객체를 생성한다. 
-	BuildObjects();
+	// 씬 생성을 요청한다. FrameAdvance()에서 생성한다.
+	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
+	m_GameTimer.Reset();
 
 	return true;
 }
@@ -35,8 +37,8 @@ void CGameFramework::OnDestroy()
 	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
 	if (m_pRenderer) m_pRenderer->WaitForGpuComplete();
 
-	//게임 객체(게임 월드 객체)를 소멸한다.
-	ReleaseObjects();
+	// 씬과 씬 매니저를 unload 한다. 게임 객체(게임 월드 객체)를 소멸한다.
+	if (m_pSceneManager) m_pSceneManager->ReleaseScene();
 
 	if (m_pRenderer) m_pRenderer->Shutdown();
 }
@@ -50,18 +52,6 @@ void CGameFramework::OnResize()
 	UINT height = rc.bottom - rc.top;
 
 	if (m_pRenderer) m_pRenderer->Resize(width, height);
-}
-
-void CGameFramework::BuildObjects()
-{
-	// 씬 생성을 요청한다. FrameAdvance()에서 생성한다.
-	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
-	m_GameTimer.Reset();
-}
-
-void CGameFramework::ReleaseObjects()
-{
-	if (m_pSceneManager) m_pSceneManager->ReleaseScene();
 }
 
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam,
