@@ -1,6 +1,5 @@
 #pragma once
 #include "Scene.h"
-#include "Camera.h"
 
 class CSceneManager {
 private:

@@ -26,9 +26,6 @@ public:
 	void OnDestroy();
 	void OnResize();
 
-	// 렌더링할 메쉬와 게임 객체를 생성하고 소멸하는 함수
-	void ReleaseObjects();
-
 	void ProcessInput();
 	void Animate();
 	void FrameAdvance();

@@ -22,10 +22,10 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 	RECT clientRC;
 	::GetClientRect(m_hWnd, &clientRC);
 
-	// 렌더러를 초기화한다 (씬 매니저/씬 초기화, 객체 생성)
+	// 렌더러 초기화
 	m_pRenderer->Initialize(m_hWnd, clientRC.right - clientRC.left, clientRC.bottom - clientRC.top);
 
-	// 씬 생성을 요청한다. FrameAdvance()에서 생성한다.
+	// 시작 씬 전환 요청. FrameAdvance()에서 생성한다.
 	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
 	m_GameTimer.Reset();
 

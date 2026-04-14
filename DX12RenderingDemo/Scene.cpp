@@ -40,10 +40,13 @@ ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* de
 void CScene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	mGraphicsRootSignature = CreateGraphicsRootSignature(device);
+	OnLoad(device, cmdList);
 }
 
 void CScene::Unload()
 {
+	OnUnload();
+
 	mObjects.clear();
 	mGraphicsRootSignature.Reset();
 }

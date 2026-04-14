@@ -1,6 +1,6 @@
 #include "TestScene.h"
 
-void CTestScene1::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void CTestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
     mGraphicsRootSignature = CreateGraphicsRootSignature(device);
 
@@ -18,7 +18,7 @@ void CTestScene1::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
     mObjects.push_back(std::move(rotatingObject));
 }
 
-void CTestScene2::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void CTestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
     mGraphicsRootSignature = CreateGraphicsRootSignature(device);
 

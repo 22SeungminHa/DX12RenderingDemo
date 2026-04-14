@@ -1,5 +1,4 @@
 #pragma once
-#include "Timer.h"
 #include "Shader.h"
 
 enum class SCENE_TYPE
@@ -19,8 +18,8 @@ public:
 
 	virtual SCENE_TYPE GetSceneType() const = 0;
 
-	virtual void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
-	virtual void Unload();
+	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+	void Unload();
 	virtual void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
@@ -34,6 +33,8 @@ public:
 protected:
 	//그래픽 루트 시그너쳐를 생성한다.
 	ComPtr<ID3D12RootSignature> CreateGraphicsRootSignature(ID3D12Device* device);
+	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) = 0;
+	virtual void OnUnload() {}
 
 protected:
 	//씬은 셰이더들의 집합이다. 셰이더들은 게임 객체들의 집합이다.
