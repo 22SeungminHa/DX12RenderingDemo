@@ -20,7 +20,7 @@ public:
 
 	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void Unload();
-	virtual void ReleaseUploadBuffers();
+	void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
 	virtual bool ProcessInput(const UCHAR* keysBuffer);
@@ -35,6 +35,7 @@ protected:
 	ComPtr<ID3D12RootSignature> CreateGraphicsRootSignature(ID3D12Device* device);
 	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) = 0;
 	virtual void OnUnload() {}
+	virtual void OnReleaseUploadBuffers() {}
 
 protected:
 	//씬은 셰이더들의 집합이다. 셰이더들은 게임 객체들의 집합이다.

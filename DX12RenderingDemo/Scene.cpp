@@ -56,6 +56,8 @@ void CScene::ReleaseUploadBuffers()
 	for (auto& object : mObjects) {
 		if (object) object->ReleaseUploadBuffers();
 	}
+
+	OnReleaseUploadBuffers();
 }
 
 bool CScene::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)

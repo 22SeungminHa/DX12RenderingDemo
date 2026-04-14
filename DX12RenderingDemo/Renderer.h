@@ -23,7 +23,7 @@ public:
 	void BeginSceneLoad();
 	void EndSceneLoad();
 
-	void Render(CScene* sceneManager);
+	void Render(CScene* scene);
 
 	void ChangeSwapChainState();
 	void WaitForGpuComplete();

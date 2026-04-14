@@ -164,7 +164,7 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	Animate();
 
-	if (m_pRenderer) m_pRenderer->Render(m_pSceneManager->GetScene());
+	if (m_pRenderer && m_pSceneManager) m_pRenderer->Render(m_pSceneManager->GetScene());
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);

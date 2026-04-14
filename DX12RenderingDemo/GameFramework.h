@@ -1,8 +1,6 @@
 #pragma once
 #include "Timer.h"
 #include "Scene.h"
-#include "Camera.h"
-#include "D3DCore.h"
 #include "SceneManager.h"
 #include "Renderer.h"
 
