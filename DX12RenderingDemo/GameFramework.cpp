@@ -146,7 +146,14 @@ void CGameFramework::Animate()
 
 void CGameFramework::ProcessSceneChange()
 {
-	if (m_pRenderer && m_pSceneManager) m_pRenderer->ProcessSceneChange(m_pSceneManager.get());
+	if (!m_pRenderer || !m_pSceneManager || !m_pSceneManager->HasSceneChange())
+		return;
+
+	m_pRenderer->BeginSceneLoad();
+	m_pSceneManager->ProcessSceneChange(m_pRenderer->GetDevice(), m_pRenderer->GetCommandList());
+	m_pRenderer->EndSceneLoad();
+
+	m_pSceneManager->ReleaseUploadBuffers();
 }
 
 void CGameFramework::FrameAdvance()
@@ -157,7 +164,7 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	Animate();
 
-	if (m_pRenderer) m_pRenderer->Render(m_pSceneManager.get());
+	if (m_pRenderer) m_pRenderer->Render(m_pSceneManager->GetScene());
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);

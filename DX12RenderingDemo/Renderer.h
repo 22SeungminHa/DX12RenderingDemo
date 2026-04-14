@@ -1,7 +1,8 @@
 #pragma once
 #include "D3DCore.h"
 #include "Camera.h"
-#include "SceneManager.h"
+
+class CScene;
 
 class CRenderer {
 private:
@@ -18,9 +19,11 @@ public:
 	void Resize(UINT width, UINT height);
 
 	void CreateCamera(UINT width, UINT height);
-	void Render(CSceneManager* sceneManager);
 
-	void ProcessSceneChange(CSceneManager* sceneManager);
+	void BeginSceneLoad();
+	void EndSceneLoad();
+
+	void Render(CScene* sceneManager);
 
 	void ChangeSwapChainState();
 	void WaitForGpuComplete();

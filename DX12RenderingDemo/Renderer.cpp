@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Scene.h"
 
 CRenderer::CRenderer()
 {
@@ -40,31 +41,28 @@ void CRenderer::Resize(UINT width, UINT height)
     mCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
 }
 
-void CRenderer::ProcessSceneChange(CSceneManager* sceneManager)
+void CRenderer::BeginSceneLoad()
 {
-    if (!sceneManager || !sceneManager->HasSceneChange()) return;
-
     mD3DCore.WaitForGpuComplete();
     mD3DCore.ResetCommandList();
-
-    sceneManager->ProcessSceneChange(mD3DCore.GetDevice(), mD3DCore.GetCommandList());
-
-    mD3DCore.ExecuteCommandList();
-    mD3DCore.WaitForGpuComplete();
-
-    sceneManager->ReleaseUploadBuffers();
 }
 
-void CRenderer::Render(CSceneManager* sceneManager)
+void CRenderer::EndSceneLoad()
+{
+    mD3DCore.ExecuteCommandList();
+    mD3DCore.WaitForGpuComplete();
+}
+
+void CRenderer::Render(CScene* scene)
 {
     float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 
     mD3DCore.ResetCommandList();
+
     mD3DCore.BeginRender(clearColor);
-
-    if (sceneManager) sceneManager->Render(mD3DCore.GetCommandList(), mCamera.get());
-
+    if (scene) scene->Render(mD3DCore.GetCommandList(), mCamera.get());
     mD3DCore.EndRender();
+
     mD3DCore.ExecuteCommandList();
     mD3DCore.Present(0, 0);
     mD3DCore.MoveToNextFrame();
