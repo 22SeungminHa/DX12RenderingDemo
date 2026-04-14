@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "D3DCore.h"
 #include "SceneManager.h"
+#include "Renderer.h"
 
 class CGameFramework {
 private:
@@ -13,14 +14,12 @@ private:
 	HINSTANCE m_hInstance;
 	HWND m_hWnd;
 
-	CD3DCore mD3DCore;
 	std::unique_ptr<CSceneManager> m_pSceneManager;
+	std::unique_ptr<CRenderer> m_pRenderer;
 
 public:
 	CGameFramework();
 	~CGameFramework();
-
-	std::unique_ptr<CCamera> m_pCamera;
 
 	// 프레임 워크 초기화 함수(주 윈도우 생성 시 호출)
 	bool OnCreate(HINSTANCE hInstance, HWND hMainwnd);

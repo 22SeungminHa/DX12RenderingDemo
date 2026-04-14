@@ -4,6 +4,8 @@
 CGameFramework::CGameFramework()
 {
 	m_pSceneManager = std::make_unique<CSceneManager>();
+	m_pRenderer = std::make_unique<CRenderer>();
+
 	_tcscpy_s(m_pszFrameRate, _T("D3DX12Demo ("));
 }
 
@@ -13,59 +15,47 @@ CGameFramework::~CGameFramework()
 
 bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
+	//Direct3D 디바이스, 명령 큐와 명령 리스트, 스왑 체인 등을 생성하는 함수를 호출한다. 
 	m_hInstance = hInstance;
 	m_hWnd = hMainWnd;
-	//Direct3D 디바이스, 명령 큐와 명령 리스트, 스왑 체인 등을 생성하는 함수를 호출한다. 
 
 	RECT clientRC;
 	::GetClientRect(m_hWnd, &clientRC);
-	mD3DCore.Initialize(m_hWnd, clientRC.right - clientRC.left, clientRC.bottom - clientRC.top);
 
-	BuildObjects();
+	m_pRenderer->Initialize(m_hWnd, clientRC.right - clientRC.left, clientRC.bottom - clientRC.top);
+
 	//렌더링할 게임 객체를 생성한다. 
+	BuildObjects();
 
-	return(true);
+	return true;
 }
 
 void CGameFramework::OnDestroy()
 {
 	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
-	mD3DCore.WaitForGpuComplete();
+	if (m_pRenderer) m_pRenderer->WaitForGpuComplete();
 
 	//게임 객체(게임 월드 객체)를 소멸한다.
 	ReleaseObjects();
 
-	mD3DCore.Shutdown();
+	if (m_pRenderer) m_pRenderer->Shutdown();
 }
 
 void CGameFramework::OnResize()
 {
-	UINT width = mD3DCore.GetClientWidth();
-	UINT height = mD3DCore.GetClientHeight();
+	RECT rc;
+	::GetClientRect(m_hWnd, &rc);
 
-	if (!m_pCamera || width == 0 || height == 0)
-		return;
+	UINT width = rc.right - rc.left;
+	UINT height = rc.bottom - rc.top;
 
-	m_pCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-	m_pCamera->SetScissorRect(0, 0, width, height);
-	m_pCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
+	if (m_pRenderer) m_pRenderer->Resize(width, height);
 }
 
 void CGameFramework::BuildObjects()
 {
-	// 카메라 객체를 생성하여 뷰포트, 씨저 사각형, 투영 변환 행렬, 카메라 변환 행렬을 생성하고 설정한다.
-	UINT width = mD3DCore.GetClientWidth();
-	UINT height = mD3DCore.GetClientHeight();
-
-	m_pCamera = std::make_unique<CCamera>();
-	m_pCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-	m_pCamera->SetScissorRect(0, 0, width, height);
-	m_pCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
-	m_pCamera->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
-
 	// 씬 생성을 요청한다. FrameAdvance()에서 생성한다.
 	m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
-
 	m_GameTimer.Reset();
 }
 
@@ -115,7 +105,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wPa
 		case VK_F8:
 			break;
 		case VK_F9:
-			mD3DCore.ChangeSwapChainState();
+			if (m_pRenderer) m_pRenderer->ChangeSwapChainState();
 			break;
 		default:
 			break;
@@ -131,7 +121,6 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT msg,
 {	
 	switch (msg) {
 	case WM_SIZE: {
-		mD3DCore.Resize(LOWORD(lParam), HIWORD(lParam));
 		OnResize();
 		return 0;
 	}
@@ -167,17 +156,7 @@ void CGameFramework::Animate()
 
 void CGameFramework::ProcessSceneChange()
 {
-	if (!m_pSceneManager || !m_pSceneManager->HasSceneChange())
-		return;
-
-	mD3DCore.WaitForGpuComplete();
-	mD3DCore.ResetCommandList();
-
-	m_pSceneManager->ProcessSceneChange(mD3DCore.GetDevice(), mD3DCore.GetCommandList());
-	
-	mD3DCore.ExecuteCommandList();
-	mD3DCore.WaitForGpuComplete();
-	m_pSceneManager->ReleaseUploadBuffers();
+	if (m_pRenderer && m_pSceneManager) m_pRenderer->ProcessSceneChange(m_pSceneManager.get());
 }
 
 void CGameFramework::FrameAdvance()
@@ -188,17 +167,7 @@ void CGameFramework::FrameAdvance()
 	ProcessInput();
 	Animate();
 
-	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	mD3DCore.ResetCommandList();
-
-	mD3DCore.BeginRender(clearColor);
-	if (m_pSceneManager) m_pSceneManager->Render(mD3DCore.GetCommandList(), m_pCamera.get());
-	mD3DCore.EndRender();
-
-	mD3DCore.ExecuteCommandList();
-	mD3DCore.Present(0, 0);
-	mD3DCore.MoveToNextFrame();
+	if (m_pRenderer) m_pRenderer->Render(m_pSceneManager.get());
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);
