@@ -3,11 +3,11 @@
 
 const ULONG MAX_SAMPLE_COUNT = 50; // 50회의 프레임 처리시간을 누적하여 평균한다.
 
-class CGameTimer
+class Timer
 {
 public:
-	CGameTimer();
-	virtual ~CGameTimer();
+	Timer();
+	virtual ~Timer();
 
 	void Start() { }
 	void Stop() { }
@@ -17,19 +17,19 @@ public:
 	float GetTimeElapsed();
 
 private:
-	bool m_bHardwareHasPerformanceCounter;
-	float m_fTimeScale;
-	float m_fTimeElapsed;
-	__int64 m_nCurrentTime;
-	__int64 m_nLastTime;
-	__int64 m_nPerformanceFrequency;
+	bool hardwareHasPerformanceCounter_;
+	float timeScale_;
+	float timeElapsed_;
+	__int64 currentTime_;
+	__int64 lastTime_;
+	__int64 performanceFrequency_;
 
-	float m_fFrameTime[MAX_SAMPLE_COUNT];
-	ULONG m_nSampleCount;
+	float frameTime_[MAX_SAMPLE_COUNT];
+	ULONG sampleCount_;
 
-	unsigned long m_nCurrentFrameRate;
-	unsigned long m_nFramesPerSecond;
-	float m_fFPSTimeElapsed;
+	unsigned long currentFrameRate_;
+	unsigned long framesPerSecond_;
+	float fpsTimeElapsed_;
 
-	bool m_bStopped;
+	bool stopped_;
 };

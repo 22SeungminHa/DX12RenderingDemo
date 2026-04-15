@@ -2,21 +2,21 @@
 #include "SceneManager.h"
 #include "Renderer.h"
 
-class CInputSystem
+class InputSystem
 {
 private:
-	CSceneManager* m_pSceneManager = nullptr;
-	CRenderer* m_pRenderer = nullptr;
-	HWND m_hWnd = nullptr;
+	SceneManager* sceneManager_ = nullptr;
+	Renderer* renderer_ = nullptr;
+	HWND hwnd_ = nullptr;
 
 public:
-	CInputSystem() = default;
-	~CInputSystem() = default;
+	InputSystem() = default;
+	~InputSystem() = default;
 
-	void Initialize(HWND hWnd, CSceneManager* pSceneManager, CRenderer* pRenderer);
+	void Initialize(HWND hwnd, SceneManager* sceneManager, Renderer* renderer);
 
 	void ProcessInput();
 
-	bool OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	bool OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	bool OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	bool OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };

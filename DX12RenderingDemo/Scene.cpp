@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* device)
+ComPtr<ID3D12RootSignature> Scene::CreateGraphicsRootSignature(ID3D12Device* device)
 {
 	ComPtr<ID3D12RootSignature> rootSignature;
 	D3D12_ROOT_PARAMETER rootParameters[2];
@@ -37,33 +37,32 @@ ComPtr<ID3D12RootSignature> CScene::CreateGraphicsRootSignature(ID3D12Device* de
 	return(rootSignature);
 }
 
-void CScene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void Scene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-	mGraphicsRootSignature = CreateGraphicsRootSignature(device);
+	rootSignature_ = CreateGraphicsRootSignature(device);
 	OnLoad(device, cmdList);
 }
 
-void CScene::Unload()
+void Scene::Unload()
 {
 	OnUnload();
 
-	mObjects.clear();
-	mGraphicsRootSignature.Reset();
+	objects_.clear();
+	rootSignature_.Reset();
 }
 
-void CScene::ReleaseUploadBuffers()
+void Scene::ReleaseUploadBuffers()
 {
-	for (auto& object : mObjects) {
+	for (auto& object : objects_) {
 		if (object) object->ReleaseUploadBuffers();
 	}
 
 	OnReleaseUploadBuffers();
 }
 
-bool CScene::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
+bool Scene::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (messageID)
-	{
+	switch (msg) {
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		break;
@@ -79,9 +78,9 @@ bool CScene::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, 
 	return(false);
 }
 
-bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
+bool Scene::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (messageID) {
+	switch (msg) {
 	case WM_KEYUP:
 		switch (wParam) {
 		default:
@@ -95,29 +94,29 @@ bool CScene::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wPara
 	return(false);
 }
 
-bool CScene::ProcessInput(const UCHAR* keysBuffer)
+bool Scene::ProcessInput(const UCHAR* keysBuffer)
 {
 	return(false);
 }
 
-void CScene::Animate(float deltaTime)
+void Scene::Animate(float deltaTime)
 {
-	for (auto& object : mObjects) {
+	for (auto& object : objects_) {
 		if (object) object->Animate(deltaTime);
 	}
 }
 
-void CScene::Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera)
+void Scene::Render(ID3D12GraphicsCommandList* cmdList, Camera* camera)
 {
-	if (!cmdList || !camera || !mGraphicsRootSignature)
+	if (!cmdList || !camera || !rootSignature_)
 		return;
 
 	camera->SetViewportsAndScissorRects(cmdList);
-	cmdList->SetGraphicsRootSignature(mGraphicsRootSignature.Get());
+	cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 	camera->UpdateShaderVariables(cmdList);
 
 	//씬을 렌더링하는 것은 씬을 구성하는 게임 객체(셰이더를 포함하는 객체)들을 렌더링하는 것이다.
-	for (auto& object : mObjects) {
+	for (auto& object : objects_) {
 		if (object) object->Render(cmdList, camera);
 	}
 }

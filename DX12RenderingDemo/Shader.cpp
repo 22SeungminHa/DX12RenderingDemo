@@ -1,14 +1,14 @@
 #include "Shader.h"
 
-CShader::CShader()
+Shader::Shader()
 {
 }
 
-CShader::~CShader()
+Shader::~Shader()
 {
 }
 
-D3D12_RASTERIZER_DESC CShader::CreateRasterizerState()
+D3D12_RASTERIZER_DESC Shader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
 	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
@@ -26,7 +26,7 @@ D3D12_RASTERIZER_DESC CShader::CreateRasterizerState()
 	return d3dRasterizerDesc;
 }
 
-D3D12_DEPTH_STENCIL_DESC CShader::CreateDepthStencilState()
+D3D12_DEPTH_STENCIL_DESC Shader::CreateDepthStencilState()
 {
 	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc{};
 	d3dDepthStencilDesc.DepthEnable = TRUE;
@@ -46,7 +46,7 @@ D3D12_DEPTH_STENCIL_DESC CShader::CreateDepthStencilState()
 	return d3dDepthStencilDesc;
 }
 
-D3D12_BLEND_DESC CShader::CreateBlendState()
+D3D12_BLEND_DESC Shader::CreateBlendState()
 {
 	D3D12_BLEND_DESC d3dBlendDesc{};
 	d3dBlendDesc.AlphaToCoverageEnable = FALSE;
@@ -65,7 +65,7 @@ D3D12_BLEND_DESC CShader::CreateBlendState()
 }
 
 //입력 조립기에게 정점 버퍼의 구조를 알려주기 위한 구조체를 반환한다. 
-D3D12_INPUT_LAYOUT_DESC CShader::CreateInputLayout()
+D3D12_INPUT_LAYOUT_DESC Shader::CreateInputLayout()
 {
 	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc{};
 	d3dInputLayoutDesc.pInputElementDescs = nullptr;
@@ -73,7 +73,7 @@ D3D12_INPUT_LAYOUT_DESC CShader::CreateInputLayout()
 	return d3dInputLayoutDesc;
 }
 
-D3D12_SHADER_BYTECODE CShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE Shader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
 	pd3dShaderBlob.Reset();
 
@@ -82,7 +82,7 @@ D3D12_SHADER_BYTECODE CShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBl
 	d3dShaderByteCode.pShaderBytecode = NULL;
 	return d3dShaderByteCode;
 }
-D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE Shader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
 	pd3dShaderBlob.Reset();
 
@@ -93,7 +93,7 @@ D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlo
 }
 
 //셰이더 소스 코드를 컴파일하여 바이트 코드 구조체를 반환한다. 
-D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(
+D3D12_SHADER_BYTECODE Shader::CompileShaderFromFile(
 	const WCHAR * pszFileName,
 	LPCSTR pszShaderName,
 	LPCSTR pszShaderProfile,
@@ -124,7 +124,7 @@ D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(
 }
 
 //그래픽스 파이프라인 상태 객체를 생성한다. 
-void CShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
 	ComPtr<ID3DBlob> pd3dVertexShaderBlob;
 	ComPtr<ID3DBlob> pd3dPixelShaderBlob;
@@ -149,34 +149,34 @@ void CShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGr
 	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
 		&d3dPipelineStateDesc,
 		IID_PPV_ARGS(pso.GetAddressOf())));
-	m_pipelineStates.push_back(std::move(pso));
+	pipelineStates_.push_back(std::move(pso));
 }
 
-void CShader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
+void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	//파이프라인에 그래픽스 상태 객체를 설정한다. 
-	pd3dCommandList->SetPipelineState(m_pipelineStates[0].Get());
+	pd3dCommandList->SetPipelineState(pipelineStates_[0].Get());
 }
 
-void CShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
 {
 	OnPrepareRender(pd3dCommandList);
 }
 
-void CShader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void Shader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
-void CShader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+void Shader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 }
 
-void CShader::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, const Matrix& world)
+void Shader::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, const Matrix& world)
 {
 	Matrix transposedWorld = world.Transpose();
 	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &transposedWorld, 0);
 }
 
-void CShader::ReleaseShaderVariables()
+void Shader::ReleaseShaderVariables()
 {
 }
 
@@ -190,31 +190,31 @@ CDiffusedShader::~CDiffusedShader()
 
 D3D12_INPUT_LAYOUT_DESC CDiffusedShader::CreateInputLayout()
 {
-	m_inputElementDescs = {
+	inputElementDescs_ = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 	
 	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc{};
-	d3dInputLayoutDesc.pInputElementDescs = m_inputElementDescs.data();
-	d3dInputLayoutDesc.NumElements = m_inputElementDescs.size();
+	d3dInputLayoutDesc.pInputElementDescs = inputElementDescs_.data();
+	d3dInputLayoutDesc.NumElements = inputElementDescs_.size();
 	
 	return d3dInputLayoutDesc;
 }
 
 D3D12_SHADER_BYTECODE CDiffusedShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
-	return CShader::CompileShaderFromFile(L"Shaders.hlsl", "VSDiffused", "vs_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSDiffused", "vs_5_1", pd3dShaderBlob);
 }
 
 D3D12_SHADER_BYTECODE CDiffusedShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
-	return CShader::CompileShaderFromFile(L"Shaders.hlsl", "PSDiffused", "ps_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSDiffused", "ps_5_1", pd3dShaderBlob);
 }
 
 void CDiffusedShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
-	m_pipelineStates.clear();
-	m_pipelineStates.reserve(1);
-	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	pipelineStates_.clear();
+	pipelineStates_.reserve(1);
+	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }

@@ -3,47 +3,47 @@
 #include "Mesh.h"
 #include "Camera.h"
 
-class CShader;
+class Shader;
 
-class CGameObject
+class GameObject
 {
 public:
-    CGameObject();
-    virtual ~CGameObject();
+    GameObject();
+    virtual ~GameObject();
 
 public:
     void Rotate(const Vector3& axis, float angle);
 
 protected:
-    Matrix m_xmf4x4World = Matrix::Identity;
-    std::unique_ptr<CMesh> m_pMesh = NULL;
-    std::unique_ptr<CShader> m_pShader = NULL;
+    Matrix worldMatrix = Matrix::Identity;
+    std::unique_ptr<Mesh> mesh_ = NULL;
+    std::unique_ptr<Shader> shader_ = NULL;
 
 public:
     void ReleaseUploadBuffers();
 
-    virtual void SetMesh(CMesh* pMesh);
-    virtual void SetShader(CShader* pShader);
+    virtual void SetMesh(Mesh* pMesh);
+    virtual void SetShader(Shader* pShader);
 
     virtual void Animate(float fTimeElapsed);
 
     virtual void OnPrepareRender();
-    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
 };
 
-class CRotatingObject : public CGameObject
+class CRotatingObject : public GameObject
 {
 public:
     CRotatingObject();
     virtual ~CRotatingObject();
 
 private:
-    Vector3 m_xmf3RotationAxis;
-    float m_fRotationSpeed;
+    Vector3 rotationAxis_;
+    float rotationSpeed_;
 
 public:
-    void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
-    void SetRotationAxis(const Vector3& xmf3RotationAxis) { m_xmf3RotationAxis = xmf3RotationAxis; }
+    void SetRotationSpeed(float fRotationSpeed) { rotationSpeed_ = fRotationSpeed; }
+    void SetRotationAxis(const Vector3& xmf3RotationAxis) { rotationAxis_ = xmf3RotationAxis; }
 
     virtual void Animate(float fTimeElapsed);
 };

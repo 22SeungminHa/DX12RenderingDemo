@@ -1,84 +1,84 @@
 #include "Mesh.h"
 
-CMesh::CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommanList)
+Mesh::Mesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommanList)
 {
 }
 
-CMesh::~CMesh()
+Mesh::~Mesh()
 {
 }
 
-void CMesh::ReleaseUploadBuffers()
+void Mesh::ReleaseUploadBuffers()
 {
-	m_pd3dVertexUploadBuffer.Reset();
-	m_pd3dIndexUploadBuffer.Reset();
+	vertexUploadBuffer_.Reset();
+	indexUploadBuffer_.Reset();
 }
 
-void CMesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
+void Mesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
-	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dVertexBufferView);
+	pd3dCommandList->IASetPrimitiveTopology(primitiveTopology_);
+	pd3dCommandList->IASetVertexBuffers(slot_, 1, &vertexBufferView_);
 
-	if (m_pd3dIndexBuffer) {
+	if (indexBuffer_) {
 		//인덱스 버퍼가 있으면 인덱스 버퍼를 파이프라인(IA: 입력 조립기)에 연결하고 인덱스를 사용하여 렌더링한다.
-		pd3dCommandList->IASetIndexBuffer(&m_d3dIndexBufferView);
-		pd3dCommandList->DrawIndexedInstanced(m_nIndices, 1, 0, 0, 0);
+		pd3dCommandList->IASetIndexBuffer(&indexBufferView_);
+		pd3dCommandList->DrawIndexedInstanced(indices_, 1, 0, 0, 0);
 	}
 	else
 	{
-		pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
+		pd3dCommandList->DrawInstanced(vertices_, 1, offset_, 0);
 	}
 }
 
-CTriangleMesh::CTriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CMesh(pd3dDevice, pd3dCommandList)
+TriangleMesh::TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : Mesh(pd3dDevice, pd3dCommandList)
 {
 	// 삼각형 메쉬 정의
-	m_nVertices = 3;
-	m_nStride = sizeof(CDiffusedVertex);
-	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	vertices_ = 3;
+	stride_ = sizeof(DiffusedVertex);
+	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	// 정점의 색상을 시계방향 순서대로 R, G, B 로 지정 RGBA로 색상을 표현.
-	CDiffusedVertex pVertices[3];
-	pVertices[0] = CDiffusedVertex(Vector3(0.0f, 6.0f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-	pVertices[1] = CDiffusedVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
-	pVertices[2] = CDiffusedVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+	DiffusedVertex pVertices[3];
+	pVertices[0] = DiffusedVertex(Vector3(0.0f, 6.0f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	pVertices[1] = DiffusedVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+	pVertices[2] = DiffusedVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 	
-	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, m_pd3dVertexUploadBuffer);
+	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertices_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
 
 	// 정점 버퍼 뷰 생성
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
+	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
+	vertexBufferView_.StrideInBytes = stride_;
+	vertexBufferView_.SizeInBytes = stride_ * vertices_;
 }
 
-CCubeMeshDiffused::CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList * pd3dCommandList, float fWidth, float fHeight, float fDepth) : CMesh(pd3dDevice, pd3dCommandList)
+CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList * pd3dCommandList, float fWidth, float fHeight, float fDepth) : Mesh(pd3dDevice, pd3dCommandList)
 {
 	//직육면체는 꼭지점(정점)이 8개이다.
-	m_nVertices = 8;
-	m_nStride = sizeof(CDiffusedVertex);
-	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	vertices_ = 8;
+	stride_ = sizeof(DiffusedVertex);
+	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
 
 	//정점 버퍼는 직육면체의 꼭지점 8개에 대한 정점 데이터를 가진다.
-	CDiffusedVertex pVertices[8];
-	pVertices[0] = CDiffusedVertex(Vector3(-fx, +fy, -fz), RANDOM_COLOR);
-	pVertices[1] = CDiffusedVertex(Vector3(+fx, +fy, -fz), RANDOM_COLOR);
-	pVertices[2] = CDiffusedVertex(Vector3(+fx, +fy, +fz), RANDOM_COLOR);
-	pVertices[3] = CDiffusedVertex(Vector3(-fx, +fy, +fz), RANDOM_COLOR);
-	pVertices[4] = CDiffusedVertex(Vector3(-fx, -fy, -fz), RANDOM_COLOR);
-	pVertices[5] = CDiffusedVertex(Vector3(+fx, -fy, -fz), RANDOM_COLOR);
-	pVertices[6] = CDiffusedVertex(Vector3(+fx, -fy, +fz), RANDOM_COLOR);
-	pVertices[7] = CDiffusedVertex(Vector3(-fx, -fy, +fz), RANDOM_COLOR);
-	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, m_nStride * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, m_pd3dVertexUploadBuffer);
-	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
-	m_d3dVertexBufferView.StrideInBytes = m_nStride;
-	m_d3dVertexBufferView.SizeInBytes = m_nStride * m_nVertices;
+	DiffusedVertex pVertices[8];
+	pVertices[0] = DiffusedVertex(Vector3(-fx, +fy, -fz), RANDOM_COLOR);
+	pVertices[1] = DiffusedVertex(Vector3(+fx, +fy, -fz), RANDOM_COLOR);
+	pVertices[2] = DiffusedVertex(Vector3(+fx, +fy, +fz), RANDOM_COLOR);
+	pVertices[3] = DiffusedVertex(Vector3(-fx, +fy, +fz), RANDOM_COLOR);
+	pVertices[4] = DiffusedVertex(Vector3(-fx, -fy, -fz), RANDOM_COLOR);
+	pVertices[5] = DiffusedVertex(Vector3(+fx, -fy, -fz), RANDOM_COLOR);
+	pVertices[6] = DiffusedVertex(Vector3(+fx, -fy, +fz), RANDOM_COLOR);
+	pVertices[7] = DiffusedVertex(Vector3(-fx, -fy, +fz), RANDOM_COLOR);
+	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertices_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
+	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
+	vertexBufferView_.StrideInBytes = stride_;
+	vertexBufferView_.SizeInBytes = stride_ * vertices_;
 
 	/*인덱스 버퍼는 직육면체의 6개의 면(사각형)에 대한 기하 정보를 갖는다. 삼각형 리스트로 직육면체를 표현할 것이
    므로 각 면은 2개의 삼각형을 가지고 각 삼각형은 3개의 정점이 필요하다. 즉, 인덱스 버퍼는 전체 36(=6*2*3)개의 인
    덱스를 가져야 한다.*/
 
-	m_nIndices = 36;
+	indices_ = 36;
 	UINT pnIndices[36];
 
 	//ⓐ 앞면(Front) 사각형의 위쪽 삼각형
@@ -118,16 +118,16 @@ CCubeMeshDiffused::CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	pnIndices[33] = 7; pnIndices[34] = 4; pnIndices[35] = 6;
 
 	//인덱스 버퍼를 생성한다.
-	m_pd3dIndexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pnIndices,
-		sizeof(UINT) * m_nIndices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
-		m_pd3dIndexUploadBuffer);
+	indexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pnIndices,
+		sizeof(UINT) * indices_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
+		indexUploadBuffer_);
 
 	//인덱스 버퍼 뷰를 생성한다.
-	m_d3dIndexBufferView.BufferLocation = m_pd3dIndexBuffer->GetGPUVirtualAddress();
-	m_d3dIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_d3dIndexBufferView.SizeInBytes = sizeof(UINT) * m_nIndices;
+	indexBufferView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress();
+	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+	indexBufferView_.SizeInBytes = sizeof(UINT) * indices_;
 }
 
-CCubeMeshDiffused::~CCubeMeshDiffused()
+CubeMeshDiffused::~CubeMeshDiffused()
 {
 }

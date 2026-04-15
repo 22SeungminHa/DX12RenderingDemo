@@ -6,14 +6,14 @@
 // 게임 객체의 정보를 셰이더에게 넘겨주기 위한 구조체(상수 버퍼)이다.
 struct CB_GAMEOBJECT_INFO
 {
-    Matrix m_xmf4x4World;
+    Matrix worldMatrix;
 };
 
-class CShader
+class Shader
 {
 public:
-    CShader();
-    virtual ~CShader();
+    Shader();
+    virtual ~Shader();
 
     virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState();
@@ -34,14 +34,14 @@ public:
     virtual void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, const Matrix& world);
 
     virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
-    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
 
 protected:
-    std::vector<ComPtr<ID3D12PipelineState>> m_pipelineStates;
-    std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputElementDescs;
+    std::vector<ComPtr<ID3D12PipelineState>> pipelineStates_;
+    std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
 };
 
-class CDiffusedShader : public CShader
+class CDiffusedShader : public Shader
 {
 public:
     CDiffusedShader();

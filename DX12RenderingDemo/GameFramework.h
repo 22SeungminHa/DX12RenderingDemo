@@ -5,32 +5,31 @@
 #include "Renderer.h"
 #include "InputSystem.h"
 
-class CGameFramework {
+class GameFramework {
 private:
-	CGameTimer m_GameTimer;
-	_TCHAR m_pszFrameRate[50];
+	Timer timer_;
+	TCHAR frameRate_[50];
 
-	HINSTANCE m_hInstance;
-	HWND m_hWnd;
+	HINSTANCE instance_{};
+	HWND hwnd_{};
 
-	std::unique_ptr<CSceneManager> m_pSceneManager;
-	std::unique_ptr<CRenderer> m_pRenderer;
-	std::unique_ptr<CInputSystem> m_pInputSystem;
+	std::unique_ptr<SceneManager> sceneManager_;
+	std::unique_ptr<Renderer> renderer_;
+	std::unique_ptr<InputSystem> inputSystem_;
 
 public:
-	CGameFramework();
-	~CGameFramework();
+	GameFramework();
+	~GameFramework();
 
 	// 프레임 워크 초기화 함수(주 윈도우 생성 시 호출)
-	bool OnCreate(HINSTANCE hInstance, HWND hMainwnd);
-	void OnDestroy();
-	void OnResize();
+	bool onCreate(HINSTANCE instance, HWND hwnd);
+	void onDestroy();
+	void onResize();
 
-	void Animate();
-	void FrameAdvance();
-
-	void ProcessSceneChange();
+	void animate();
+	void frameAdvance();
+	void processSceneChange();
 
 	//윈도우의 메시지(키보드, 마우스 입력)를 처리하는 함수이다. 
-	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+	LRESULT CALLBACK onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };

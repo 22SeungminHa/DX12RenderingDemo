@@ -1,76 +1,76 @@
 #pragma once
 #include "pch.h"
 
-class CVertex
+class Vertex
 {
 protected:
-	Vector3 m_xmf3Position;
+	Vector3 position_;
 public:
-	CVertex() { m_xmf3Position = Vector3::Zero;  }
-	CVertex(const Vector3& xmf3Position) { m_xmf3Position = xmf3Position; }
-	~CVertex() {}
+	Vertex() { position_ = Vector3::Zero;  }
+	Vertex(const Vector3& xmf3Position) { position_ = xmf3Position; }
+	~Vertex() {}
 };
 
-class CDiffusedVertex : public CVertex
+class DiffusedVertex : public Vertex
 {
 protected:
-	Vector4 m_xmf4Diffuse;
+	Vector4 diffuse_;
 
 public:
-	CDiffusedVertex() { m_xmf3Position = Vector3::Zero; m_xmf4Diffuse = Vector4::Zero; }
-	CDiffusedVertex(float x, float y, float z, const Vector4& xmf4Diffuse) { m_xmf3Position = Vector3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; }
-	CDiffusedVertex(const Vector3& xmf3Position, const Vector4& xmf4Diffuse) { m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; }
-	~CDiffusedVertex() { }
+	DiffusedVertex() { position_ = Vector3::Zero; diffuse_ = Vector4::Zero; }
+	DiffusedVertex(float x, float y, float z, const Vector4& xmf4Diffuse) { position_ = Vector3(x, y, z); diffuse_ = xmf4Diffuse; }
+	DiffusedVertex(const Vector3& xmf3Position, const Vector4& xmf4Diffuse) { position_ = xmf3Position; diffuse_ = xmf4Diffuse; }
+	~DiffusedVertex() { }
 };
 
-class CMesh
+class Mesh
 {
 public:
-	CMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual ~CMesh();
+	Mesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual ~Mesh();
 
 public:
 	void ReleaseUploadBuffers();
 
 protected:
-	ComPtr<ID3D12Resource> m_pd3dVertexBuffer = NULL;
-	ComPtr<ID3D12Resource> m_pd3dVertexUploadBuffer = NULL;
+	ComPtr<ID3D12Resource> vertexBuffer_ = NULL;
+	ComPtr<ID3D12Resource> vertexUploadBuffer_ = NULL;
 
-	D3D12_VERTEX_BUFFER_VIEW m_d3dVertexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 
-	D3D12_PRIMITIVE_TOPOLOGY m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	D3D12_PRIMITIVE_TOPOLOGY primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	UINT m_nSlot = 0;
-	UINT m_nVertices = 0;
-	UINT m_nStride = 0;
-	UINT m_nOffset = 0;
+	UINT slot_ = 0;
+	UINT vertices_ = 0;
+	UINT stride_ = 0;
+	UINT offset_ = 0;
 
-	ComPtr<ID3D12Resource> m_pd3dIndexBuffer = NULL;
-	ComPtr<ID3D12Resource> m_pd3dIndexUploadBuffer = NULL;
+	ComPtr<ID3D12Resource> indexBuffer_ = NULL;
+	ComPtr<ID3D12Resource> indexUploadBuffer_ = NULL;
 
-	D3D12_INDEX_BUFFER_VIEW m_d3dIndexBufferView;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView_;
 	/*인덱스 버퍼(인덱스의 배열)와 인덱스 버퍼를 위한 업로드 버퍼에 대한 인터페이스 포인터이다. 
 	인덱스 버퍼는 정점 버퍼(배열)에 대한 인덱스를 가진다.*/
 
-	UINT m_nIndices = 0;		//인덱스 버퍼에 포함되는 인덱스의 개수이다.
-	UINT m_nStartIndex = 0; 	//인덱스 버퍼에서 메쉬를 그리기 위해 사용되는 시작 인덱스이다. 
-	int m_nBaseVertex = 0;		//인덱스 버퍼의 인덱스에 더해질 인덱스이다.
+	UINT indices_ = 0;		//인덱스 버퍼에 포함되는 인덱스의 개수이다.
+	UINT startIndex_ = 0; 	//인덱스 버퍼에서 메쉬를 그리기 위해 사용되는 시작 인덱스이다. 
+	int baseVertex_ = 0;		//인덱스 버퍼의 인덱스에 더해질 인덱스이다.
 
 public:
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList);
 };
 
-class CTriangleMesh : public CMesh
+class TriangleMesh : public Mesh
 {
 public:
-	CTriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual ~CTriangleMesh(){ }
+	TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual ~TriangleMesh(){ }
 };
 
-class CCubeMeshDiffused : public CMesh
+class CubeMeshDiffused : public Mesh
 {
 public:
 	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다.
-	CCubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
-	virtual ~CCubeMeshDiffused();
+	CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
+	virtual ~CubeMeshDiffused();
 };

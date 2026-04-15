@@ -2,18 +2,18 @@
 #include "D3DCore.h"
 #include "Camera.h"
 
-class CScene;
+class Scene;
 
-class CRenderer {
+class Renderer {
 private:
-	CD3DCore mD3DCore;
-	std::unique_ptr<CCamera> mCamera;
+	CD3DCore d3dCore_;
+	std::unique_ptr<Camera> camera_;
 
 public:
-	CRenderer();
-	~CRenderer();
+	Renderer();
+	~Renderer();
 
-	bool Initialize(HWND hWnd, UINT width, UINT height);
+	bool Initialize(HWND hwnd, UINT width, UINT height);
 	void Shutdown();
 
 	void Resize(UINT width, UINT height);
@@ -23,13 +23,13 @@ public:
 	void BeginSceneLoad();
 	void EndSceneLoad();
 
-	void Render(CScene* scene);
+	void Render(Scene* scene);
 
 	void ChangeSwapChainState();
 	void WaitForGpuComplete();
 
-	ID3D12Device* GetDevice() const { return mD3DCore.GetDevice(); }
-	ID3D12GraphicsCommandList* GetCommandList() const { return mD3DCore.GetCommandList(); }
-	CCamera* GetCamera() const { return mCamera.get(); }
+	ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
+	Camera* GetCamera() const { return camera_.get(); }
 };
 

@@ -3,7 +3,7 @@
 
 class CD3DCore {
 public:
-    static const UINT swapChainBufferCount = 2;
+    static const UINT swapChainBufferCnt_ = 2;
 
 private:
     struct HandleCloser
@@ -38,52 +38,52 @@ public:
     void BeginRender(const float clearColor[4]);
     void EndRender();
 
-    void Resize(UINT width, UINT height) { mClientWidth = width; mClientHeight = height; }
+    void Resize(UINT width, UINT height) { clientWidth_ = width; clientHeight_ = height; }
 
 public:
-    UINT GetClientWidth() const { return mClientWidth; }
-    UINT GetClientHeight() const { return mClientHeight; }
+    UINT GetClientWidth() const { return clientWidth_; }
+    UINT GetClientHeight() const { return clientHeight_; }
 
-    ID3D12Device* GetDevice() const { return mD3DDevice.Get(); }
-    IDXGISwapChain3* GetSwapChain() const { return mSwapChain.Get(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return mCommandList.Get(); }
-    ID3D12CommandQueue* GetCommandQueue() const { return mCommandQueue.Get(); }
+    ID3D12Device* GetDevice() const { return device_.Get(); }
+    IDXGISwapChain3* GetSwapChain() const { return swapChain_.Get(); }
+    ID3D12GraphicsCommandList* GetCommandList() const { return cmdList_.Get(); }
+    ID3D12CommandQueue* GetCommandQueue() const { return cmdQueue_.Get(); }
 
-    ID3D12Resource* GetCurrentRenderTarget() const { return mRenderTargetBuffers[mSwapChainBufferIndex].Get(); }
-    UINT GetCurrentBackBufferIndex() const { return mSwapChainBufferIndex; }
+    ID3D12Resource* GetCurrentRenderTarget() const { return renderTargetBuffers_[swapChainBufferIndex_].Get(); }
+    UINT GetCurrentBackBufferIndex() const { return swapChainBufferIndex_; }
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRtvHandle() const;
     D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() const;
 
-    UINT GetRtvDescriptorIncrementSize() const { return mRtvDescriptorIncrementSize; }
-    UINT GetDsvDescriptorIncrementSize() const { return mDsvDescriptorIncrementSize; }
+    UINT GetRtvDescriptorIncrementSize() const { return rtvDescriptorIncrementSize_; }
+    UINT GetDsvDescriptorIncrementSize() const { return dsvDescriptorIncrementSize_; }
 
 private:
-    ComPtr<IDXGIFactory4> mDXGIFactory;
-    ComPtr<IDXGISwapChain3> mSwapChain;
-    ComPtr<ID3D12Device> mD3DDevice;
+    ComPtr<IDXGIFactory4> factory_;
+    ComPtr<IDXGISwapChain3> swapChain_;
+    ComPtr<ID3D12Device> device_;
 
-    bool mMSAAEnable = false;
-    UINT mMSAAQualityLevels = 0;
+    bool msaaEnable_ = false;
+    UINT msaaQualityLevel_ = 0;
 
-    UINT mSwapChainBufferIndex = 0;
+    UINT swapChainBufferIndex_ = 0;
 
-    std::array<ComPtr<ID3D12Resource>, swapChainBufferCount> mRenderTargetBuffers;
-    ComPtr<ID3D12DescriptorHeap> mRtvDescriptorHeap;
-    UINT mRtvDescriptorIncrementSize = 0;
+    std::array<ComPtr<ID3D12Resource>, swapChainBufferCnt_> renderTargetBuffers_;
+    ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
+    UINT rtvDescriptorIncrementSize_ = 0;
 
-    ComPtr<ID3D12Resource> mDepthStencilBuffer;
-    ComPtr<ID3D12DescriptorHeap> mDsvDescriptorHeap;
-    UINT mDsvDescriptorIncrementSize = 0;
+    ComPtr<ID3D12Resource> depthStencilBuffer_;
+    ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
+    UINT dsvDescriptorIncrementSize_ = 0;
 
-    ComPtr<ID3D12CommandQueue> mCommandQueue;
-    ComPtr<ID3D12CommandAllocator> mCommandAllocator;
-    ComPtr<ID3D12GraphicsCommandList> mCommandList;
+    ComPtr<ID3D12CommandQueue> cmdQueue_;
+    ComPtr<ID3D12CommandAllocator> cmdAllocator_;
+    ComPtr<ID3D12GraphicsCommandList> cmdList_;
 
-    ComPtr<ID3D12Fence> mFence;
-    UINT64 mFenceValues[swapChainBufferCount] = {};
-    unique_handle mFenceEvent{ nullptr };
+    ComPtr<ID3D12Fence> fence_;
+    UINT64 fenceValues_[swapChainBufferCnt_] = {};
+    unique_handle fenceEvent_{ nullptr };
 
-    UINT mClientWidth = 0;
-    UINT mClientHeight = 0;
+    UINT clientWidth_ = 0;
+    UINT clientHeight_ = 0;
 };

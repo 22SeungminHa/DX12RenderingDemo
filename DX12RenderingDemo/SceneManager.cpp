@@ -1,85 +1,85 @@
 #include "SceneManager.h"
 #include "TestScene.h"
 
-std::unique_ptr<CScene> CSceneManager::CreateSceneByType(SCENE_TYPE sceneType)
+std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType)
 {
 	switch (sceneType) {
 	case SCENE_TYPE::TEST1:
-		return std::make_unique<CTestScene1>();
+		return std::make_unique<TestScene1>();
 	case SCENE_TYPE::TEST2:
-		return std::make_unique<CTestScene2>();
+		return std::make_unique<TestScene2>();
 	default:
 		return nullptr;
 	}
 }
 
-void CSceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void SceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-	mCurrentScene = CreateSceneByType(sceneType);
+	currentScene_ = CreateSceneByType(sceneType);
 
-	if (mCurrentScene) {
-		mCurrentSceneType = sceneType;
-		mCurrentScene->Load(device, cmdList);
+	if (currentScene_) {
+		currentSceneType_ = sceneType;
+		currentScene_->Load(device, cmdList);
 	}
 	else {
-		mCurrentSceneType = SCENE_TYPE::NONE;
+		currentSceneType_ = SCENE_TYPE::NONE;
 	}
 }
 
-void CSceneManager::RequestChangeScene(SCENE_TYPE nextScene)
+void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 {
-	if (mCurrentScene && nextScene == mCurrentSceneType)
+	if (currentScene_ && nextScene == currentSceneType_)
 		return;
 
-	mSceneChangeRequested = true;
-	mNextSceneType = nextScene;
+	sceneChangeRequested_ = true;
+	nextSceneType_ = nextScene;
 }
 
-void CSceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-	if (!mSceneChangeRequested) return;
+	if (!sceneChangeRequested_) return;
 
 	ReleaseScene();
-	CreateScene(mNextSceneType, device, cmdList);
-	mSceneChangeRequested = false;
-	mNextSceneType = SCENE_TYPE::NONE;
+	CreateScene(nextSceneType_, device, cmdList);
+	sceneChangeRequested_ = false;
+	nextSceneType_ = SCENE_TYPE::NONE;
 }
 
-void CSceneManager::ReleaseScene()
+void SceneManager::ReleaseScene()
 {
-	if (mCurrentScene) {
-		mCurrentScene->Unload();
-		mCurrentScene.reset();
+	if (currentScene_) {
+		currentScene_->Unload();
+		currentScene_.reset();
 	}
 
-	mCurrentSceneType = SCENE_TYPE::NONE;
+	currentSceneType_ = SCENE_TYPE::NONE;
 }
 
-void CSceneManager::ReleaseUploadBuffers()
+void SceneManager::ReleaseUploadBuffers()
 {
-	if (mCurrentScene) mCurrentScene->ReleaseUploadBuffers();
+	if (currentScene_) currentScene_->ReleaseUploadBuffers();
 }
 
-bool CSceneManager::ProcessInput(const UCHAR* keysBuffer)
+bool SceneManager::ProcessInput(const UCHAR* keysBuffer)
 {
-	if (mCurrentScene) return mCurrentScene->ProcessInput(keysBuffer);
+	if (currentScene_) return currentScene_->ProcessInput(keysBuffer);
 	return false;
 }
 
-bool CSceneManager::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
+bool SceneManager::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (mCurrentScene && mCurrentScene->OnProcessingKeyboardMessage(hWnd, messageID, wParam, lParam))
+	if (currentScene_ && currentScene_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
 		return true;
 
-	switch (messageID) {
+	switch (msg) {
 	case WM_KEYUP:
 		switch (wParam) {
 		case VK_SPACE:
-			if (mCurrentSceneType == SCENE_TYPE::TEST1) {
+			if (currentSceneType_ == SCENE_TYPE::TEST1) {
 				RequestChangeScene(SCENE_TYPE::TEST2);
 				return true;
 			}
-			else if (mCurrentSceneType == SCENE_TYPE::TEST2) {
+			else if (currentSceneType_ == SCENE_TYPE::TEST2) {
 				RequestChangeScene(SCENE_TYPE::TEST1);
 				return true;
 			}
@@ -95,12 +95,12 @@ bool CSceneManager::OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARA
 	return false;
 }
 
-bool CSceneManager::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam)
+bool SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (mCurrentScene && mCurrentScene->OnProcessingMouseMessage(hWnd, messageID, wParam, lParam))
+	if (currentScene_ && currentScene_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
 		return true;
 
-	switch (messageID)
+	switch (msg)
 	{
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -117,12 +117,12 @@ bool CSceneManager::OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM w
 	return false;
 }
 
-void CSceneManager::Animate(float deltaTime)
+void SceneManager::Animate(float deltaTime)
 {
-	if (mCurrentScene) mCurrentScene->Animate(deltaTime);
+	if (currentScene_) currentScene_->Animate(deltaTime);
 }
 
-void CSceneManager::Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera)
+void SceneManager::Render(ID3D12GraphicsCommandList* cmdList, Camera* camera)
 {
-	if (mCurrentScene) mCurrentScene->Render(cmdList, camera);
+	if (currentScene_) currentScene_->Render(cmdList, camera);
 }

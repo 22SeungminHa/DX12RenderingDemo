@@ -2,63 +2,63 @@
 #include "Shader.h"
 #include "Camera.h"
 
-CGameObject::CGameObject()
+GameObject::GameObject()
 {
-	m_xmf4x4World = Matrix::Identity;
+	worldMatrix = Matrix::Identity;
 } 
 
-CGameObject::~CGameObject()
+GameObject::~GameObject()
 {
-	if (m_pShader) m_pShader->ReleaseShaderVariables();
+	if (shader_) shader_->ReleaseShaderVariables();
 }
 
-void CGameObject::SetShader(CShader* pShader)
+void GameObject::SetShader(Shader* pShader)
 {
-	m_pShader.reset(pShader);
+	shader_.reset(pShader);
 }
 
-void CGameObject::SetMesh(CMesh* pMesh)
+void GameObject::SetMesh(Mesh* pMesh)
 {
-	m_pMesh.reset(pMesh);
+	mesh_.reset(pMesh);
 }
 
-void CGameObject::ReleaseUploadBuffers()
+void GameObject::ReleaseUploadBuffers()
 {
-	if (m_pMesh) m_pMesh->ReleaseUploadBuffers();
+	if (mesh_) mesh_->ReleaseUploadBuffers();
 }
 
-void CGameObject::Animate(float fTimeElapsed)
-{
-}
-
-void CGameObject::OnPrepareRender()
+void GameObject::Animate(float fTimeElapsed)
 {
 }
 
-void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+void GameObject::OnPrepareRender()
+{
+}
+
+void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
 {
 	OnPrepareRender();
 
-	if (m_pShader)
+	if (shader_)
 	{
 		//게임 객체의 월드 변환 행렬을 셰이더의 상수 버퍼로 전달(복사)한다.
-		m_pShader->UpdateShaderVariable(pd3dCommandList, m_xmf4x4World);
-		m_pShader->Render(pd3dCommandList, pCamera);
+		shader_->UpdateShaderVariable(pd3dCommandList, worldMatrix);
+		shader_->Render(pd3dCommandList, pCamera);
 	}
 
-	if (m_pMesh) m_pMesh->Render(pd3dCommandList);
+	if (mesh_) mesh_->Render(pd3dCommandList);
 }
 
-void CGameObject::Rotate(const Vector3& axis, float angle)
+void GameObject::Rotate(const Vector3& axis, float angle)
 {
 	Matrix mtxRotate = Matrix::CreateFromAxisAngle(axis, XMConvertToRadians(angle));
-	m_xmf4x4World = mtxRotate * m_xmf4x4World;
+	worldMatrix = mtxRotate * worldMatrix;
 }
 
 CRotatingObject::CRotatingObject()
 {
-	m_xmf3RotationAxis = Vector3::Up;
-	m_fRotationSpeed = 90.0f;
+	rotationAxis_ = Vector3::Up;
+	rotationSpeed_ = 90.0f;
 }
 
 CRotatingObject::~CRotatingObject()
@@ -67,5 +67,5 @@ CRotatingObject::~CRotatingObject()
 
 void CRotatingObject::Animate(float fTimeElapsed)
 {
-	CGameObject::Rotate(m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
+	GameObject::Rotate(rotationAxis_, rotationSpeed_ * fTimeElapsed);
 }

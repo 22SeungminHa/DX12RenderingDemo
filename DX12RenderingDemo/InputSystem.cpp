@@ -1,25 +1,25 @@
 #include "InputSystem.h"
 
-void CInputSystem::Initialize(HWND hWnd, CSceneManager* pSceneManager, CRenderer* pRenderer)
+void InputSystem::Initialize(HWND hwnd, SceneManager* sceneManager, Renderer* renderer)
 {
-	m_hWnd = hWnd;
-	m_pSceneManager = pSceneManager;
-	m_pRenderer = pRenderer;
+	hwnd_ = hwnd;
+	sceneManager_ = sceneManager;
+	renderer_ = renderer;
 }
 
-void CInputSystem::ProcessInput()
+void InputSystem::ProcessInput()
 {
-	if (!m_pSceneManager) return;
+	if (!sceneManager_) return;
 
 	UCHAR keysBuffer[256] = {};
 	::GetKeyboardState(keysBuffer);
 
-	m_pSceneManager->ProcessInput(keysBuffer);
+	sceneManager_->ProcessInput(keysBuffer);
 }
 
-bool CInputSystem::OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+bool InputSystem::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pSceneManager && m_pSceneManager->OnProcessingMouseMessage(hWnd, msg, wParam, lParam))
+	if (sceneManager_ && sceneManager_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
 		return true;
 
 	switch (msg) {
@@ -38,9 +38,9 @@ bool CInputSystem::OnProcessingMouseMessage(HWND hWnd, UINT msg, WPARAM wParam, 
 	return false;
 }
 
-bool CInputSystem::OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+bool InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (m_pSceneManager && m_pSceneManager->OnProcessingKeyboardMessage(hWnd, msg, wParam, lParam))
+	if (sceneManager_ && sceneManager_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
 		return true;
 
 	switch (msg) {
@@ -50,20 +50,20 @@ bool CInputSystem::OnProcessingKeyboardMessage(HWND hWnd, UINT msg, WPARAM wPara
 			::PostQuitMessage(0);
 			return true;
 		case VK_SPACE:
-			if (!m_pSceneManager) break;
+			if (!sceneManager_) break;
 
-			if (m_pSceneManager->GetSceneType() == SCENE_TYPE::TEST1) {
-				m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST2);
+			if (sceneManager_->GetSceneType() == SCENE_TYPE::TEST1) {
+				sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
 				return true;
 			}
-			else if (m_pSceneManager->GetSceneType() == SCENE_TYPE::TEST2) {
-				m_pSceneManager->RequestChangeScene(SCENE_TYPE::TEST1);
+			else if (sceneManager_->GetSceneType() == SCENE_TYPE::TEST2) {
+				sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
 				return true;
 			}
 			break;
 		case VK_F9:
-			if (m_pRenderer) {
-				m_pRenderer->ChangeSwapChainState();
+			if (renderer_) {
+				renderer_->ChangeSwapChainState();
 				return true;
 			}
 			break;

@@ -10,7 +10,7 @@ struct VS_CB_CAMERA_INFO
     Matrix m_xmf4x4Projection;
 };
 
-class CCamera
+class Camera
 {
 protected:
     // 카메라 변환 행렬
@@ -22,8 +22,8 @@ protected:
     D3D12_RECT m_d3dScissorRect;
 
 public:
-    CCamera();
-    virtual ~CCamera();
+    Camera();
+    virtual ~Camera();
 
     virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
     virtual void ReleaseShaderVariables();

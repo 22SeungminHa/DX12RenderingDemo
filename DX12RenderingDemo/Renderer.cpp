@@ -1,79 +1,79 @@
 #include "Renderer.h"
 #include "Scene.h"
 
-CRenderer::CRenderer()
+Renderer::Renderer()
 {
 }
 
-CRenderer::~CRenderer()
+Renderer::~Renderer()
 {
 }
 
-bool CRenderer::Initialize(HWND hWnd, UINT width, UINT height)
+bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
-    mD3DCore.Initialize(hWnd, width, height);
+    d3dCore_.Initialize(hwnd, width, height);
     CreateCamera(width, height);
     return true;
 }
 
-void CRenderer::Shutdown()
+void Renderer::Shutdown()
 {
-    mD3DCore.Shutdown();
+    d3dCore_.Shutdown();
 }
 
-void CRenderer::CreateCamera(UINT width, UINT height)
+void Renderer::CreateCamera(UINT width, UINT height)
 {
-    mCamera = std::make_unique<CCamera>();
-    mCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-    mCamera->SetScissorRect(0, 0, width, height);
-    mCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
-    mCamera->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
+    camera_ = std::make_unique<Camera>();
+    camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
+    camera_->SetScissorRect(0, 0, width, height);
+    camera_->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
+    camera_->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 }
 
-void CRenderer::Resize(UINT width, UINT height)
+void Renderer::Resize(UINT width, UINT height)
 {
-    if (!mCamera || width == 0 || height == 0) return;
+    if (!camera_ || width == 0 || height == 0) return;
 
-    mD3DCore.Resize(width, height);
+    d3dCore_.Resize(width, height);
 
-    mCamera->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-    mCamera->SetScissorRect(0, 0, width, height);
-    mCamera->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
+    camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
+    camera_->SetScissorRect(0, 0, width, height);
+    camera_->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
 }
 
-void CRenderer::BeginSceneLoad()
+void Renderer::BeginSceneLoad()
 {
-    mD3DCore.WaitForGpuComplete();
-    mD3DCore.ResetCommandList();
+    d3dCore_.WaitForGpuComplete();
+    d3dCore_.ResetCommandList();
 }
 
-void CRenderer::EndSceneLoad()
+void Renderer::EndSceneLoad()
 {
-    mD3DCore.ExecuteCommandList();
-    mD3DCore.WaitForGpuComplete();
+    d3dCore_.ExecuteCommandList();
+    d3dCore_.WaitForGpuComplete();
 }
 
-void CRenderer::Render(CScene* scene)
+void Renderer::Render(Scene* scene)
 {
     float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 
-    mD3DCore.ResetCommandList();
+    d3dCore_.ResetCommandList();
 
-    mD3DCore.BeginRender(clearColor);
-    if (scene) scene->Render(mD3DCore.GetCommandList(), mCamera.get());
-    mD3DCore.EndRender();
+    d3dCore_.BeginRender(clearColor);
+    if (scene) scene->Render(d3dCore_.GetCommandList(), camera_.get());
+    d3dCore_.EndRender();
 
-    mD3DCore.ExecuteCommandList();
-    mD3DCore.Present(0, 0);
-    mD3DCore.MoveToNextFrame();
+    d3dCore_.ExecuteCommandList();
+    d3dCore_.Present(0, 0);
+    d3dCore_.MoveToNextFrame();
 }
 
-void CRenderer::ChangeSwapChainState()
+void Renderer::ChangeSwapChainState()
 {
-    mD3DCore.ChangeSwapChainState();
+    d3dCore_.ChangeSwapChainState();
 }
 
-void CRenderer::WaitForGpuComplete()
+void Renderer::WaitForGpuComplete()
 {
-    mD3DCore.WaitForGpuComplete();
+    d3dCore_.WaitForGpuComplete();
 }

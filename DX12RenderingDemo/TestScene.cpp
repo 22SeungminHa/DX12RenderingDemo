@@ -1,37 +1,37 @@
 #include "TestScene.h"
 
-void CTestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    mGraphicsRootSignature = CreateGraphicsRootSignature(device);
+    rootSignature_ = CreateGraphicsRootSignature(device);
 
-    auto cubeMesh = std::make_unique<CCubeMeshDiffused>(device, cmdList, 12.0f, 12.0f, 12.0f);
+    auto cubeMesh = std::make_unique<CubeMeshDiffused>(device, cmdList, 12.0f, 12.0f, 12.0f);
 
     auto rotatingObject = std::make_unique<CRotatingObject>();
     rotatingObject->SetMesh(cubeMesh.release());
 
     auto shader = std::make_unique<CDiffusedShader>();
-    shader->CreateShader(device, mGraphicsRootSignature.Get());
+    shader->CreateShader(device, rootSignature_.Get());
     shader->CreateShaderVariables(device, cmdList);
     rotatingObject->SetShader(shader.release());
 
-    mObjects.clear();
-    mObjects.push_back(std::move(rotatingObject));
+    objects_.clear();
+    objects_.push_back(std::move(rotatingObject));
 }
 
-void CTestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    mGraphicsRootSignature = CreateGraphicsRootSignature(device);
+    rootSignature_ = CreateGraphicsRootSignature(device);
 
-    auto triMesh = std::make_unique<CTriangleMesh>(device, cmdList);
+    auto triMesh = std::make_unique<TriangleMesh>(device, cmdList);
 
     auto rotatingObject = std::make_unique<CRotatingObject>();
     rotatingObject->SetMesh(triMesh.release());
 
     auto shader = std::make_unique<CDiffusedShader>();
-    shader->CreateShader(device, mGraphicsRootSignature.Get());
+    shader->CreateShader(device, rootSignature_.Get());
     shader->CreateShaderVariables(device, cmdList);
     rotatingObject->SetShader(shader.release());
 
-    mObjects.clear();
-    mObjects.push_back(std::move(rotatingObject));
+    objects_.clear();
+    objects_.push_back(std::move(rotatingObject));
 }

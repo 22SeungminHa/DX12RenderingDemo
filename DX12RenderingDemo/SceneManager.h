@@ -1,22 +1,22 @@
 #pragma once
 #include "Scene.h"
 
-class CSceneManager {
+class SceneManager {
 private:
-    std::unique_ptr<CScene> mCurrentScene;
-    SCENE_TYPE mCurrentSceneType = SCENE_TYPE::NONE;
-    SCENE_TYPE mNextSceneType = SCENE_TYPE::NONE;
-    bool mSceneChangeRequested = false;
+    std::unique_ptr<Scene> currentScene_;
+    SCENE_TYPE currentSceneType_ = SCENE_TYPE::NONE;
+    SCENE_TYPE nextSceneType_ = SCENE_TYPE::NONE;
+    bool sceneChangeRequested_ = false;
 
     void CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 
 public:
-    CSceneManager() = default;
-    ~CSceneManager() = default;
+    SceneManager() = default;
+    ~SceneManager() = default;
 
-    CScene* GetScene() const { return mCurrentScene.get(); }
-    SCENE_TYPE GetSceneType() const { return mCurrentSceneType; }
-    bool HasSceneChange() const { return mSceneChangeRequested; }
+    Scene* GetScene() const { return currentScene_.get(); }
+    SCENE_TYPE GetSceneType() const { return currentSceneType_; }
+    bool HasSceneChange() const { return sceneChangeRequested_; }
 
     void RequestChangeScene(SCENE_TYPE nextScene);
     void ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
@@ -29,8 +29,8 @@ public:
     bool OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 
     void Animate(float deltaTime);
-    void Render(ID3D12GraphicsCommandList* cmdList, CCamera* camera);
+    void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera);
 
 private:
-    std::unique_ptr<CScene> CreateSceneByType(SCENE_TYPE sceneType);
+    std::unique_ptr<Scene> CreateSceneByType(SCENE_TYPE sceneType);
 };
