@@ -6,7 +6,7 @@ class Scene;
 
 class Renderer {
 private:
-	CD3DCore d3dCore_;
+	D3DCore d3dCore_;
 	std::unique_ptr<Camera> camera_;
 
 public:
