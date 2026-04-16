@@ -13,6 +13,8 @@ private:
 	HINSTANCE instance_{};
 	HWND hwnd_{};
 
+	bool isFullscreenChanging_ = false;
+
 	std::unique_ptr<SceneManager> sceneManager_;
 	std::unique_ptr<Renderer> renderer_;
 	std::unique_ptr<InputSystem> inputSystem_;
@@ -24,7 +26,8 @@ public:
 	// 프레임 워크 초기화 함수(주 윈도우 생성 시 호출)
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();
-	void onResize();
+
+	void ToggleFullscreen();
 
 	void animate();
 	void frameAdvance();

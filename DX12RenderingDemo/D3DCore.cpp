@@ -288,16 +288,16 @@ void D3DCore::ChangeSwapChainState()
     ThrowIfFailed(swapChain_->GetFullscreenState(&isFullScreen, nullptr));
     ThrowIfFailed(swapChain_->SetFullscreenState(!isFullScreen, nullptr));
 
-    DXGI_MODE_DESC targetDesc{};
-    targetDesc.Width = clientWidth_;
-    targetDesc.Height = clientHeight_;
-    targetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    targetDesc.RefreshRate.Numerator = 60;
-    targetDesc.RefreshRate.Denominator = 1;
-    targetDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-    targetDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+    //DXGI_MODE_DESC targetDesc{};
+    //targetDesc.Width = clientWidth_;
+    //targetDesc.Height = clientHeight_;
+    //targetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    //targetDesc.RefreshRate.Numerator = 60;
+    //targetDesc.RefreshRate.Denominator = 1;
+    //targetDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+    //targetDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 
-    ThrowIfFailed(swapChain_->ResizeTarget(&targetDesc));
+    //ThrowIfFailed(swapChain_->ResizeTarget(&targetDesc));
 
     ReleaseBackBuffers();
     depthStencilBuffer_.Reset();
@@ -306,8 +306,8 @@ void D3DCore::ChangeSwapChainState()
     ThrowIfFailed(swapChain_->GetDesc(&swapChainDesc));
     ThrowIfFailed(swapChain_->ResizeBuffers(
         swapChainBufferCnt_,
-        clientWidth_,
-        clientHeight_,
+        0, // 현재 창 크기에 맞춤
+        0,
         swapChainDesc.BufferDesc.Format,
         swapChainDesc.Flags));
 

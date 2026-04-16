@@ -50,23 +50,42 @@ void GameFramework::onDestroy()
 	if (renderer_) renderer_->Shutdown();
 }
 
-void GameFramework::onResize()
+void GameFramework::ToggleFullscreen()
 {
-	RECT rect;
-	::GetClientRect(hwnd_, &rect);
+	if (!renderer_) return;
 
+	isFullscreenChanging_ = true;
+
+	renderer_->WaitForGpuComplete();
+	renderer_->ChangeSwapChainState();
+
+	RECT rect{};
+	::GetClientRect(hwnd_, &rect);
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	if (renderer_) renderer_->Resize(width, height);
+	if (width > 0 && height > 0)
+		renderer_->Resize(width, height);
+
+	isFullscreenChanging_ = false;
 }
 
 LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {	
 	switch (msg) {
 	case WM_SIZE:
-		onResize();
+	{
+		if (wParam == SIZE_MINIMIZED) return 0;
+		if (isFullscreenChanging_) return 0;
+
+		UINT width = LOWORD(lParam);
+		UINT height = HIWORD(lParam);
+		if (width == 0 || height == 0) return 0;
+
+		ToggleFullscreen();
 		return 0;
+	}
+
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONUP:
