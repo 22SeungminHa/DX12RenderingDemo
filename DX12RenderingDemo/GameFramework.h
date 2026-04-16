@@ -7,6 +7,8 @@
 
 class GameFramework {
 private:
+	static constexpr UINT WM_APP_TOGGLE_FULLSCREEN = WM_APP + 1;
+
 	Timer timer_;
 	TCHAR frameRate_[50];
 
@@ -15,6 +17,7 @@ private:
 
 	bool isFullscreenChanging_ = false;
 	bool isBorderlessFullscreen_ = false;
+	bool pendingResizeAfterFullscreen_ = false;
 	WINDOWPLACEMENT windowPlacement_{ sizeof(WINDOWPLACEMENT) };
 	DWORD windowedStyle_ = 0;
 	DWORD windowedExStyle_ = 0;

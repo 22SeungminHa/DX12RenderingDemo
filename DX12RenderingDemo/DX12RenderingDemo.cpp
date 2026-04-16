@@ -145,23 +145,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_SIZE:
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    case WM_MOUSEMOVE:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-        gameFramework.onProcessingWindowMessage(hWnd, message, wParam, lParam);
-        break;
     case WM_DESTROY:
         ::PostQuitMessage(0);
-        break;
+        return 0;
     default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return gameFramework.onProcessingWindowMessage(hWnd, message, wParam, lParam);
     }
-    return 0;
 }
 
 // 정보 대화 상자의 메시지 처리기입니다.

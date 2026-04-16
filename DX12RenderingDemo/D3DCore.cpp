@@ -1,14 +1,5 @@
 #include "D3DCore.h"
 
-namespace
-{
-    constexpr DXGI_FORMAT kBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-    constexpr DXGI_FORMAT kDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    constexpr UINT kRefreshRateNumerator = 60;
-    constexpr UINT kRefreshRateDenominator = 1;
-    constexpr UINT kMsaaSampleCount = 4;
-}
-
 bool D3DCore::Initialize(HWND hwnd, int width, int height)
 {
     clientWidth_ = width;
@@ -245,7 +236,7 @@ void D3DCore::CreateRenderTargetViews()
         ThrowIfFailed(swapChain_->GetBuffer(i, IID_PPV_ARGS(renderTargetBuffers_[i].GetAddressOf())));
         device_->CreateRenderTargetView(renderTargetBuffers_[i].Get(), nullptr, rtvCPUDescriptorHandle);
 
-        renderTargetStates_[i] = D3D12_RESOURCE_STATE_COMMON;
+        renderTargetStates_[i] = D3D12_RESOURCE_STATE_PRESENT;
 
         rtvCPUDescriptorHandle.ptr += rtvDescriptorIncrementSize_;
     }

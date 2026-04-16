@@ -72,29 +72,25 @@ void GameFramework::ToggleFullscreen()
 
 	if (!isBorderlessFullscreen_)
 	{
+		windowPlacement_.length = sizeof(WINDOWPLACEMENT);
 		::GetWindowPlacement(hwnd_, &windowPlacement_);
 
 		HMONITOR hMonitor = ::MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
-		MONITORINFO monitorInfo{};
-		monitorInfo.cbSize = sizeof(MONITORINFO);
-		::GetMonitorInfo(hMonitor, &monitorInfo);
+		MONITORINFO mi{};
+		mi.cbSize = sizeof(MONITORINFO);
+		::GetMonitorInfo(hMonitor, &mi);
 
-		// 진짜 borderless fullscreen: WS_POPUP 사용
 		::SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 
 		::SetWindowPos(
 			hwnd_,
 			HWND_TOP,
-			monitorInfo.rcMonitor.left,
-			monitorInfo.rcMonitor.top,
-			monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-			monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+			mi.rcMonitor.left,
+			mi.rcMonitor.top,
+			mi.rcMonitor.right - mi.rcMonitor.left,
+			mi.rcMonitor.bottom - mi.rcMonitor.top,
 			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		::ShowWindow(hwnd_, SW_SHOW);
-		::SetForegroundWindow(hwnd_);
-		::SetFocus(hwnd_);
 
 		isBorderlessFullscreen_ = true;
 	}
@@ -103,28 +99,37 @@ void GameFramework::ToggleFullscreen()
 		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
 		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 
+		// showCmd 보정
+		if (windowPlacement_.showCmd == SW_SHOWMINIMIZED)
+			windowPlacement_.showCmd = SW_SHOWNORMAL;
+
 		::SetWindowPlacement(hwnd_, &windowPlacement_);
+
 		::SetWindowPos(
 			hwnd_,
-			nullptr,
+			HWND_NOTOPMOST,
 			0, 0, 0, 0,
-			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		::ShowWindow(hwnd_, SW_SHOW);
-		::SetForegroundWindow(hwnd_);
-		::SetFocus(hwnd_);
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER |
+			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
 		isBorderlessFullscreen_ = false;
 	}
 
+	::ShowWindow(hwnd_, SW_SHOW);
+	::UpdateWindow(hwnd_);
+
 	isFullscreenChanging_ = false;
 
-	onResize();
+	// 여기서 바로 onResize() 호출하지 말고 플래그만 세팅
+	pendingResizeAfterFullscreen_ = true;
 }
-
 LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {	
 	switch (msg) {
+	case WM_APP_TOGGLE_FULLSCREEN:
+		ToggleFullscreen();
+		return 0;
+
 	case WM_SIZE:
 	{
 		if (wParam == SIZE_MINIMIZED) return 0;
@@ -134,7 +139,8 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 		UINT height = HIWORD(lParam);
 		if (width == 0 || height == 0) return 0;
 
-		onResize();
+		// 너무 즉시 ResizeBuffers 하지 말고 지연
+		pendingResizeAfterFullscreen_ = true;
 		return 0;
 	}
 
@@ -149,7 +155,7 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 
 	case WM_KEYDOWN:
 		if (wParam == VK_F9 && !(lParam & (1 << 30))) {
-			ToggleFullscreen();
+			::PostMessage(hwnd, WM_APP_TOGGLE_FULLSCREEN, 0, 0);
 			return 0;
 		}
 		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
@@ -184,6 +190,12 @@ void GameFramework::processSceneChange()
 void GameFramework::frameAdvance()
 {
 	timer_.Tick(0.0f);
+
+	if (pendingResizeAfterFullscreen_)
+	{
+		pendingResizeAfterFullscreen_ = false;
+		onResize();
+	}
 
 	processSceneChange();
 
