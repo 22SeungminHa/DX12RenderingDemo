@@ -1,11 +1,10 @@
-#include "D3DCore.h"
+癤�#include "D3DCore.h"
 
 bool D3DCore::Initialize(HWND hwnd, int width, int height)
 {
     clientWidth_ = width;
     clientHeight_ = height;
 
-	//Direct3D 디바이스, 명령 큐와 명령 리스트, 스왑 체인 등을 생성하는 함수를 호출한다. 
     CreateDirect3DDevice();
     CreateCommandObjects();
     CreateDescriptorHeaps();
@@ -315,7 +314,7 @@ void D3DCore::MoveToNextFrame()
 {
     const UINT64 currentFenceValue = fenceValues_[swapChainBufferIndex_];
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), currentFenceValue));
-    
+
     swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 
     if (fence_->GetCompletedValue() < fenceValues_[swapChainBufferIndex_])

@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "GameFramework.h"
 
 GameFramework::GameFramework()
@@ -16,13 +16,15 @@ GameFramework::~GameFramework()
 
 bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 {
-	//Direct3D µð¹ÙÀÌ½º, ¸í·É Å¥¿Í ¸í·É ¸®½ºÆ®, ½º¿Ò Ã¼ÀÎ µîÀ» »ý¼ºÇÏ´Â ÇÔ¼ö¸¦ È£ÃâÇÑ´Ù. 
 	instance_ = instance;
 	hwnd_ = hwnd;
 
 	windowPlacement_.length = sizeof(WINDOWPLACEMENT);
 	windowedStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_STYLE));
 	windowedExStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_EXSTYLE));
+
+	// ì‹œìž‘ ëª¨ë“œ 1íšŒ ì ìš©
+	ApplyStartupDisplayMode();
 
 	RECT rect;
 	::GetClientRect(hwnd_, &rect);
@@ -34,10 +36,55 @@ bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 
 	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
 	inputSystem_->Initialize(hwnd_, sceneManager_.get(), renderer_.get());
-	
+
 	timer_.Reset();
 
 	return true;
+}
+
+void GameFramework::ApplyStartupDisplayMode()
+{
+	if (!hwnd_) return;
+
+	if (startFullscreen_)
+	{
+		HMONITOR hMonitor = ::MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
+		MONITORINFO monitorInfo{};
+		monitorInfo.cbSize = sizeof(MONITORINFO);
+		::GetMonitorInfo(hMonitor, &monitorInfo);
+
+		::SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
+
+		::SetWindowPos(
+			hwnd_,
+			HWND_TOP,
+			monitorInfo.rcMonitor.left,
+			monitorInfo.rcMonitor.top,
+			monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+			monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+		isBorderlessFullscreen_ = true;
+	}
+	else
+	{
+		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
+		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
+
+		::SetWindowPlacement(hwnd_, &windowPlacement_);
+		::SetWindowPos(
+			hwnd_,
+			nullptr,
+			0, 0, 1280, 720,   // ì›í•˜ëŠ” ê¸°ë³¸ ì°½ í¬ê¸°
+			SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+		isBorderlessFullscreen_ = false;
+	}
+
+	::ShowWindow(hwnd_, SW_SHOW);
+	::SetForegroundWindow(hwnd_);
+	::SetFocus(hwnd_);
 }
 
 void GameFramework::onDestroy()
@@ -62,74 +109,9 @@ void GameFramework::onResize()
 	renderer_->Resize(width, height);
 }
 
-void GameFramework::ToggleFullscreen()
-{
-	if (!hwnd_ || isFullscreenChanging_) return;
-
-	isFullscreenChanging_ = true;
-
-	if (renderer_) renderer_->WaitForGpuComplete();
-
-	if (!isBorderlessFullscreen_)
-	{
-		windowPlacement_.length = sizeof(WINDOWPLACEMENT);
-		::GetWindowPlacement(hwnd_, &windowPlacement_);
-
-		HMONITOR hMonitor = ::MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
-		MONITORINFO mi{};
-		mi.cbSize = sizeof(MONITORINFO);
-		::GetMonitorInfo(hMonitor, &mi);
-
-		::SetWindowLongPtr(hwnd_, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
-
-		::SetWindowPos(
-			hwnd_,
-			HWND_TOP,
-			mi.rcMonitor.left,
-			mi.rcMonitor.top,
-			mi.rcMonitor.right - mi.rcMonitor.left,
-			mi.rcMonitor.bottom - mi.rcMonitor.top,
-			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		isBorderlessFullscreen_ = true;
-	}
-	else
-	{
-		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
-		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
-
-		// showCmd º¸Á¤
-		if (windowPlacement_.showCmd == SW_SHOWMINIMIZED)
-			windowPlacement_.showCmd = SW_SHOWNORMAL;
-
-		::SetWindowPlacement(hwnd_, &windowPlacement_);
-
-		::SetWindowPos(
-			hwnd_,
-			HWND_NOTOPMOST,
-			0, 0, 0, 0,
-			SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER |
-			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		isBorderlessFullscreen_ = false;
-	}
-
-	::ShowWindow(hwnd_, SW_SHOW);
-	::UpdateWindow(hwnd_);
-
-	isFullscreenChanging_ = false;
-
-	// ¿©±â¼­ ¹Ù·Î onResize() È£ÃâÇÏÁö ¸»°í ÇÃ·¡±×¸¸ ¼¼ÆÃ
-	pendingResizeAfterFullscreen_ = true;
-}
 LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{	
+{
 	switch (msg) {
-	case WM_APP_TOGGLE_FULLSCREEN:
-		ToggleFullscreen();
-		return 0;
-
 	case WM_SIZE:
 	{
 		if (wParam == SIZE_MINIMIZED) return 0;
@@ -139,8 +121,7 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 		UINT height = HIWORD(lParam);
 		if (width == 0 || height == 0) return 0;
 
-		// ³Ê¹« Áï½Ã ResizeBuffers ÇÏÁö ¸»°í Áö¿¬
-		pendingResizeAfterFullscreen_ = true;
+		onResize();
 		return 0;
 	}
 
@@ -154,13 +135,6 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 		break;
 
 	case WM_KEYDOWN:
-		if (wParam == VK_F9 && !(lParam & (1 << 30))) {
-			::PostMessage(hwnd, WM_APP_TOGGLE_FULLSCREEN, 0, 0);
-			return 0;
-		}
-		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
-			return 0;
-		break;
 	case WM_KEYUP:
 		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
 			return 0;
@@ -190,12 +164,6 @@ void GameFramework::processSceneChange()
 void GameFramework::frameAdvance()
 {
 	timer_.Tick(0.0f);
-
-	if (pendingResizeAfterFullscreen_)
-	{
-		pendingResizeAfterFullscreen_ = false;
-		onResize();
-	}
 
 	processSceneChange();
 

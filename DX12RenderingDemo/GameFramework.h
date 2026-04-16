@@ -7,8 +7,6 @@
 
 class GameFramework {
 private:
-	static constexpr UINT WM_APP_TOGGLE_FULLSCREEN = WM_APP + 1;
-
 	Timer timer_;
 	TCHAR frameRate_[50];
 
@@ -17,7 +15,10 @@ private:
 
 	bool isFullscreenChanging_ = false;
 	bool isBorderlessFullscreen_ = false;
-	bool pendingResizeAfterFullscreen_ = false;
+
+	// 시작 모드만 결정하는 변수
+	bool startFullscreen_ = false;
+
 	WINDOWPLACEMENT windowPlacement_{ sizeof(WINDOWPLACEMENT) };
 	DWORD windowedStyle_ = 0;
 	DWORD windowedExStyle_ = 0;
@@ -26,6 +27,9 @@ private:
 	std::unique_ptr<Renderer> renderer_;
 	std::unique_ptr<InputSystem> inputSystem_;
 
+private:
+	void ApplyStartupDisplayMode();
+
 public:
 	GameFramework();
 	~GameFramework();
@@ -33,7 +37,6 @@ public:
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();
 	void onResize();
-	void ToggleFullscreen();
 
 	void animate();
 	void frameAdvance();
