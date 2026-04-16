@@ -62,10 +62,6 @@ bool InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam
 			}
 			break;
 		case VK_F9:
-			if (renderer_) {
-				renderer_->ChangeSwapChainState();
-				return true;
-			}
 			break;
 		default:
 			break;

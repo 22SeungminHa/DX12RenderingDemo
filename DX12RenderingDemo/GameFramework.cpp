@@ -26,14 +26,9 @@ bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	// 렌더러 초기화
 	renderer_->Initialize(hwnd_, width, height);
-
-	// 시작 씬 전환 요청. FrameAdvance()에서 생성한다.
 	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
-
 	inputSystem_->Initialize(hwnd_, sceneManager_.get(), renderer_.get());
-
 	timer_.Reset();
 
 	return true;
@@ -41,18 +36,24 @@ bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 
 void GameFramework::onDestroy()
 {
-	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다.
 	if (renderer_) renderer_->WaitForGpuComplete();
-
-	// 씬과 씬 매니저를 unload 한다. 게임 객체(게임 월드 객체)를 소멸한다.
 	if (sceneManager_) sceneManager_->ReleaseScene();
-
 	if (renderer_) renderer_->Shutdown();
+}
+
+void GameFramework::onResize()
+{
+	RECT rect;
+	::GetClientRect(hwnd_, &rect);
+	UINT width = rect.right - rect.left;
+	UINT height = rect.bottom - rect.top;
+
+	if (renderer_) renderer_->Resize(width, height);
 }
 
 void GameFramework::ToggleFullscreen()
 {
-	if (!renderer_) return;
+	if (!renderer_ || isFullscreenChanging_) return;
 
 	isFullscreenChanging_ = true;
 
@@ -63,9 +64,6 @@ void GameFramework::ToggleFullscreen()
 	::GetClientRect(hwnd_, &rect);
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
-
-	if (width > 0 && height > 0)
-		renderer_->Resize(width, height);
 
 	isFullscreenChanging_ = false;
 }
@@ -82,7 +80,7 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 		UINT height = HIWORD(lParam);
 		if (width == 0 || height == 0) return 0;
 
-		ToggleFullscreen();
+		onResize();
 		return 0;
 	}
 
@@ -94,8 +92,16 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 		if (inputSystem_ && inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
 			return 0;
 		break;
+
 	case WM_KEYDOWN:
+		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
+			return 0;
+		break;
 	case WM_KEYUP:
+		if (wParam == VK_F9) {
+			ToggleFullscreen();
+			return 0;
+		}
 		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
 			return 0;
 		break;

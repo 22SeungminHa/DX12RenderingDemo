@@ -61,8 +61,32 @@ void D3DCore::Shutdown()
 
 void D3DCore::Resize(UINT width, UINT height)
 {
+    if (!device_ || !swapChain_) return;
+    if (width == 0 || height == 0) return;
+    if (clientWidth_ == width && clientHeight_ == height) return;
+
+    WaitForGpuComplete();
+
     clientWidth_ = width;
     clientHeight_ = height;
+
+    ReleaseBackBuffers();
+    depthStencilBuffer_.Reset();
+
+    DXGI_SWAP_CHAIN_DESC swapChainDesc{};
+    ThrowIfFailed(swapChain_->GetDesc(&swapChainDesc));
+
+    ThrowIfFailed(swapChain_->ResizeBuffers(
+        swapChainBufferCnt_,
+        clientWidth_,
+        clientHeight_,
+        swapChainDesc.BufferDesc.Format,
+        swapChainDesc.Flags));
+
+    swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
+
+    CreateRenderTargetViews();
+    CreateDepthStencilView();
 }
 
 void D3DCore::CreateDirect3DDevice()

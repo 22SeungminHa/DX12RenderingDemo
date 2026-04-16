@@ -27,6 +27,7 @@ public:
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();
 
+	void onResize();
 	void ToggleFullscreen();
 
 	void animate();
