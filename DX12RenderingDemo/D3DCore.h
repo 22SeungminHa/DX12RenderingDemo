@@ -25,12 +25,6 @@ public:
 
     void Resize(UINT width, UINT height);
 
-
-public:
-
-
-
-
 public:
     UINT GetClientWidth() const { return clientWidth_; }
     UINT GetClientHeight() const { return clientHeight_; }
@@ -82,6 +76,8 @@ private:
     UINT swapChainBufferIndex_ = 0;
 
     std::array<ComPtr<ID3D12Resource>, swapChainBufferCnt_> renderTargetBuffers_;
+    std::array<D3D12_RESOURCE_STATES, swapChainBufferCnt_> renderTargetStates_{};
+    
     ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
     UINT rtvDescriptorIncrementSize_ = 0;
 

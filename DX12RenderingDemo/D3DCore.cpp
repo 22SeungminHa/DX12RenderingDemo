@@ -32,9 +32,6 @@ void D3DCore::Shutdown()
 
     WaitForGpuComplete();
 
-    if (swapChain_)
-        swapChain_->SetFullscreenState(FALSE, nullptr);
-
     ReleaseBackBuffers();
 
     depthStencilBuffer_.Reset();
@@ -138,7 +135,7 @@ void D3DCore::CreateDirect3DDevice()
 
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaQualityLevels{};
     msaaQualityLevels.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    msaaQualityLevels.SampleCount = 4;
+    msaaQualityLevels.SampleCount = 1;
     msaaQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
     msaaQualityLevels.NumQualityLevels = 0;
 
@@ -148,7 +145,7 @@ void D3DCore::CreateDirect3DDevice()
         sizeof(msaaQualityLevels)));
 
     msaaQualityLevel_ = msaaQualityLevels.NumQualityLevels;
-    msaaEnable_ = (msaaQualityLevel_ > 1);
+    msaaEnable_ = false;
 
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.GetAddressOf())));
 
@@ -206,10 +203,10 @@ DXGI_SWAP_CHAIN_DESC D3DCore::CreateSwapChainDesc(HWND hwnd, int width, int heig
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     desc.OutputWindow = hwnd;
-    desc.SampleDesc.Count = msaaEnable_ ? 4 : 1;
-    desc.SampleDesc.Quality = msaaEnable_ ? (msaaQualityLevel_ - 1) : 0;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
     desc.Windowed = TRUE;
-    desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+    desc.Flags = 0;
     return desc;
 }
 
@@ -248,6 +245,8 @@ void D3DCore::CreateRenderTargetViews()
         ThrowIfFailed(swapChain_->GetBuffer(i, IID_PPV_ARGS(renderTargetBuffers_[i].GetAddressOf())));
         device_->CreateRenderTargetView(renderTargetBuffers_[i].Get(), nullptr, rtvCPUDescriptorHandle);
 
+        renderTargetStates_[i] = D3D12_RESOURCE_STATE_COMMON;
+
         rtvCPUDescriptorHandle.ptr += rtvDescriptorIncrementSize_;
     }
 }
@@ -262,13 +261,12 @@ D3D12_RESOURCE_DESC D3DCore::CreateDepthStencilResourceDesc() const
     desc.DepthOrArraySize = 1;
     desc.MipLevels = 1;
     desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    desc.SampleDesc.Count = msaaEnable_ ? 4 : 1;
-    desc.SampleDesc.Quality = msaaEnable_ ? (msaaQualityLevel_ - 1) : 0;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
     desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
     return desc;
 }
-
 D3D12_CLEAR_VALUE D3DCore::CreateDepthStencilClearValue() const
 {
     D3D12_CLEAR_VALUE clearValue{};
@@ -306,38 +304,6 @@ void D3DCore::CreateDepthStencilView()
 
 void D3DCore::ChangeSwapChainState()
 {
-    WaitForGpuComplete();
-
-    BOOL isFullScreen = FALSE;
-    ThrowIfFailed(swapChain_->GetFullscreenState(&isFullScreen, nullptr));
-    ThrowIfFailed(swapChain_->SetFullscreenState(!isFullScreen, nullptr));
-
-    //DXGI_MODE_DESC targetDesc{};
-    //targetDesc.Width = clientWidth_;
-    //targetDesc.Height = clientHeight_;
-    //targetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    //targetDesc.RefreshRate.Numerator = 60;
-    //targetDesc.RefreshRate.Denominator = 1;
-    //targetDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-    //targetDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-
-    //ThrowIfFailed(swapChain_->ResizeTarget(&targetDesc));
-
-    ReleaseBackBuffers();
-    depthStencilBuffer_.Reset();
-
-    DXGI_SWAP_CHAIN_DESC swapChainDesc{};
-    ThrowIfFailed(swapChain_->GetDesc(&swapChainDesc));
-    ThrowIfFailed(swapChain_->ResizeBuffers(
-        swapChainBufferCnt_,
-        0, // 현재 창 크기에 맞춤
-        0,
-        swapChainDesc.BufferDesc.Format,
-        swapChainDesc.Flags));
-
-    swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
-    CreateRenderTargetViews();
-    CreateDepthStencilView();
 }
 
 void D3DCore::WaitForGpuComplete()
@@ -388,6 +354,8 @@ void D3DCore::ExecuteCommandList()
 
 void D3DCore::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
 {
+    if (before == after) return;
+
     D3D12_RESOURCE_BARRIER barrier{};
     barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -413,10 +381,15 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetDsvHandle() const
 
 void D3DCore::BeginRender(const float clearColor[4])
 {
+    ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
+    UINT currentIndex = swapChainBufferIndex_;
+
     TransitionResource(
-        GetCurrentRenderTarget(),
-        D3D12_RESOURCE_STATE_PRESENT,
+        currentRenderTarget,
+        renderTargetStates_[currentIndex],
         D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    renderTargetStates_[currentIndex] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
     const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetCurrentRtvHandle();
     const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetDsvHandle();
@@ -428,10 +401,15 @@ void D3DCore::BeginRender(const float clearColor[4])
 
 void D3DCore::EndRender()
 {
+    ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
+    UINT currentIndex = swapChainBufferIndex_;
+
     TransitionResource(
-        GetCurrentRenderTarget(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        currentRenderTarget,
+        renderTargetStates_[currentIndex],
         D3D12_RESOURCE_STATE_PRESENT);
+
+    renderTargetStates_[currentIndex] = D3D12_RESOURCE_STATE_PRESENT;
 }
 
 void D3DCore::Present(UINT syncInterval, UINT flags)

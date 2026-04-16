@@ -14,6 +14,10 @@ private:
 	HWND hwnd_{};
 
 	bool isFullscreenChanging_ = false;
+	bool isBorderlessFullscreen_ = false;
+	WINDOWPLACEMENT windowPlacement_{ sizeof(WINDOWPLACEMENT) };
+	DWORD windowedStyle_ = 0;
+	DWORD windowedExStyle_ = 0;
 
 	std::unique_ptr<SceneManager> sceneManager_;
 	std::unique_ptr<Renderer> renderer_;
@@ -23,10 +27,8 @@ public:
 	GameFramework();
 	~GameFramework();
 
-	// 프레임 워크 초기화 함수(주 윈도우 생성 시 호출)
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();
-
 	void onResize();
 	void ToggleFullscreen();
 
@@ -34,6 +36,5 @@ public:
 	void frameAdvance();
 	void processSceneChange();
 
-	//윈도우의 메시지(키보드, 마우스 입력)를 처리하는 함수이다. 
 	LRESULT CALLBACK onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };

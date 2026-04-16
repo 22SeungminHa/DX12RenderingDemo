@@ -70,7 +70,6 @@ void Renderer::Render(Scene* scene)
 
 void Renderer::ChangeSwapChainState()
 {
-    d3dCore_.ChangeSwapChainState();
 }
 
 void Renderer::WaitForGpuComplete()
