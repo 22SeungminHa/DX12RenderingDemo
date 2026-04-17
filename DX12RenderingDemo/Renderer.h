@@ -21,13 +21,14 @@ public:
 
     // setup
     void InitializeCamera(UINT width, UINT height);
+    void Resize(UINT width, UINT height);
 
     // render
     void Render(Scene* scene);
 
     // load
     void BeginSceneLoad();
-    UINT64 EndSceneLoad();                      // º¯°æ
+    UINT64 EndSceneLoad();
     bool IsSceneLoadComplete(UINT64 fenceValue) const;
     void WaitForSceneLoad(UINT64 fenceValue);
     

@@ -22,6 +22,7 @@ private:
 	void UpdateSceneChange();
 	void Animate();
 	void ProcessPendingUploadBufferRelease(bool forceWait = false);
+	void HandleResize(UINT width, UINT height); // Ãß°¡
 
 private:
 	// Constants
@@ -35,6 +36,13 @@ private:
 	HWND hwnd_{};
 
 	bool startFullscreen_ = false;
+
+	bool isMinimized_ = false;
+
+	bool resizePending_ = false;
+	UINT pendingResizeWidth_ = 0;
+	UINT pendingResizeHeight_ = 0;
+
 	DWORD windowedStyle_ = 0;
 	DWORD windowedExStyle_ = 0;
 

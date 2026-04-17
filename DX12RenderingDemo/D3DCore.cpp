@@ -49,6 +49,55 @@ void D3DCore::Shutdown()
 #endif
 }
 
+void D3DCore::Resize(UINT width, UINT height)
+{
+    if (!device_ || !swapChain_)
+        return;
+
+    if (width == 0 || height == 0)
+        return;
+
+    if (clientWidth_ == width && clientHeight_ == height)
+        return;
+
+    WaitForGpuComplete();
+
+    auto& allocator = cmdAllocators_[currentBackBufferIndex_];
+    ThrowIfFailed(allocator->Reset());
+    ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
+
+    clientWidth_ = width;
+    clientHeight_ = height;
+
+    for (auto& buffer : renderTargetBuffers_)
+        buffer.Reset();
+
+    depthStencilBuffer_.Reset();
+
+    DXGI_SWAP_CHAIN_DESC swapChainDesc{};
+    ThrowIfFailed(swapChain_->GetDesc(&swapChainDesc));
+
+    ThrowIfFailed(swapChain_->ResizeBuffers(
+        kSwapChainBufferCount,
+        clientWidth_,
+        clientHeight_,
+        swapChainDesc.BufferDesc.Format,
+        swapChainDesc.Flags));
+
+    currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
+
+    for (auto& value : frameFenceValues_)
+        value = 0;
+
+    for (auto& state : renderTargetStates_)
+        state = D3D12_RESOURCE_STATE_PRESENT;
+
+    CreateRenderTargetViews();
+    CreateDepthStencilObjects();
+
+    ThrowIfFailed(cmdList_->Close());
+}
+
 void D3DCore::CreateDirect3DDevice()
 {
     UINT factoryFlags = 0;
@@ -113,8 +162,9 @@ void D3DCore::CreateDirect3DDevice()
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.GetAddressOf())));
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(uploadFence_.GetAddressOf())));
 
-    for (auto& value : fenceValues_)
-        value = 1;
+    for (auto& value : frameFenceValues_)
+        value = 0;
+    nextFenceValue_ = 1;
 
     fenceEvent_.reset(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
     if (!fenceEvent_)
@@ -284,7 +334,7 @@ void D3DCore::WaitForGpuComplete()
 {
     assert(cmdQueue_ && fence_ && fenceEvent_);
 
-    const UINT64 fenceValue = fenceValues_[currentBackBufferIndex_];
+    const UINT64 fenceValue = nextFenceValue_++;
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
 
     if (fence_->GetCompletedValue() < fenceValue)
@@ -293,34 +343,37 @@ void D3DCore::WaitForGpuComplete()
         ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
     }
 
-    ++fenceValues_[currentBackBufferIndex_];
+    // 현재 back buffer도 이 fence까지는 완료된 상태라고 볼 수 있음
+    frameFenceValues_[currentBackBufferIndex_] = fenceValue;
 }
 
 void D3DCore::MoveToNextFrame()
 {
     assert(cmdQueue_ && fence_ && fenceEvent_ && swapChain_);
 
-    const UINT64 currentFenceValue = fenceValues_[currentBackBufferIndex_];
-    
-    ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), currentFenceValue));
+    // 현재 back buffer에 대해 이번 프레임 제출 완료 fence 기록
+    const UINT64 fenceValue = nextFenceValue_++;
+    ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
+    frameFenceValues_[currentBackBufferIndex_] = fenceValue;
 
-    const UINT nextIndex = swapChain_->GetCurrentBackBufferIndex();
-    currentBackBufferIndex_ = nextIndex;
+    // 다음 back buffer로 이동
+    currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 
-    if (fence_->GetCompletedValue() < fenceValues_[nextIndex])
+    // 다음 back buffer가 아직 GPU에서 사용 중이면 대기
+    const UINT64 waitFenceValue = frameFenceValues_[currentBackBufferIndex_];
+    if (waitFenceValue != 0 && fence_->GetCompletedValue() < waitFenceValue)
     {
-        ThrowIfFailed(fence_->SetEventOnCompletion(
-            fenceValues_[nextIndex],
-            fenceEvent_.get()));
+        ThrowIfFailed(fence_->SetEventOnCompletion(waitFenceValue, fenceEvent_.get()));
         ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
     }
-
-    fenceValues_[nextIndex] = currentFenceValue + 1;
 }
 
 void D3DCore::ResetCommandList()
 {
     auto& allocator = cmdAllocators_[currentBackBufferIndex_];
+    if (!allocator || !cmdList_)
+        return;
+
     ThrowIfFailed(allocator->Reset());
     ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
 }

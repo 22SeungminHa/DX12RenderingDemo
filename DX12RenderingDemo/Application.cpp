@@ -107,21 +107,59 @@ void Application::OnDestroy()
 LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
+
+	case WM_SIZE:
+	{
+		const UINT width = LOWORD(lParam);
+		const UINT height = HIWORD(lParam);
+
+		pendingResizeWidth_ = width;
+		pendingResizeHeight_ = height;
+
+		if (wParam == SIZE_MINIMIZED) {
+			isMinimized_ = true;
+			break;
+		}
+
+		isMinimized_ = false;
+
+		if (width == 0 || height == 0) break;
+
+		resizePending_ = true;
+		break;
+	}
+
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		if (inputSystem_) inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
+		if (inputSystem_) {
+			inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
+		}
 		break;
 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
-		if (inputSystem_) inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
+		if (inputSystem_) {
+			inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
+		}
 		break;
 	}
 
 	return 0;
+}
+
+void Application::HandleResize(UINT width, UINT height)
+{
+	if (!renderer_)
+		return;
+
+	if (width == 0 || height == 0)
+		return;
+
+	ProcessPendingUploadBufferRelease(true);
+	renderer_->Resize(width, height);
 }
 
 void Application::Animate()
@@ -148,8 +186,16 @@ void Application::FrameAdvance()
 {
 	timer_.Tick();
 
-	// 완료된 업로드 버퍼가 있으면 non-blocking으로 정리
 	ProcessPendingUploadBufferRelease(false);
+
+	if (isMinimized_)
+		return;
+
+	if (resizePending_) {
+		resizePending_ = false;
+		HandleResize(pendingResizeWidth_, pendingResizeHeight_);
+		return; // resize한 프레임은 바로 종료
+	}
 
 	UpdateSceneChange();
 

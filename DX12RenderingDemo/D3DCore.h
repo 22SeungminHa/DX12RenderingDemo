@@ -16,6 +16,8 @@ public:
 	void ResetCommandList();
 	void ExecuteCommandList();
 
+	void Resize(UINT width, UINT height); // Ãß°¡
+
 	// scene load / upload path
 	void ResetUploadCommandList();
 	UINT64 ExecuteUploadCommandList();
@@ -103,7 +105,8 @@ private:
 	// Synchronization
 	// frame fence
 	ComPtr<ID3D12Fence> fence_;
-	std::array<UINT64, kSwapChainBufferCount> fenceValues_{};
+	std::array<UINT64, kSwapChainBufferCount> frameFenceValues_{};
+	UINT64 nextFenceValue_ = 1;
 	unique_handle fenceEvent_{ nullptr };
 	// upload fence
 	ComPtr<ID3D12Fence> uploadFence_;
