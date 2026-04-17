@@ -21,8 +21,6 @@ public:
     void BeginRender(const float clearColor[4]);
     void EndRender();
 
-    void Resize(UINT width, UINT height);
-
 public:
     UINT GetClientWidth() const { return clientWidth_; }
     UINT GetClientHeight() const { return clientHeight_; }
@@ -84,7 +82,7 @@ private:
     UINT dsvDescriptorIncrementSize_ = 0;
 
     ComPtr<ID3D12CommandQueue> cmdQueue_;
-    ComPtr<ID3D12CommandAllocator> cmdAllocator_;
+    std::array<ComPtr<ID3D12CommandAllocator>, swapChainBufferCnt_> cmdAllocators_;
     ComPtr<ID3D12GraphicsCommandList> cmdList_;
 
     ComPtr<ID3D12Fence> fence_;

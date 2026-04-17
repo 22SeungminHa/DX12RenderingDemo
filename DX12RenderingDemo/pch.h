@@ -10,7 +10,7 @@
 #pragma comment(lib, "dxguid.lib")
 
 #define FRAME_BUFFER_WIDTH 800
-#define FRAME_BUFFER_HEIGHT 600	
+#define FRAME_BUFFER_HEIGHT 600
 
 // 정점 색상 랜덤값.
 #define RANDOM_COLOR Vector4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))

@@ -32,7 +32,6 @@ public:
 
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();
-	void onResize();
 
 	void animate();
 	void frameAdvance();

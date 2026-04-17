@@ -16,8 +16,6 @@ public:
 	bool Initialize(HWND hwnd, UINT width, UINT height);
 	void Shutdown();
 
-	void Resize(UINT width, UINT height);
-
 	void CreateCamera(UINT width, UINT height);
 
 	void BeginSceneLoad();

@@ -30,17 +30,6 @@ void Renderer::CreateCamera(UINT width, UINT height)
     camera_->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 }
 
-void Renderer::Resize(UINT width, UINT height)
-{
-    if (!camera_ || width == 0 || height == 0) return;
-
-    d3dCore_.Resize(width, height);
-
-    camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-    camera_->SetScissorRect(0, 0, width, height);
-    camera_->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
-}
-
 void Renderer::BeginSceneLoad()
 {
     d3dCore_.WaitForGpuComplete();

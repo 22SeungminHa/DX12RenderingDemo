@@ -29,7 +29,9 @@ void D3DCore::Shutdown()
     dsvDescriptorHeap_.Reset();
 
     cmdList_.Reset();
-    cmdAllocator_.Reset();
+    for (auto& allocator : cmdAllocators_) {
+        allocator.Reset();
+    }
     cmdQueue_.Reset();
 
     fence_.Reset();
@@ -44,36 +46,6 @@ void D3DCore::Shutdown()
     ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(debug.GetAddressOf())));
     ThrowIfFailed(debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL));
 #endif
-}
-
-void D3DCore::Resize(UINT width, UINT height)
-{
-    if (!device_ || !swapChain_) return;
-    if (width == 0 || height == 0) return;
-    if (clientWidth_ == width && clientHeight_ == height) return;
-
-    WaitForGpuComplete();
-
-    clientWidth_ = width;
-    clientHeight_ = height;
-
-    ReleaseBackBuffers();
-    depthStencilBuffer_.Reset();
-
-    DXGI_SWAP_CHAIN_DESC swapChainDesc{};
-    ThrowIfFailed(swapChain_->GetDesc(&swapChainDesc));
-
-    ThrowIfFailed(swapChain_->ResizeBuffers(
-        swapChainBufferCnt_,
-        clientWidth_,
-        clientHeight_,
-        swapChainDesc.BufferDesc.Format,
-        swapChainDesc.Flags));
-
-    swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
-
-    CreateRenderTargetViews();
-    CreateDepthStencilView();
 }
 
 void D3DCore::CreateDirect3DDevice()
@@ -154,8 +126,18 @@ void D3DCore::CreateCommandObjects()
     cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
-    ThrowIfFailed(device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(cmdAllocator_.GetAddressOf())));
-    ThrowIfFailed(device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAllocator_.Get(), nullptr, IID_PPV_ARGS(cmdList_.GetAddressOf())));
+    for (UINT i = 0; i < swapChainBufferCnt_; ++i)
+    {
+        ThrowIfFailed(device_->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            IID_PPV_ARGS(cmdAllocators_[i].GetAddressOf())));
+    }
+    ThrowIfFailed(device_->CreateCommandList(
+        0,
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        cmdAllocators_[0].Get(),
+        nullptr,
+        IID_PPV_ARGS(cmdList_.GetAddressOf())));
     ThrowIfFailed(cmdList_->Close());
 }
 
@@ -326,8 +308,9 @@ void D3DCore::MoveToNextFrame()
 
 void D3DCore::ResetCommandList()
 {
-    ThrowIfFailed(cmdAllocator_->Reset());
-    ThrowIfFailed(cmdList_->Reset(cmdAllocator_.Get(), nullptr));
+    auto& allocator = cmdAllocators_[swapChainBufferIndex_];
+    ThrowIfFailed(allocator->Reset());
+    ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
 }
 
 void D3DCore::ExecuteCommandList()

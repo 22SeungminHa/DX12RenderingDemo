@@ -84,9 +84,11 @@ void GameFramework::ApplyStartupDisplayMode()
 	}
 
 	::ShowWindow(hwnd_, SW_SHOW);
+	::UpdateWindow(hwnd_);
 	::SetForegroundWindow(hwnd_);
 	::SetFocus(hwnd_);
 }
+
 void GameFramework::onDestroy()
 {
 	if (renderer_) renderer_->WaitForGpuComplete();
@@ -94,36 +96,9 @@ void GameFramework::onDestroy()
 	if (renderer_) renderer_->Shutdown();
 }
 
-void GameFramework::onResize()
-{
-	if (!renderer_) return;
-
-	RECT rect{};
-	::GetClientRect(hwnd_, &rect);
-
-	UINT width = rect.right - rect.left;
-	UINT height = rect.bottom - rect.top;
-
-	if (width == 0 || height == 0) return;
-
-	renderer_->Resize(width, height);
-}
-
 LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
-	case WM_SIZE:
-	{
-		if (wParam == SIZE_MINIMIZED) return 0;
-
-		UINT width = LOWORD(lParam);
-		UINT height = HIWORD(lParam);
-		if (width == 0 || height == 0) return 0;
-
-		onResize();
-		return 0;
-	}
-
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_LBUTTONUP:
