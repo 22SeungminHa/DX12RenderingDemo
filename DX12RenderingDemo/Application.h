@@ -7,11 +7,11 @@
 
 class Application {
 private:
-	static constexpr const TCHAR* TitlePrefix = _T("D3DX12Demo (");
+	static constexpr const TCHAR* kTitlePrefix = _T("D3DX12Demo (");
 	static constexpr size_t kFrameRateBufferSize = 50;
 	TCHAR frameRate_[kFrameRateBufferSize]{};
 
-	const size_t prefixLen = _tcslen(TitlePrefix);
+	const size_t prefixLen = _tcslen(kTitlePrefix);
 	const size_t remain = kFrameRateBufferSize - prefixLen;
 
 	Timer timer_;
@@ -36,7 +36,7 @@ public:
 	Application();
 	~Application();
 
-	bool OnCreate(HINSTANCE instance, HWND hwnd);
+	void OnCreate(HINSTANCE instance, HWND hwnd);
 	void OnDestroy();
 
 	void Animate();

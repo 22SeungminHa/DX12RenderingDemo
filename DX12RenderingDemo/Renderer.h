@@ -13,7 +13,7 @@ public:
 	Renderer();
 	~Renderer();
 
-	bool Initialize(HWND hwnd, UINT width, UINT height);
+	void Initialize(HWND hwnd, UINT width, UINT height);
 	void Shutdown();
 
 	void CreateCamera(UINT width, UINT height);

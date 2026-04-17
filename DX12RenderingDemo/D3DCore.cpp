@@ -285,7 +285,7 @@ void D3DCore::WaitForGpuComplete()
 void D3DCore::MoveToNextFrame()
 {
     const UINT currentIndex = swapChainBufferIndex_;
-    const UINT64 currentFenceValue = fenceValues_[swapChainBufferIndex_];
+    const UINT64 currentFenceValue = fenceValues_[currentIndex];
     
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), currentFenceValue));
 

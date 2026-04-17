@@ -119,11 +119,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     if (!hMainWnd) return(FALSE);
 
-    if (!application.OnCreate(hInstance, hMainWnd))
-    {
-        DestroyWindow(hMainWnd);
-        return FALSE;
-    }
+    application.OnCreate(hInstance, hMainWnd);
 
     ::ShowWindow(hMainWnd, SW_SHOW);
     ::UpdateWindow(hMainWnd);

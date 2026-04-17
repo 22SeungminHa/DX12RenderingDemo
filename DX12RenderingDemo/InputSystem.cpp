@@ -17,10 +17,10 @@ void InputSystem::ProcessInput()
 	sceneManager_->ProcessInput(keysBuffer);
 }
 
-bool InputSystem::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void InputSystem::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (sceneManager_ && sceneManager_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
-		return true;
+	if (sceneManager_)
+		sceneManager_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
 
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -34,35 +34,22 @@ bool InputSystem::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, L
 	default:
 		break;
 	}
-
-	return false;
 }
 
-bool InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (sceneManager_ && sceneManager_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
-		return true;
+	if (sceneManager_) sceneManager_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
 
 	switch (msg) {
 	case WM_KEYUP:
 		switch (wParam) {
 		case VK_ESCAPE:
 			::PostQuitMessage(0);
-			return true;
-		case VK_SPACE:
-			if (!sceneManager_) break;
+			break;
 
-			if (sceneManager_->GetSceneType() == SCENE_TYPE::TEST1) {
-				sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
-				return true;
-			}
-			else if (sceneManager_->GetSceneType() == SCENE_TYPE::TEST2) {
-				sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
-				return true;
-			}
+		case VK_SPACE:
 			break;
-		case VK_F9:
-			break;
+
 		default:
 			break;
 		}
@@ -70,6 +57,4 @@ bool InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam
 	default:
 		break;
 	}
-
-	return false;
 }

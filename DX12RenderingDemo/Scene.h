@@ -23,9 +23,9 @@ public:
 	void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
-	virtual bool ProcessInput(const UCHAR* keysBuffer);
-	virtual bool OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual bool OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual void ProcessInput(const UCHAR* keysBuffer);
+	virtual void OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	virtual void OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	
 	virtual void Animate(float deltaTime);
 	virtual void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera);

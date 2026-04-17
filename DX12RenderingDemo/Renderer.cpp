@@ -9,11 +9,10 @@ Renderer::~Renderer()
 {
 }
 
-bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
+void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
     CreateCamera(width, height);
-    return true;
 }
 
 void Renderer::Shutdown()

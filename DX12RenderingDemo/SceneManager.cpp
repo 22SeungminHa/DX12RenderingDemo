@@ -60,30 +60,27 @@ void SceneManager::ReleaseUploadBuffers()
 	if (currentScene_) currentScene_->ReleaseUploadBuffers();
 }
 
-bool SceneManager::ProcessInput(const UCHAR* keysBuffer)
+void SceneManager::ProcessInput(const UCHAR* keysBuffer)
 {
-	if (currentScene_) return currentScene_->ProcessInput(keysBuffer);
-	return false;
+	if (currentScene_) currentScene_->ProcessInput(keysBuffer);
 }
 
-bool SceneManager::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void SceneManager::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (currentScene_ && currentScene_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
-		return true;
+	if (currentScene_) currentScene_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
 
-	switch (msg) {
+	switch (msg)
+	{
 	case WM_KEYUP:
-		switch (wParam) {
+		switch (wParam)
+		{
 		case VK_SPACE:
-			if (currentSceneType_ == SCENE_TYPE::TEST1) {
+			if (currentSceneType_ == SCENE_TYPE::TEST1)
 				RequestChangeScene(SCENE_TYPE::TEST2);
-				return true;
-			}
-			else if (currentSceneType_ == SCENE_TYPE::TEST2) {
+			else if (currentSceneType_ == SCENE_TYPE::TEST2)
 				RequestChangeScene(SCENE_TYPE::TEST1);
-				return true;
-			}
 			break;
+
 		default:
 			break;
 		}
@@ -91,14 +88,11 @@ bool SceneManager::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wPara
 	default:
 		break;
 	}
-
-	return false;
 }
 
-bool SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (currentScene_ && currentScene_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
-		return true;
+	if (currentScene_) currentScene_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
 
 	switch (msg)
 	{
@@ -113,8 +107,6 @@ bool SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, 
 	default:
 		break;
 	}
-
-	return false;
 }
 
 void SceneManager::Animate(float deltaTime)

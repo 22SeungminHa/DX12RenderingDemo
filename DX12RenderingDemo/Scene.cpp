@@ -60,7 +60,7 @@ void Scene::ReleaseUploadBuffers()
 	OnReleaseUploadBuffers();
 }
 
-bool Scene::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void Scene::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -74,11 +74,9 @@ bool Scene::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	default:
 		break;
 	}
-	
-	return(false);
 }
 
-bool Scene::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void Scene::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_KEYUP:
@@ -90,13 +88,10 @@ bool Scene::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 	default:
 		break;
 	}
-
-	return(false);
 }
 
-bool Scene::ProcessInput(const UCHAR* keysBuffer)
+void Scene::ProcessInput(const UCHAR* keysBuffer)
 {
-	return(false);
 }
 
 void Scene::Animate(float deltaTime)

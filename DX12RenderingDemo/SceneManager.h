@@ -24,9 +24,9 @@ public:
     void ReleaseScene();
     void ReleaseUploadBuffers();
 
-    bool ProcessInput(const UCHAR* keysBuffer);
-    bool OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
-    bool OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
+    void ProcessInput(const UCHAR* keysBuffer);
+    void OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
+    void OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 
     void Animate(float deltaTime);
     void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera);

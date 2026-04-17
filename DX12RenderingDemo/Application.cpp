@@ -7,14 +7,14 @@ Application::Application()
 	renderer_ = std::make_unique<Renderer>();
 	inputSystem_ = std::make_unique<InputSystem>();
 
-	_tcscpy_s(frameRate_, TitlePrefix);
+	_tcscpy_s(frameRate_, kTitlePrefix);
 }
 
 Application::~Application()
 {
 }
 
-bool Application::OnCreate(HINSTANCE instance, HWND hwnd)
+void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 {
 	instance_ = instance;
 	hwnd_ = hwnd;
@@ -37,8 +37,6 @@ bool Application::OnCreate(HINSTANCE instance, HWND hwnd)
 	inputSystem_->Initialize(hwnd_, sceneManager_.get(), renderer_.get());
 
 	timer_.Reset();
-
-	return true;
 }
 
 void Application::ApplyStartupDisplayMode()
@@ -82,9 +80,6 @@ void Application::ApplyStartupDisplayMode()
 			windowWidth, windowHeight,
 			SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 	}
-
-	::SetForegroundWindow(hwnd_);
-	::SetFocus(hwnd_);
 }
 
 void Application::OnDestroy()
@@ -102,18 +97,16 @@ LRESULT CALLBACK Application::OnProcessingMessage(HWND hwnd, UINT msg, WPARAM wP
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		if (inputSystem_ && inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam))
-			return 0;
+		if (inputSystem_) inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
 		break;
 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
-		if (inputSystem_ && inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam))
-			return 0;
+		if (inputSystem_) inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
 		break;
 	}
 
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+	return 0;
 }
 
 void Application::Animate()
