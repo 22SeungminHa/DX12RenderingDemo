@@ -3,12 +3,12 @@
 
 class D3DCore {
 public:
-    static const UINT swapChainBufferCnt_ = 2;
+    static constexpr UINT kSwapChainBufferCount = 2;
 
     D3DCore() = default;
     ~D3DCore() = default;
 
-    bool Initialize(HWND hWnd, int width, int height);
+    void Initialize(HWND hWnd, int width, int height);
     void Shutdown();
 
     void WaitForGpuComplete();
@@ -57,7 +57,7 @@ private:
     void ReleaseBackBuffers();
     void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
-    DXGI_SWAP_CHAIN_DESC CreateSwapChainDesc(HWND hwnd, int width, int height) const;
+    DXGI_SWAP_CHAIN_DESC1 CreateSwapChainDesc1(int width, int height) const;
     D3D12_RESOURCE_DESC CreateDepthStencilResourceDesc() const;
     D3D12_CLEAR_VALUE CreateDepthStencilClearValue() const;
 
@@ -71,8 +71,8 @@ private:
 
     UINT swapChainBufferIndex_ = 0;
 
-    std::array<ComPtr<ID3D12Resource>, swapChainBufferCnt_> renderTargetBuffers_;
-    std::array<D3D12_RESOURCE_STATES, swapChainBufferCnt_> renderTargetStates_{};
+    std::array<ComPtr<ID3D12Resource>, kSwapChainBufferCount> renderTargetBuffers_;
+    std::array<D3D12_RESOURCE_STATES, kSwapChainBufferCount> renderTargetStates_{};
     
     ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
     UINT rtvDescriptorIncrementSize_ = 0;
@@ -82,11 +82,11 @@ private:
     UINT dsvDescriptorIncrementSize_ = 0;
 
     ComPtr<ID3D12CommandQueue> cmdQueue_;
-    std::array<ComPtr<ID3D12CommandAllocator>, swapChainBufferCnt_> cmdAllocators_;
+    std::array<ComPtr<ID3D12CommandAllocator>, kSwapChainBufferCount> cmdAllocators_;
     ComPtr<ID3D12GraphicsCommandList> cmdList_;
 
     ComPtr<ID3D12Fence> fence_;
-    std::array<UINT64, swapChainBufferCnt_> fenceValues_{};
+    std::array<UINT64, kSwapChainBufferCount> fenceValues_{};
     unique_handle fenceEvent_{ nullptr };
 
     UINT clientWidth_ = 0;

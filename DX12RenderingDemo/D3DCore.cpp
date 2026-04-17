@@ -1,6 +1,6 @@
 ﻿#include "D3DCore.h"
 
-bool D3DCore::Initialize(HWND hwnd, int width, int height)
+void D3DCore::Initialize(HWND hwnd, int width, int height)
 {
     clientWidth_ = width;
     clientHeight_ = height;
@@ -11,16 +11,15 @@ bool D3DCore::Initialize(HWND hwnd, int width, int height)
     CreateSwapChain(hwnd, width, height);
     CreateRenderTargetViews();
     CreateDepthStencilView();
-
-    return true;
 }
 
 void D3DCore::Shutdown()
 {
-    if (!device_ && !swapChain_ && !cmdQueue_)
+    if (!device_ && !swapChain_ && !cmdQueue_ && !fence_)
         return;
 
-    WaitForGpuComplete();
+    if (cmdQueue_ && fence_ && fenceEvent_)
+        WaitForGpuComplete();
 
     ReleaseBackBuffers();
 
@@ -43,8 +42,8 @@ void D3DCore::Shutdown()
 
 #if defined(_DEBUG)
     ComPtr<IDXGIDebug1> debug;
-    ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(debug.GetAddressOf())));
-    ThrowIfFailed(debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL));
+    if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(debug.GetAddressOf()))))
+        debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL);
 #endif
 }
 
@@ -126,7 +125,7 @@ void D3DCore::CreateCommandObjects()
     cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
-    for (UINT i = 0; i < swapChainBufferCnt_; ++i)
+    for (UINT i = 0; i < kSwapChainBufferCount; ++i)
     {
         ThrowIfFailed(device_->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -144,7 +143,7 @@ void D3DCore::CreateCommandObjects()
 void D3DCore::CreateDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-    rtvHeapDesc.NumDescriptors = swapChainBufferCnt_;
+    rtvHeapDesc.NumDescriptors = kSwapChainBufferCount;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
@@ -163,21 +162,20 @@ void D3DCore::CreateDescriptorHeaps()
 }
 
 
-DXGI_SWAP_CHAIN_DESC D3DCore::CreateSwapChainDesc(HWND hwnd, int width, int height) const
+DXGI_SWAP_CHAIN_DESC1 D3DCore::CreateSwapChainDesc1(int width, int height) const
 {
-    DXGI_SWAP_CHAIN_DESC desc{};
-    desc.BufferCount = swapChainBufferCnt_;
-    desc.BufferDesc.Width = width;
-    desc.BufferDesc.Height = height;
-    desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    desc.BufferDesc.RefreshRate.Numerator = 60;
-    desc.BufferDesc.RefreshRate.Denominator = 1;
-    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    desc.OutputWindow = hwnd;
+    DXGI_SWAP_CHAIN_DESC1 desc{};
+    desc.Width = width;
+    desc.Height = height;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.Stereo = FALSE;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
-    desc.Windowed = TRUE;
+    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    desc.BufferCount = kSwapChainBufferCount;
+    desc.Scaling = DXGI_SCALING_STRETCH;
+    desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     desc.Flags = 0;
     return desc;
 }
@@ -187,16 +185,21 @@ void D3DCore::CreateSwapChain(HWND hwnd, int width, int height)
     clientWidth_ = width;
     clientHeight_ = height;
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc = CreateSwapChainDesc(hwnd, width, height);
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = CreateSwapChainDesc1(width, height);
 
-    ComPtr<IDXGISwapChain> baseSwapChain;
-    ThrowIfFailed(factory_->CreateSwapChain(
+    ComPtr<IDXGISwapChain1> baseSwapChain;
+    ThrowIfFailed(factory_->CreateSwapChainForHwnd(
         cmdQueue_.Get(),
+        hwnd,
         &swapChainDesc,
+        nullptr,
+        nullptr,
         baseSwapChain.GetAddressOf()));
+
     ThrowIfFailed(baseSwapChain.As(&swapChain_));
 
     swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
+
     ThrowIfFailed(factory_->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
@@ -210,7 +213,7 @@ void D3DCore::CreateRenderTargetViews()
 {
     D3D12_CPU_DESCRIPTOR_HANDLE rtvCPUDescriptorHandle = rtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 
-    for (UINT i = 0; i < swapChainBufferCnt_; i++)
+    for (UINT i = 0; i < kSwapChainBufferCount; i++)
     {
         renderTargetBuffers_[i].Reset();
 
@@ -225,20 +228,15 @@ void D3DCore::CreateRenderTargetViews()
 
 D3D12_RESOURCE_DESC D3DCore::CreateDepthStencilResourceDesc() const
 {
-    D3D12_RESOURCE_DESC desc{};
-    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    desc.Alignment = 0;
-    desc.Width = clientWidth_;
-    desc.Height = clientHeight_;
-    desc.DepthOrArraySize = 1;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-    return desc;
+    return CD3DX12_RESOURCE_DESC::Tex2D(
+        DXGI_FORMAT_D24_UNORM_S8_UINT,
+        clientWidth_,
+        clientHeight_,
+        1, 1,
+        1, 0,
+        D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 }
+
 D3D12_CLEAR_VALUE D3DCore::CreateDepthStencilClearValue() const
 {
     D3D12_CLEAR_VALUE clearValue{};
@@ -250,15 +248,9 @@ D3D12_CLEAR_VALUE D3DCore::CreateDepthStencilClearValue() const
 
 void D3DCore::CreateDepthStencilView()
 {
-    D3D12_HEAP_PROPERTIES heapProperties{};
-    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    heapProperties.CreationNodeMask = 1;
-    heapProperties.VisibleNodeMask = 1;
-
-    D3D12_RESOURCE_DESC resourceDesc = CreateDepthStencilResourceDesc();
-    D3D12_CLEAR_VALUE clearValue = CreateDepthStencilClearValue();
+    const auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    const auto resourceDesc = CreateDepthStencilResourceDesc();
+    const auto clearValue = CreateDepthStencilClearValue();
 
     ThrowIfFailed(device_->CreateCommittedResource(
         &heapProperties,
@@ -276,6 +268,8 @@ void D3DCore::CreateDepthStencilView()
 
 void D3DCore::WaitForGpuComplete()
 {
+    assert(cmdQueue_ && fence_ && fenceEvent_);
+
     const UINT64 fenceValue = fenceValues_[swapChainBufferIndex_];
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
 
@@ -290,20 +284,23 @@ void D3DCore::WaitForGpuComplete()
 
 void D3DCore::MoveToNextFrame()
 {
+    const UINT currentIndex = swapChainBufferIndex_;
     const UINT64 currentFenceValue = fenceValues_[swapChainBufferIndex_];
+    
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), currentFenceValue));
 
-    swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
+    const UINT nextIndex = swapChain_->GetCurrentBackBufferIndex();
+    swapChainBufferIndex_ = nextIndex;
 
-    if (fence_->GetCompletedValue() < fenceValues_[swapChainBufferIndex_])
+    if (fence_->GetCompletedValue() < fenceValues_[nextIndex])
     {
         ThrowIfFailed(fence_->SetEventOnCompletion(
-            fenceValues_[swapChainBufferIndex_],
+            fenceValues_[nextIndex],
             fenceEvent_.get()));
         ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
     }
 
-    fenceValues_[swapChainBufferIndex_] = currentFenceValue + 1;
+    fenceValues_[nextIndex] = currentFenceValue + 1;
 }
 
 void D3DCore::ResetCommandList()

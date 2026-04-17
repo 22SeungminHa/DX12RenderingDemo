@@ -8,12 +8,13 @@
 class Application {
 private:
 	static constexpr const TCHAR* TitlePrefix = _T("D3DX12Demo (");
+	static constexpr size_t kFrameRateBufferSize = 50;
+	TCHAR frameRate_[kFrameRateBufferSize]{};
 
 	const size_t prefixLen = _tcslen(TitlePrefix);
-	const size_t remain = _countof(frameRate_) - prefixLen;
+	const size_t remain = kFrameRateBufferSize - prefixLen;
 
 	Timer timer_;
-	TCHAR frameRate_[50];
 
 	HINSTANCE instance_{};
 	HWND hwnd_{};
@@ -27,15 +28,6 @@ private:
 	std::unique_ptr<SceneManager> sceneManager_;
 	std::unique_ptr<Renderer> renderer_;
 	std::unique_ptr<InputSystem> inputSystem_;
-
-	struct SceneLoadGuard {
-		Renderer* renderer = nullptr;
-
-		explicit SceneLoadGuard(Renderer* r) : renderer(r) {}
-		~SceneLoadGuard() { if (renderer) renderer->EndSceneLoad(); }
-		SceneLoadGuard(const SceneLoadGuard&) = delete;
-		SceneLoadGuard& operator=(const SceneLoadGuard&) = delete;
-	};
 
 private:
 	void ApplyStartupDisplayMode();

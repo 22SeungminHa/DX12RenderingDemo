@@ -127,8 +127,8 @@ void Application::ProcessSceneChange()
 		return;
 
 	renderer_->BeginSceneLoad();
-	SceneLoadGuard guard{ renderer_.get() };
 	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
+	renderer_->EndSceneLoad();
 
 	sceneManager_->ReleaseUploadBuffers();
 }
