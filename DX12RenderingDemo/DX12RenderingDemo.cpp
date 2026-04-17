@@ -5,7 +5,7 @@
 #include "DX12RenderingDemo.h"
 #include "GameFramework.h"
 
-GameFramework gameFramework;
+Application gameFramework;
 
 #define MAX_LOADSTRING 100
 

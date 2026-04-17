@@ -31,11 +31,11 @@ public:
     virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
 };
 
-class CRotatingObject : public GameObject
+class RotatingObject : public GameObject
 {
 public:
-    CRotatingObject();
-    virtual ~CRotatingObject();
+    RotatingObject();
+    virtual ~RotatingObject();
 
 private:
     Vector3 rotationAxis_;

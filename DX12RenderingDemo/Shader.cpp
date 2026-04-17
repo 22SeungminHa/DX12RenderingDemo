@@ -180,15 +180,15 @@ void Shader::ReleaseShaderVariables()
 {
 }
 
-CDiffusedShader::CDiffusedShader()
+DiffusedShader::DiffusedShader()
 {
 }
 
-CDiffusedShader::~CDiffusedShader()
+DiffusedShader::~DiffusedShader()
 {
 }
 
-D3D12_INPUT_LAYOUT_DESC CDiffusedShader::CreateInputLayout()
+D3D12_INPUT_LAYOUT_DESC DiffusedShader::CreateInputLayout()
 {
 	inputElementDescs_ = {
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -202,17 +202,17 @@ D3D12_INPUT_LAYOUT_DESC CDiffusedShader::CreateInputLayout()
 	return d3dInputLayoutDesc;
 }
 
-D3D12_SHADER_BYTECODE CDiffusedShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE DiffusedShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
 	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSDiffused", "vs_5_1", pd3dShaderBlob);
 }
 
-D3D12_SHADER_BYTECODE CDiffusedShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE DiffusedShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
 	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSDiffused", "ps_5_1", pd3dShaderBlob);
 }
 
-void CDiffusedShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void DiffusedShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
 	pipelineStates_.clear();
 	pipelineStates_.reserve(1);

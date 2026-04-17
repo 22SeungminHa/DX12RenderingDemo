@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "GameFramework.h"
 
-GameFramework::GameFramework()
+Application::Application()
 {
 	sceneManager_ = std::make_unique<SceneManager>();
 	renderer_ = std::make_unique<Renderer>();
@@ -10,11 +10,11 @@ GameFramework::GameFramework()
 	_tcscpy_s(frameRate_, _T("D3DX12Demo ("));
 }
 
-GameFramework::~GameFramework()
+Application::~Application()
 {
 }
 
-bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
+bool Application::onCreate(HINSTANCE instance, HWND hwnd)
 {
 	instance_ = instance;
 	hwnd_ = hwnd;
@@ -41,7 +41,7 @@ bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 	return true;
 }
 
-void GameFramework::ApplyStartupDisplayMode()
+void Application::ApplyStartupDisplayMode()
 {
 	if (!hwnd_) return;
 
@@ -89,14 +89,14 @@ void GameFramework::ApplyStartupDisplayMode()
 	::SetFocus(hwnd_);
 }
 
-void GameFramework::onDestroy()
+void Application::onDestroy()
 {
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseScene();
 	if (renderer_) renderer_->Shutdown();
 }
 
-LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Application::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -118,12 +118,12 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void GameFramework::animate()
+void Application::animate()
 {
 	if (sceneManager_) sceneManager_->Animate(timer_.GetTimeElapsed());
 }
 
-void GameFramework::processSceneChange()
+void Application::processSceneChange()
 {
 	if (!renderer_ || !sceneManager_ || !sceneManager_->HasSceneChange())
 		return;
@@ -135,7 +135,7 @@ void GameFramework::processSceneChange()
 	sceneManager_->ReleaseUploadBuffers();
 }
 
-void GameFramework::frameAdvance()
+void Application::frameAdvance()
 {
 	timer_.Tick(0.0f);
 

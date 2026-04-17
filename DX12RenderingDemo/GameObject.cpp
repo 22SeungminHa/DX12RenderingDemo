@@ -55,17 +55,17 @@ void GameObject::Rotate(const Vector3& axis, float angle)
 	worldMatrix = mtxRotate * worldMatrix;
 }
 
-CRotatingObject::CRotatingObject()
+RotatingObject::RotatingObject()
 {
 	rotationAxis_ = Vector3::Up;
 	rotationSpeed_ = 90.0f;
 }
 
-CRotatingObject::~CRotatingObject()
+RotatingObject::~RotatingObject()
 {
 }
 
-void CRotatingObject::Animate(float fTimeElapsed)
+void RotatingObject::Animate(float fTimeElapsed)
 {
 	GameObject::Rotate(rotationAxis_, rotationSpeed_ * fTimeElapsed);
 }

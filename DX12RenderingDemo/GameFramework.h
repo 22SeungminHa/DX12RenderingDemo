@@ -5,7 +5,7 @@
 #include "Renderer.h"
 #include "InputSystem.h"
 
-class GameFramework {
+class Application {
 private:
 	Timer timer_;
 	TCHAR frameRate_[50];
@@ -27,8 +27,8 @@ private:
 	void ApplyStartupDisplayMode();
 
 public:
-	GameFramework();
-	~GameFramework();
+	Application();
+	~Application();
 
 	bool onCreate(HINSTANCE instance, HWND hwnd);
 	void onDestroy();

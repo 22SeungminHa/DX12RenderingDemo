@@ -41,11 +41,11 @@ protected:
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
 };
 
-class CDiffusedShader : public Shader
+class DiffusedShader : public Shader
 {
 public:
-    CDiffusedShader();
-    virtual ~CDiffusedShader();
+    DiffusedShader();
+    virtual ~DiffusedShader();
 
     virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
     virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
