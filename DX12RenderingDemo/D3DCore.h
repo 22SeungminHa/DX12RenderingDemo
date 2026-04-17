@@ -16,6 +16,12 @@ public:
 	void ResetCommandList();
 	void ExecuteCommandList();
 
+	// scene load / upload path
+	void ResetUploadCommandList();
+	UINT64 ExecuteUploadCommandList();
+	bool IsUploadFenceComplete(UINT64 fenceValue) const;
+	void WaitForUploadFence(UINT64 fenceValue);
+
 	void BeginRender(const float clearColor[4]);
 	void EndRender();
 
@@ -78,6 +84,7 @@ private:
 	// Command system
 	ComPtr<ID3D12CommandQueue> cmdQueue_;
 	std::array<ComPtr<ID3D12CommandAllocator>, kSwapChainBufferCount> cmdAllocators_;
+	ComPtr<ID3D12CommandAllocator> uploadCmdAllocator_;   // Ãß°¡
 	ComPtr<ID3D12GraphicsCommandList> cmdList_;
 
 	// Render targets
@@ -94,9 +101,14 @@ private:
 	UINT dsvDescriptorSize_ = 0;
 
 	// Synchronization
+	// frame fence
 	ComPtr<ID3D12Fence> fence_;
 	std::array<UINT64, kSwapChainBufferCount> fenceValues_{};
 	unique_handle fenceEvent_{ nullptr };
+	// upload fence
+	ComPtr<ID3D12Fence> uploadFence_;
+	UINT64 uploadFenceValue_ = 0;
+	unique_handle uploadFenceEvent_{ nullptr };
 
 	// View / configuration
 	UINT clientWidth_ = 0;

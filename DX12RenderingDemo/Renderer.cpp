@@ -26,14 +26,22 @@ void Renderer::InitializeCamera(UINT width, UINT height)
 
 void Renderer::BeginSceneLoad()
 {
-    d3dCore_.WaitForGpuComplete();
-    d3dCore_.ResetCommandList();
+    d3dCore_.ResetUploadCommandList();
 }
 
-void Renderer::EndSceneLoad()
+UINT64 Renderer::EndSceneLoad()
 {
-    d3dCore_.ExecuteCommandList();
-    d3dCore_.WaitForGpuComplete();
+    return d3dCore_.ExecuteUploadCommandList();
+}
+
+bool Renderer::IsSceneLoadComplete(UINT64 fenceValue) const
+{
+    return d3dCore_.IsUploadFenceComplete(fenceValue);
+}
+
+void Renderer::WaitForSceneLoad(UINT64 fenceValue)
+{
+    d3dCore_.WaitForUploadFence(fenceValue);
 }
 
 void Renderer::Render(Scene* scene)

@@ -22,7 +22,6 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 	windowedStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_STYLE));
 	windowedExStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_EXSTYLE));
 
-	// 시작 모드 1회 적용
 	ApplyStartupDisplayMode();
 
 	RECT rect;
@@ -80,8 +79,26 @@ void Application::ApplyStartupDisplayMode()
 	}
 }
 
+void Application::ProcessPendingUploadBufferRelease(bool forceWait)
+{
+	if (!hasPendingUploadBufferRelease_ || !renderer_ || !sceneManager_)
+		return;
+
+	if (!forceWait && !renderer_->IsSceneLoadComplete(pendingSceneLoadFenceValue_))
+		return;
+
+	renderer_->WaitForSceneLoad(pendingSceneLoadFenceValue_);
+	sceneManager_->ReleaseUploadBuffers();
+
+	pendingSceneLoadFenceValue_ = 0;
+	hasPendingUploadBufferRelease_ = false;
+}
+
 void Application::OnDestroy()
 {
+	// scene load 업로드가 남아 있으면 여기서만 정리
+	ProcessPendingUploadBufferRelease(true);
+
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseScene();
 	if (renderer_) renderer_->Shutdown();
@@ -117,16 +134,22 @@ void Application::UpdateSceneChange()
 	if (!renderer_ || !sceneManager_ || !sceneManager_->HasSceneChange())
 		return;
 
+	// 이전 scene load의 upload buffer가 아직 남아 있다면
+	// 새 scene 전환 전에만 안전하게 정리
+	ProcessPendingUploadBufferRelease(true);
+
 	renderer_->BeginSceneLoad();
 	sceneManager_->UpdateSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
-	renderer_->EndSceneLoad();
-
-	sceneManager_->ReleaseUploadBuffers();
+	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
+	hasPendingUploadBufferRelease_ = true;
 }
 
 void Application::FrameAdvance()
 {
 	timer_.Tick();
+
+	// 완료된 업로드 버퍼가 있으면 non-blocking으로 정리
+	ProcessPendingUploadBufferRelease(false);
 
 	UpdateSceneChange();
 

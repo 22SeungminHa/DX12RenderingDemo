@@ -15,8 +15,6 @@ void D3DCore::Initialize(HWND hwnd, int width, int height)
 
 void D3DCore::Shutdown()
 {
-    // Shutdown() 호출 전 상위에서 반드시 WaitForGpuComplete()를 보장해야 한다.
-
     if (!device_ && !swapChain_ && !cmdQueue_ && !fence_) return;
 
     ReleaseBackBuffers();
@@ -26,16 +24,22 @@ void D3DCore::Shutdown()
     dsvDescriptorHeap_.Reset();
 
     cmdList_.Reset();
+
+    uploadCmdAllocator_.Reset();
     for (auto& allocator : cmdAllocators_) {
         allocator.Reset();
     }
+
     cmdQueue_.Reset();
 
+    uploadFence_.Reset();
     fence_.Reset();
+
     swapChain_.Reset();
     device_.Reset();
     factory_.Reset();
 
+    uploadFenceEvent_.reset();
     fenceEvent_.reset();
 
 #if defined(_DEBUG)
@@ -107,12 +111,17 @@ void D3DCore::CreateDirect3DDevice()
     isMsaaEnabled_ = false;
 
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.GetAddressOf())));
+    ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(uploadFence_.GetAddressOf())));
 
     for (auto& value : fenceValues_)
         value = 1;
 
     fenceEvent_.reset(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
     if (!fenceEvent_)
+        ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+
+    uploadFenceEvent_.reset(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
+    if (!uploadFenceEvent_)
         ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 }
 
@@ -123,18 +132,25 @@ void D3DCore::CreateCommandObjects()
     cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
+
     for (UINT i = 0; i < kSwapChainBufferCount; ++i)
     {
         ThrowIfFailed(device_->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT,
             IID_PPV_ARGS(cmdAllocators_[i].GetAddressOf())));
     }
+
+    ThrowIfFailed(device_->CreateCommandAllocator(
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        IID_PPV_ARGS(uploadCmdAllocator_.GetAddressOf())));
+
     ThrowIfFailed(device_->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         cmdAllocators_[0].Get(),
         nullptr,
         IID_PPV_ARGS(cmdList_.GetAddressOf())));
+
     ThrowIfFailed(cmdList_->Close());
 }
 
@@ -315,6 +331,41 @@ void D3DCore::ExecuteCommandList()
 
     ID3D12CommandList* commandLists[] = { cmdList_.Get() };
     cmdQueue_->ExecuteCommandLists(_countof(commandLists), commandLists);
+}
+
+void D3DCore::ResetUploadCommandList()
+{
+    ThrowIfFailed(uploadCmdAllocator_->Reset());
+    ThrowIfFailed(cmdList_->Reset(uploadCmdAllocator_.Get(), nullptr));
+}
+
+UINT64 D3DCore::ExecuteUploadCommandList()
+{
+    ThrowIfFailed(cmdList_->Close());
+
+    ID3D12CommandList* commandLists[] = { cmdList_.Get() };
+    cmdQueue_->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    const UINT64 fenceValue = ++uploadFenceValue_;
+    ThrowIfFailed(cmdQueue_->Signal(uploadFence_.Get(), fenceValue));
+    return fenceValue;
+}
+
+bool D3DCore::IsUploadFenceComplete(UINT64 fenceValue) const
+{
+    return uploadFence_ && (uploadFence_->GetCompletedValue() >= fenceValue);
+}
+
+void D3DCore::WaitForUploadFence(UINT64 fenceValue)
+{
+    if (!uploadFence_ || !uploadFenceEvent_)
+        return;
+
+    if (uploadFence_->GetCompletedValue() >= fenceValue)
+        return;
+
+    ThrowIfFailed(uploadFence_->SetEventOnCompletion(fenceValue, uploadFenceEvent_.get()));
+    ::WaitForSingleObject(uploadFenceEvent_.get(), INFINITE);
 }
 
 void D3DCore::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)

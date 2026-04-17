@@ -27,8 +27,10 @@ public:
 
     // load
     void BeginSceneLoad();
-    void EndSceneLoad();
-
+    UINT64 EndSceneLoad();                      // º¯°æ
+    bool IsSceneLoadComplete(UINT64 fenceValue) const;
+    void WaitForSceneLoad(UINT64 fenceValue);
+    
     // sync
     void WaitForGpuComplete();
 
