@@ -19,7 +19,6 @@ bool GameFramework::onCreate(HINSTANCE instance, HWND hwnd)
 	instance_ = instance;
 	hwnd_ = hwnd;
 
-	windowPlacement_.length = sizeof(WINDOWPLACEMENT);
 	windowedStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_STYLE));
 	windowedExStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_EXSTYLE));
 
@@ -64,29 +63,30 @@ void GameFramework::ApplyStartupDisplayMode()
 			monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
 			monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
 			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		isBorderlessFullscreen_ = true;
 	}
 	else
 	{
 		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
 		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 
-		::SetWindowPlacement(hwnd_, &windowPlacement_);
+		RECT windowRect{ 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT };
+		::AdjustWindowRectEx(&windowRect, windowedStyle_, FALSE, windowedExStyle_);
+
+		const int windowWidth = windowRect.right - windowRect.left;
+		const int windowHeight = windowRect.bottom - windowRect.top;
+
 		::SetWindowPos(
 			hwnd_,
 			nullptr,
-			0, 0, 1280, 720,   // 원하는 기본 창 크기
-			SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-		isBorderlessFullscreen_ = false;
+			100, 100,
+			windowWidth, windowHeight,
+			SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 	}
 
 	::ShowWindow(hwnd_, SW_SHOW);
 	::SetForegroundWindow(hwnd_);
 	::SetFocus(hwnd_);
 }
-
 void GameFramework::onDestroy()
 {
 	if (renderer_) renderer_->WaitForGpuComplete();
@@ -115,7 +115,6 @@ LRESULT CALLBACK GameFramework::onProcessingWindowMessage(HWND hwnd, UINT msg, W
 	case WM_SIZE:
 	{
 		if (wParam == SIZE_MINIMIZED) return 0;
-		if (isFullscreenChanging_) return 0;
 
 		UINT width = LOWORD(lParam);
 		UINT height = HIWORD(lParam);

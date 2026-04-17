@@ -25,7 +25,6 @@ public:
 
 	void Render(Scene* scene);
 
-	void ChangeSwapChainState();
 	void WaitForGpuComplete();
 
 	ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }

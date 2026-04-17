@@ -11,8 +11,6 @@ public:
     bool Initialize(HWND hWnd, int width, int height);
     void Shutdown();
 
-    void ChangeSwapChainState();
-
     void WaitForGpuComplete();
     void MoveToNextFrame();
     void Present(UINT syncInterval = 0, UINT flags = 0);

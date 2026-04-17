@@ -292,10 +292,6 @@ void D3DCore::CreateDepthStencilView()
         dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 }
 
-void D3DCore::ChangeSwapChainState()
-{
-}
-
 void D3DCore::WaitForGpuComplete()
 {
     const UINT64 fenceValue = fenceValues_[swapChainBufferIndex_];

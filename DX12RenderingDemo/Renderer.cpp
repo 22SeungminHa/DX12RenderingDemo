@@ -68,10 +68,6 @@ void Renderer::Render(Scene* scene)
     d3dCore_.MoveToNextFrame();
 }
 
-void Renderer::ChangeSwapChainState()
-{
-}
-
 void Renderer::WaitForGpuComplete()
 {
     d3dCore_.WaitForGpuComplete();

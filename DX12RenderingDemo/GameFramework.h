@@ -13,13 +13,9 @@ private:
 	HINSTANCE instance_{};
 	HWND hwnd_{};
 
-	bool isFullscreenChanging_ = false;
-	bool isBorderlessFullscreen_ = false;
-
 	// 시작 모드만 결정하는 변수
 	bool startFullscreen_ = false;
 
-	WINDOWPLACEMENT windowPlacement_{ sizeof(WINDOWPLACEMENT) };
 	DWORD windowedStyle_ = 0;
 	DWORD windowedExStyle_ = 0;
 
