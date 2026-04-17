@@ -19,7 +19,7 @@ public:
     bool HasSceneChange() const { return sceneChangeRequested_; }
 
     void RequestChangeScene(SCENE_TYPE nextScene);
-    void ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+    void UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 
     void ReleaseScene();
     void ReleaseUploadBuffers();

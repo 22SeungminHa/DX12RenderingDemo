@@ -35,7 +35,7 @@ void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 	nextSceneType_ = nextScene;
 }
 
-void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void SceneManager::UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	if (!sceneChangeRequested_) return;
 

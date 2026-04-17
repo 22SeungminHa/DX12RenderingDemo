@@ -16,7 +16,7 @@ Application::~Application()
 
 void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 {
-	instance_ = instance;
+	hInstance_ = instance;
 	hwnd_ = hwnd;
 
 	windowedStyle_ = static_cast<DWORD>(::GetWindowLongPtr(hwnd_, GWL_STYLE));
@@ -89,7 +89,7 @@ void Application::OnDestroy()
 	if (renderer_) renderer_->Shutdown();
 }
 
-LRESULT CALLBACK Application::OnProcessingMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -114,13 +114,13 @@ void Application::Animate()
 	if (sceneManager_) sceneManager_->Animate(timer_.GetTimeElapsed());
 }
 
-void Application::ProcessSceneChange()
+void Application::UpdateSceneChange()
 {
 	if (!renderer_ || !sceneManager_ || !sceneManager_->HasSceneChange())
 		return;
 
 	renderer_->BeginSceneLoad();
-	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
+	sceneManager_->UpdateSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
 	renderer_->EndSceneLoad();
 
 	sceneManager_->ReleaseUploadBuffers();
@@ -130,7 +130,7 @@ void Application::FrameAdvance()
 {
 	timer_.Tick();
 
-	ProcessSceneChange();
+	UpdateSceneChange();
 
 	if (inputSystem_) inputSystem_->ProcessInput();
 
@@ -139,7 +139,7 @@ void Application::FrameAdvance()
 	if (renderer_ && sceneManager_) renderer_->Render(sceneManager_->GetScene());
 
 	if (hwnd_) {
-		timer_.GetFrameRate(frameRate_ + prefixLen, static_cast<int>(remain));
+		timer_.GetFrameRate(frameRate_ + kTitlePrefixLength, static_cast<int>(kRemain));
 		::SetWindowText(hwnd_, frameRate_);
 	}
 }

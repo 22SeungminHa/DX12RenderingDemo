@@ -1,94 +1,107 @@
 #pragma once
 #include "pch.h"
 
-class D3DCore {
+class D3DCore
+{
 public:
-    static constexpr UINT kSwapChainBufferCount = 2;
-
-    D3DCore() = default;
-    ~D3DCore() = default;
-
-    void Initialize(HWND hWnd, int width, int height);
-    void Shutdown();
-
-    void WaitForGpuComplete();
-    void MoveToNextFrame();
-    void Present(UINT syncInterval = 0, UINT flags = 0);
-
-    void ResetCommandList();
-    void ExecuteCommandList();
-
-    void BeginRender(const float clearColor[4]);
-    void EndRender();
+	static constexpr UINT kSwapChainBufferCount = 2;
 
 public:
-    UINT GetClientWidth() const { return clientWidth_; }
-    UINT GetClientHeight() const { return clientHeight_; }
+	D3DCore() = default;
+	~D3DCore() = default;
 
-    ID3D12Device* GetDevice() const { return device_.Get(); }
-    IDXGISwapChain3* GetSwapChain() const { return swapChain_.Get(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return cmdList_.Get(); }
-    ID3D12CommandQueue* GetCommandQueue() const { return cmdQueue_.Get(); }
+	void Initialize(HWND hWnd, int width, int height);
+	void Shutdown();
 
-    ID3D12Resource* GetCurrentRenderTarget() const { return renderTargetBuffers_[swapChainBufferIndex_].Get(); }
-    UINT GetCurrentBackBufferIndex() const { return swapChainBufferIndex_; }
+	void ResetCommandList();
+	void ExecuteCommandList();
 
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRtvHandle() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() const;
+	void BeginRender(const float clearColor[4]);
+	void EndRender();
 
-    UINT GetRtvDescriptorIncrementSize() const { return rtvDescriptorIncrementSize_; }
-    UINT GetDsvDescriptorIncrementSize() const { return dsvDescriptorIncrementSize_; }
+	void Present(UINT syncInterval = 0, UINT flags = 0);
+	void MoveToNextFrame();
+	void WaitForGpuComplete();
 
-private:
-    struct HandleCloser
-    {
-        void operator()(HANDLE h) const noexcept { if (h) ::CloseHandle(h); }
-    };
-    using unique_handle = std::unique_ptr<std::remove_pointer_t<HANDLE>, HandleCloser>;
+public:
+	UINT GetClientWidth() const { return clientWidth_; }
+	UINT GetClientHeight() const { return clientHeight_; }
 
-private:
-    void CreateSwapChain(HWND hWnd, int width, int height);
-    void CreateDirect3DDevice();
-    void CreateDescriptorHeaps();
-    void CreateCommandObjects();
-    void CreateRenderTargetViews();
-    void CreateDepthStencilView();
+	ID3D12Device* GetDevice() const { return device_.Get(); }
+	IDXGISwapChain3* GetSwapChain() const { return swapChain_.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return cmdList_.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() const { return cmdQueue_.Get(); }
 
-    void ReleaseBackBuffers();
-    void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+	ID3D12Resource* GetCurrentRenderTarget() const { return renderTargetBuffers_[currentBackBufferIndex_].Get(); }
+	UINT GetCurrentBackBufferIndex() const { return currentBackBufferIndex_; }
 
-    DXGI_SWAP_CHAIN_DESC1 CreateSwapChainDesc1(int width, int height) const;
-    D3D12_RESOURCE_DESC CreateDepthStencilResourceDesc() const;
-    D3D12_CLEAR_VALUE CreateDepthStencilClearValue() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRtvHandle() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() const;
+
+	UINT GetRtvDescriptorIncrementSize() const { return rtvDescriptorSize_; }
+	UINT GetDsvDescriptorIncrementSize() const { return dsvDescriptorSize_; }
 
 private:
-    ComPtr<IDXGIFactory4> factory_;
-    ComPtr<IDXGISwapChain3> swapChain_;
-    ComPtr<ID3D12Device> device_;
+	struct HandleCloser
+	{
+		void operator()(HANDLE h) const noexcept
+		{
+			if (h) ::CloseHandle(h);
+		}
+	};
 
-    bool msaaEnable_ = false;
-    UINT msaaQualityLevel_ = 0;
+	using unique_handle = std::unique_ptr<std::remove_pointer_t<HANDLE>, HandleCloser>;
 
-    UINT swapChainBufferIndex_ = 0;
+private:
+	void CreateDirect3DDevice();
+	void CreateCommandObjects();
+	void CreateDescriptorHeaps();
 
-    std::array<ComPtr<ID3D12Resource>, kSwapChainBufferCount> renderTargetBuffers_;
-    std::array<D3D12_RESOURCE_STATES, kSwapChainBufferCount> renderTargetStates_{};
-    
-    ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
-    UINT rtvDescriptorIncrementSize_ = 0;
+	void CreateSwapChain(HWND hWnd, int width, int height);
+	DXGI_SWAP_CHAIN_DESC1 CreateSwapChainDesc1(int width, int height) const;
 
-    ComPtr<ID3D12Resource> depthStencilBuffer_;
-    ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
-    UINT dsvDescriptorIncrementSize_ = 0;
+	void CreateRenderTargetViews();
+	void ReleaseBackBuffers();
 
-    ComPtr<ID3D12CommandQueue> cmdQueue_;
-    std::array<ComPtr<ID3D12CommandAllocator>, kSwapChainBufferCount> cmdAllocators_;
-    ComPtr<ID3D12GraphicsCommandList> cmdList_;
+	void CreateDepthStencilObjects();
+	D3D12_RESOURCE_DESC CreateDepthStencilResourceDesc() const;
+	D3D12_CLEAR_VALUE CreateDepthStencilClearValue() const;
 
-    ComPtr<ID3D12Fence> fence_;
-    std::array<UINT64, kSwapChainBufferCount> fenceValues_{};
-    unique_handle fenceEvent_{ nullptr };
+	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
-    UINT clientWidth_ = 0;
-    UINT clientHeight_ = 0;
+private:
+	// Device / DXGI core
+	ComPtr<IDXGIFactory4> factory_;
+	ComPtr<ID3D12Device> device_;
+	ComPtr<IDXGISwapChain3> swapChain_;
+
+	// Command system
+	ComPtr<ID3D12CommandQueue> cmdQueue_;
+	std::array<ComPtr<ID3D12CommandAllocator>, kSwapChainBufferCount> cmdAllocators_;
+	ComPtr<ID3D12GraphicsCommandList> cmdList_;
+
+	// Render targets
+	std::array<ComPtr<ID3D12Resource>, kSwapChainBufferCount> renderTargetBuffers_;
+	std::array<D3D12_RESOURCE_STATES, kSwapChainBufferCount> renderTargetStates_{};
+	UINT currentBackBufferIndex_ = 0;
+
+	ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
+	UINT rtvDescriptorSize_ = 0;
+
+	// Depth stencil
+	ComPtr<ID3D12Resource> depthStencilBuffer_;
+	ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
+	UINT dsvDescriptorSize_ = 0;
+
+	// Synchronization
+	ComPtr<ID3D12Fence> fence_;
+	std::array<UINT64, kSwapChainBufferCount> fenceValues_{};
+	unique_handle fenceEvent_{ nullptr };
+
+	// View / configuration
+	UINT clientWidth_ = 0;
+	UINT clientHeight_ = 0;
+
+	bool isMsaaEnabled_ = false;
+	UINT msaaQualityLevel_ = 0;
 };

@@ -10,16 +10,14 @@ void D3DCore::Initialize(HWND hwnd, int width, int height)
     CreateDescriptorHeaps();
     CreateSwapChain(hwnd, width, height);
     CreateRenderTargetViews();
-    CreateDepthStencilView();
+    CreateDepthStencilObjects();
 }
 
 void D3DCore::Shutdown()
 {
-    if (!device_ && !swapChain_ && !cmdQueue_ && !fence_)
-        return;
+    // Shutdown() 호출 전 상위에서 반드시 WaitForGpuComplete()를 보장해야 한다.
 
-    if (cmdQueue_ && fence_ && fenceEvent_)
-        WaitForGpuComplete();
+    if (!device_ && !swapChain_ && !cmdQueue_ && !fence_) return;
 
     ReleaseBackBuffers();
 
@@ -106,7 +104,7 @@ void D3DCore::CreateDirect3DDevice()
         sizeof(msaaQualityLevels)));
 
     msaaQualityLevel_ = msaaQualityLevels.NumQualityLevels;
-    msaaEnable_ = false;
+    isMsaaEnabled_ = false;
 
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.GetAddressOf())));
 
@@ -149,7 +147,7 @@ void D3DCore::CreateDescriptorHeaps()
     rtvHeapDesc.NodeMask = 0;
 
     ThrowIfFailed(device_->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(rtvDescriptorHeap_.GetAddressOf())));
-    rtvDescriptorIncrementSize_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rtvDescriptorSize_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
     dsvHeapDesc.NumDescriptors = 1;
@@ -158,7 +156,7 @@ void D3DCore::CreateDescriptorHeaps()
     dsvHeapDesc.NodeMask = 0;
 
     ThrowIfFailed(device_->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvDescriptorHeap_.GetAddressOf())));
-    dsvDescriptorIncrementSize_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    dsvDescriptorSize_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
 
 
@@ -198,7 +196,7 @@ void D3DCore::CreateSwapChain(HWND hwnd, int width, int height)
 
     ThrowIfFailed(baseSwapChain.As(&swapChain_));
 
-    swapChainBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
+    currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 
     ThrowIfFailed(factory_->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 }
@@ -222,7 +220,7 @@ void D3DCore::CreateRenderTargetViews()
 
         renderTargetStates_[i] = D3D12_RESOURCE_STATE_PRESENT;
 
-        rtvCPUDescriptorHandle.ptr += rtvDescriptorIncrementSize_;
+        rtvCPUDescriptorHandle.ptr += rtvDescriptorSize_;
     }
 }
 
@@ -246,7 +244,7 @@ D3D12_CLEAR_VALUE D3DCore::CreateDepthStencilClearValue() const
     return clearValue;
 }
 
-void D3DCore::CreateDepthStencilView()
+void D3DCore::CreateDepthStencilObjects()
 {
     const auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
     const auto resourceDesc = CreateDepthStencilResourceDesc();
@@ -270,7 +268,7 @@ void D3DCore::WaitForGpuComplete()
 {
     assert(cmdQueue_ && fence_ && fenceEvent_);
 
-    const UINT64 fenceValue = fenceValues_[swapChainBufferIndex_];
+    const UINT64 fenceValue = fenceValues_[currentBackBufferIndex_];
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
 
     if (fence_->GetCompletedValue() < fenceValue)
@@ -279,18 +277,19 @@ void D3DCore::WaitForGpuComplete()
         ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
     }
 
-    ++fenceValues_[swapChainBufferIndex_];
+    ++fenceValues_[currentBackBufferIndex_];
 }
 
 void D3DCore::MoveToNextFrame()
 {
-    const UINT currentIndex = swapChainBufferIndex_;
-    const UINT64 currentFenceValue = fenceValues_[currentIndex];
+    assert(cmdQueue_ && fence_ && fenceEvent_ && swapChain_);
+
+    const UINT64 currentFenceValue = fenceValues_[currentBackBufferIndex_];
     
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), currentFenceValue));
 
     const UINT nextIndex = swapChain_->GetCurrentBackBufferIndex();
-    swapChainBufferIndex_ = nextIndex;
+    currentBackBufferIndex_ = nextIndex;
 
     if (fence_->GetCompletedValue() < fenceValues_[nextIndex])
     {
@@ -305,7 +304,7 @@ void D3DCore::MoveToNextFrame()
 
 void D3DCore::ResetCommandList()
 {
-    auto& allocator = cmdAllocators_[swapChainBufferIndex_];
+    auto& allocator = cmdAllocators_[currentBackBufferIndex_];
     ThrowIfFailed(allocator->Reset());
     ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
 }
@@ -336,7 +335,7 @@ void D3DCore::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES
 D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetCurrentRtvHandle() const
 {
     D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += (swapChainBufferIndex_ * rtvDescriptorIncrementSize_);
+    handle.ptr += (currentBackBufferIndex_ * rtvDescriptorSize_);
     return handle;
 }
 
@@ -348,7 +347,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetDsvHandle() const
 void D3DCore::BeginRender(const float clearColor[4])
 {
     ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
-    UINT currentIndex = swapChainBufferIndex_;
+    UINT currentIndex = currentBackBufferIndex_;
 
     TransitionResource(
         currentRenderTarget,
@@ -368,7 +367,7 @@ void D3DCore::BeginRender(const float clearColor[4])
 void D3DCore::EndRender()
 {
     ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
-    UINT currentIndex = swapChainBufferIndex_;
+    UINT currentIndex = currentBackBufferIndex_;
 
     TransitionResource(
         currentRenderTarget,
