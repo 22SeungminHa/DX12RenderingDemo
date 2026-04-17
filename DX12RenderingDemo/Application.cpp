@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "GameFramework.h"
+#include "Application.h"
 
 Application::Application()
 {
@@ -7,14 +7,14 @@ Application::Application()
 	renderer_ = std::make_unique<Renderer>();
 	inputSystem_ = std::make_unique<InputSystem>();
 
-	_tcscpy_s(frameRate_, _T("D3DX12Demo ("));
+	_tcscpy_s(frameRate_, TitlePrefix);
 }
 
 Application::~Application()
 {
 }
 
-bool Application::onCreate(HINSTANCE instance, HWND hwnd)
+bool Application::OnCreate(HINSTANCE instance, HWND hwnd)
 {
 	instance_ = instance;
 	hwnd_ = hwnd;
@@ -83,20 +83,18 @@ void Application::ApplyStartupDisplayMode()
 			SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 	}
 
-	::ShowWindow(hwnd_, SW_SHOW);
-	::UpdateWindow(hwnd_);
 	::SetForegroundWindow(hwnd_);
 	::SetFocus(hwnd_);
 }
 
-void Application::onDestroy()
+void Application::OnDestroy()
 {
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseScene();
 	if (renderer_) renderer_->Shutdown();
 }
 
-LRESULT CALLBACK Application::onProcessingWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Application::OnProcessingMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg) {
 	case WM_LBUTTONDOWN:
@@ -118,35 +116,37 @@ LRESULT CALLBACK Application::onProcessingWindowMessage(HWND hwnd, UINT msg, WPA
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void Application::animate()
+void Application::Animate()
 {
 	if (sceneManager_) sceneManager_->Animate(timer_.GetTimeElapsed());
 }
 
-void Application::processSceneChange()
+void Application::ProcessSceneChange()
 {
 	if (!renderer_ || !sceneManager_ || !sceneManager_->HasSceneChange())
 		return;
 
 	renderer_->BeginSceneLoad();
+	SceneLoadGuard guard{ renderer_.get() };
 	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
-	renderer_->EndSceneLoad();
 
 	sceneManager_->ReleaseUploadBuffers();
 }
 
-void Application::frameAdvance()
+void Application::FrameAdvance()
 {
-	timer_.Tick(0.0f);
+	timer_.Tick();
 
-	processSceneChange();
+	ProcessSceneChange();
 
 	if (inputSystem_) inputSystem_->ProcessInput();
 
-	animate();
+	Animate();
 
 	if (renderer_ && sceneManager_) renderer_->Render(sceneManager_->GetScene());
 
-	timer_.GetFrameRate(frameRate_ + 12, 37);
-	::SetWindowText(hwnd_, frameRate_);
+	if (hwnd_) {
+		timer_.GetFrameRate(frameRate_ + prefixLen, static_cast<int>(remain));
+		::SetWindowText(hwnd_, frameRate_);
+	}
 }

@@ -12,7 +12,8 @@ public:
 	void Start() { }
 	void Stop() { }
 	void Reset();
-	void Tick(float fLockFPS = 0.0f);
+	void Tick();
+	void WaitForFrameRate(float lockFPS = 0.0f);
 	unsigned long GetFrameRate(LPTSTR lpszString = NULL, int nCharacters = 0);
 	float GetTimeElapsed();
 

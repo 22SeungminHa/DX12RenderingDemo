@@ -3,9 +3,9 @@
 
 #include "pch.h"
 #include "DX12RenderingDemo.h"
-#include "GameFramework.h"
+#include "Application.h"
 
-Application gameFramework;
+Application application;
 
 #define MAX_LOADSTRING 100
 
@@ -58,11 +58,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
         else
         {
-            gameFramework.frameAdvance();
+            application.FrameAdvance();
         }
     }
 
-    gameFramework.onDestroy();
+    application.OnDestroy();
 
     return (int)msg.wParam;
 }
@@ -119,7 +119,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     if (!hMainWnd) return(FALSE);
 
-    gameFramework.onCreate(hInstance, hMainWnd);
+    if (!application.OnCreate(hInstance, hMainWnd))
+    {
+        DestroyWindow(hMainWnd);
+        return FALSE;
+    }
+
+    ::ShowWindow(hMainWnd, SW_SHOW);
+    ::UpdateWindow(hMainWnd);
 
     return(TRUE);
 }
@@ -146,7 +153,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_MOUSEMOVE:
     case WM_KEYDOWN:
     case WM_KEYUP:
-        gameFramework.onProcessingWindowMessage(hWnd, message, wParam, lParam);
+        application.OnProcessingMessage(hWnd, message, wParam, lParam);
         break;
     case WM_DESTROY:
         ::PostQuitMessage(0);
