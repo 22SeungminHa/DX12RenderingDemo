@@ -1,18 +1,10 @@
 #include "Renderer.h"
 #include "Scene.h"
 
-Renderer::Renderer()
-{
-}
-
-Renderer::~Renderer()
-{
-}
-
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
-    CreateCamera(width, height);
+    InitializeCamera(width, height);
 }
 
 void Renderer::Shutdown()
@@ -20,12 +12,15 @@ void Renderer::Shutdown()
     d3dCore_.Shutdown();
 }
 
-void Renderer::CreateCamera(UINT width, UINT height)
+void Renderer::InitializeCamera(UINT width, UINT height)
 {
-    camera_ = std::make_unique<Camera>();
+    if (!camera_) camera_ = std::make_unique<Camera>();
+
     camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
     camera_->SetScissorRect(0, 0, width, height);
-    camera_->GenerateProjectionMatrix(1.0f, 500.0f, float(width) / float(height), 90.0f);
+
+    float aspect = (height == 0) ? 1.0f : static_cast<float>(width) / static_cast<float>(height);
+    camera_->GenerateProjectionMatrix(1.0f, 500.0f, aspect, 90.0f);
     camera_->GenerateViewMatrix(Vector3(0.0f, 15.0f, -25.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::Up);
 }
 

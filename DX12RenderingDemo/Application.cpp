@@ -43,8 +43,7 @@ void Application::ApplyStartupDisplayMode()
 {
 	if (!hwnd_) return;
 
-	if (startFullscreen_)
-	{
+	if (startFullscreen_) {
 		HMONITOR hMonitor = ::MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO monitorInfo{};
 		monitorInfo.cbSize = sizeof(MONITORINFO);
@@ -62,8 +61,7 @@ void Application::ApplyStartupDisplayMode()
 			monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
 			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 	}
-	else
-	{
+	else {
 		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
 		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 

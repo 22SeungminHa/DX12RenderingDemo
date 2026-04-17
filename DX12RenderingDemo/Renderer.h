@@ -4,29 +4,36 @@
 
 class Scene;
 
-class Renderer {
+class Renderer
+{
 private:
-	D3DCore d3dCore_;
-	std::unique_ptr<Camera> camera_;
+    D3DCore d3dCore_;
+    std::unique_ptr<Camera> camera_;
 
 public:
-	Renderer();
-	~Renderer();
+    Renderer() = default;
+    ~Renderer() = default;
 
-	void Initialize(HWND hwnd, UINT width, UINT height);
-	void Shutdown();
+public:
+    // lifecycle
+    void Initialize(HWND hwnd, UINT width, UINT height);
+    void Shutdown();
 
-	void CreateCamera(UINT width, UINT height);
+    // setup
+    void InitializeCamera(UINT width, UINT height);
 
-	void BeginSceneLoad();
-	void EndSceneLoad();
+    // render
+    void Render(Scene* scene);
 
-	void Render(Scene* scene);
+    // load
+    void BeginSceneLoad();
+    void EndSceneLoad();
 
-	void WaitForGpuComplete();
+    // sync
+    void WaitForGpuComplete();
 
-	ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
-	ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
-	Camera* GetCamera() const { return camera_.get(); }
+    // getters
+    ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
+    ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
+    Camera* GetCamera() const { return camera_.get(); }
 };
-
