@@ -1,13 +1,8 @@
 #pragma once
 #include "UploadBuffer.h"
+#include "ShaderTypes.h"
 
 #define ASPECT_RATIO (float(FRAME_BUFFER_WIDTH) / float(FRAME_BUFFER_HEIGHT))
-
-struct PassCB
-{
-    Matrix view;
-    Matrix proj;
-};
 
 class Camera
 {

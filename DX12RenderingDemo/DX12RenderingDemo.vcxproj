@@ -141,6 +141,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderTypes.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -168,7 +169,6 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="TestScene.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="UploadBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX12RenderingDemo.rc" />

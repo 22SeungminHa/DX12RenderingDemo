@@ -73,6 +73,9 @@
     <ClInclude Include="UploadBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="ShaderTypes.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12RenderingDemo.cpp">
@@ -119,9 +122,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="InputSystem.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="UploadBuffer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
