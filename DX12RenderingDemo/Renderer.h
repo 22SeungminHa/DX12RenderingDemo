@@ -8,7 +8,7 @@ class Renderer
 {
 private:
     D3DCore d3dCore_;
-    std::unique_ptr<Camera> camera_;
+    std::unique_ptr<UploadBuffer<PassCB>> passCB_;
 
 public:
     Renderer() = default;
@@ -18,9 +18,6 @@ public:
     // lifecycle
     void Initialize(HWND hwnd, UINT width, UINT height);
     void Shutdown();
-
-    // setup
-    void InitializeCamera(UINT width, UINT height);
     void Resize(UINT width, UINT height);
 
     // render
@@ -38,5 +35,10 @@ public:
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
-    Camera* GetCamera() const { return camera_.get(); }
+
+private:
+    void CreateShaderVariables();
+    void ReleaseShaderVariables();
+    void UpdateCameraData(Camera* camera);
+    void SetViewportsAndScissorRects(Camera* camera);
 };

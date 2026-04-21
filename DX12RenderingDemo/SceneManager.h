@@ -8,7 +8,7 @@ private:
     SCENE_TYPE nextSceneType_ = SCENE_TYPE::NONE;
     bool sceneChangeRequested_ = false;
 
-    void CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+    void CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height);
 
 public:
     SceneManager() = default;
@@ -19,7 +19,7 @@ public:
     bool HasSceneChange() const { return sceneChangeRequested_; }
 
     void RequestChangeScene(SCENE_TYPE nextScene);
-    void UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+    void UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height);
 
     void ReleaseScene();
     void ReleaseUploadBuffers();
@@ -29,8 +29,9 @@ public:
     void OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
 
     void Animate(float deltaTime);
-    void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera);
+    void Render(ID3D12GraphicsCommandList* cmdList);
+    void Resize(UINT width, UINT height);
 
 private:
-    std::unique_ptr<Scene> CreateSceneByType(SCENE_TYPE sceneType);
+    std::unique_ptr<Scene> CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height);
 };

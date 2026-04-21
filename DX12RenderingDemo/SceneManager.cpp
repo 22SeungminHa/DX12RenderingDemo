@@ -1,21 +1,21 @@
 #include "SceneManager.h"
 #include "TestScene.h"
 
-std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType)
+std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)
 {
 	switch (sceneType) {
 	case SCENE_TYPE::TEST1:
-		return std::make_unique<TestScene1>();
+		return std::make_unique<TestScene1>(width, height);
 	case SCENE_TYPE::TEST2:
-		return std::make_unique<TestScene2>();
+		return std::make_unique<TestScene2>(width, height);
 	default:
 		return nullptr;
 	}
 }
 
-void SceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void SceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
 {
-	currentScene_ = CreateSceneByType(sceneType);
+	currentScene_ = CreateSceneByType(sceneType, width, height);
 
 	if (currentScene_) {
 		currentSceneType_ = sceneType;
@@ -35,12 +35,12 @@ void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 	nextSceneType_ = nextScene;
 }
 
-void SceneManager::UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void SceneManager::UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
 {
 	if (!sceneChangeRequested_) return;
 
 	ReleaseScene();
-	CreateScene(nextSceneType_, device, cmdList);
+	CreateScene(nextSceneType_, device, cmdList, width, height);
 	sceneChangeRequested_ = false;
 	nextSceneType_ = SCENE_TYPE::NONE;
 }
@@ -114,7 +114,12 @@ void SceneManager::Animate(float deltaTime)
 	if (currentScene_) currentScene_->Animate(deltaTime);
 }
 
-void SceneManager::Render(ID3D12GraphicsCommandList* cmdList, Camera* camera)
+void SceneManager::Render(ID3D12GraphicsCommandList* cmdList)
 {
-	if (currentScene_) currentScene_->Render(cmdList, camera);
+	if (currentScene_) currentScene_->Render(cmdList);
+}
+
+void SceneManager::Resize(UINT width, UINT height)
+{
+	if (currentScene_) currentScene_->Resize(width, height);
 }

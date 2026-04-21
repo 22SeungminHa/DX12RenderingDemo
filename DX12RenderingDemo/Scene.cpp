@@ -1,5 +1,11 @@
 #include "Scene.h"
 
+Scene::Scene(UINT width, UINT height)
+{
+	clientWidth_ = width;
+	clientHeight_ = height;
+};
+
 ComPtr<ID3D12RootSignature> Scene::CreateGraphicsRootSignature(ID3D12Device* device)
 {
 	ComPtr<ID3D12RootSignature> rootSignature;
@@ -51,7 +57,17 @@ void Scene::Unload()
 	OnUnload();
 
 	objects_.clear();
+	cameras_.clear();
+	activeCamera_ = nullptr;
 	rootSignature_.Reset();
+}
+
+void Scene::Resize(UINT width, UINT height)
+{
+	clientWidth_ = width;
+	clientHeight_ = height;
+
+	OnResize(width, height);
 }
 
 void Scene::ReleaseUploadBuffers()
@@ -104,17 +120,13 @@ void Scene::Animate(float deltaTime)
 	}
 }
 
-void Scene::Render(ID3D12GraphicsCommandList* cmdList, Camera* camera)
+void Scene::Render(ID3D12GraphicsCommandList* cmdList)
 {
-	if (!cmdList || !camera || !rootSignature_)
+	if (!cmdList || !rootSignature_)
 		return;
-
-	camera->SetViewportsAndScissorRects(cmdList);
-	cmdList->SetGraphicsRootSignature(rootSignature_.Get());
-	camera->UpdateShaderVariables(cmdList);
 
 	//씬을 렌더링하는 것은 씬을 구성하는 게임 객체(셰이더를 포함하는 객체)들을 렌더링하는 것이다.
 	for (auto& object : objects_) {
-		if (object) object->Render(cmdList, camera);
+		if (object) object->Render(cmdList, activeCamera_);
 	}
 }

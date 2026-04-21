@@ -6,26 +6,32 @@
 
 class Camera
 {
-protected:
-    Matrix m_xmf4x4View; // 카메라 변환 행렬
-    Matrix m_xmf4x4Projection; // 투영 변환 행렬
-    D3D12_VIEWPORT m_d3dViewport; // 뷰포트
-    D3D12_RECT m_d3dScissorRect; // 씨저 사각형
-
-    std::unique_ptr<UploadBuffer<PassCB>> passCB_;
-
 public:
     Camera();
-    virtual ~Camera();
+    virtual ~Camera() = default;
 
-    virtual void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-    virtual void ReleaseShaderVariables();
-    virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+public:
+    // view / projection
+    void SetLookAt(const Vector3& position, const Vector3& target, const Vector3& up = Vector3::Up);
+    void SetProjection(float nearPlane, float farPlane, float aspectRatio, float fovY);
 
-    void GenerateViewMatrix(const Vector3& position, const Vector3& lookAt, const Vector3& up);
-    void GenerateProjectionMatrix(float nearPlaneDistance, float farPlaneDistance, float aspectRatio, float fovAngle);
+    // viewport / scissor
+    void SetViewport(float x, float y, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
+    void SetScissorRect(LONG left, LONG top, LONG right, LONG bottom);
 
-    void SetViewport(int xTopLeft, int yTopLeft, int nWidth, int nHeight, float fMinZ = 0.0f, float fMaxZ = 1.0f);
-    void SetScissorRect(LONG xLeft, LONG yTop, LONG xRight, LONG yBottom);
-    virtual void SetViewportsAndScissorRects(ID3D12GraphicsCommandList* pd3dCommandList);
+    // getters
+    const Matrix& GetViewMatrix() const { return view_; }
+    const Matrix& GetProjectionMatrix() const { return projection_; }
+    const D3D12_VIEWPORT& GetViewport() const { return viewport_; }
+    const D3D12_RECT& GetScissorRect() const { return scissorRect_; }
+
+    // pass data
+    PassCB BuildPassCB() const;
+
+protected:
+    Matrix view_ = Matrix::Identity;
+    Matrix projection_ = Matrix::Identity;
+
+    D3D12_VIEWPORT viewport_{};
+    D3D12_RECT scissorRect_{};
 };

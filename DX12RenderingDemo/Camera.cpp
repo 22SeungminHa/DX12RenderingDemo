@@ -2,68 +2,43 @@
 
 Camera::Camera()
 {
-	m_xmf4x4View = Matrix::Identity;
-	m_xmf4x4Projection = Matrix::Identity;
-	m_d3dViewport = { 0, 0, FRAME_BUFFER_WIDTH , FRAME_BUFFER_HEIGHT, 0.0f, 1.0f };
-	m_d3dScissorRect = { 0, 0, FRAME_BUFFER_WIDTH , FRAME_BUFFER_HEIGHT };
+	viewport_ = { 0.0f, 0.0f, float(FRAME_BUFFER_WIDTH), float(FRAME_BUFFER_HEIGHT), 0.0f, 1.0f };
+	scissorRect_ = { 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT };
 }
 
-Camera::~Camera()
+void Camera::SetLookAt(const Vector3& position, const Vector3& target, const Vector3& up)
 {
-
+    view_ = Matrix::CreateLookAt(position, target, up);
 }
 
-void Camera::SetViewport(int xTopLeft, int yTopLeft, int nWidth, int nHeight, float fMinZ, float fMaxZ)
+void Camera::SetProjection(float nearPlane, float farPlane, float aspectRatio, float fovY)
 {
-	m_d3dViewport.TopLeftX = float(xTopLeft);
-	m_d3dViewport.TopLeftY = float(yTopLeft);
-	m_d3dViewport.Width = float(nWidth);
-	m_d3dViewport.Height = float(nHeight);
-	m_d3dViewport.MinDepth = fMinZ;
-	m_d3dViewport.MaxDepth = fMaxZ;
+    projection_ = Matrix::CreatePerspectiveFieldOfView(
+        XMConvertToRadians(fovY), aspectRatio, nearPlane, farPlane);
 }
 
-void Camera::SetScissorRect(LONG xLeft, LONG yTop, LONG xRight, LONG yBottom)
+void Camera::SetViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
 {
-	m_d3dScissorRect.left = xLeft;
-	m_d3dScissorRect.top = yTop;
-	m_d3dScissorRect.right = xRight;
-	m_d3dScissorRect.bottom = yBottom;
+    viewport_.TopLeftX = x;
+    viewport_.TopLeftY = y;
+    viewport_.Width = width;
+    viewport_.Height = height;
+    viewport_.MinDepth = minDepth;
+    viewport_.MaxDepth = maxDepth;
 }
 
-void Camera::GenerateProjectionMatrix(float nearPlaneDistance, float farPlaneDistance, float aspectRatio, float fovAngle)
+void Camera::SetScissorRect(LONG left, LONG top, LONG right, LONG bottom)
 {
-	m_xmf4x4Projection = Matrix::CreatePerspectiveFieldOfView(XMConvertToRadians(fovAngle), aspectRatio, nearPlaneDistance, farPlaneDistance);
+    scissorRect_.left = left;
+    scissorRect_.top = top;
+    scissorRect_.right = right;
+    scissorRect_.bottom = bottom;
 }
 
-void Camera::GenerateViewMatrix(const Vector3& position, const Vector3& lookAt, const Vector3& up)
+PassCB Camera::BuildPassCB() const
 {
-	m_xmf4x4View = Matrix::CreateLookAt(position, lookAt, up);
-}
-
-void Camera::CreateShaderVariables(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
-{
-	passCB_ = std::make_unique<UploadBuffer<PassCB>>(device, 1, true);
-}
-
-void Camera::UpdateShaderVariables(ID3D12GraphicsCommandList* cmdList)
-{
-	PassCB cbData{};
-	cbData.view = m_xmf4x4View.Transpose();
-	cbData.proj = m_xmf4x4Projection.Transpose();
-
-	passCB_->CopyData(0, cbData);
-
-	cmdList->SetGraphicsRootConstantBufferView(1, passCB_->GetResource()->GetGPUVirtualAddress());
-}
-
-void Camera::ReleaseShaderVariables()
-{
-	passCB_.reset();
-}
-
-void Camera::SetViewportsAndScissorRects(ID3D12GraphicsCommandList* cmdList)
-{
-	cmdList->RSSetViewports(1, &m_d3dViewport);
-	cmdList->RSSetScissorRects(1, &m_d3dScissorRect);
+    PassCB passCB{};
+    passCB.view = view_.Transpose();
+    passCB.proj = projection_.Transpose();
+    return passCB;
 }

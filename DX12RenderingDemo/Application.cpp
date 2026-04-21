@@ -160,6 +160,7 @@ void Application::HandleResize(UINT width, UINT height)
 
 	ProcessPendingUploadBufferRelease(true);
 	renderer_->Resize(width, height);
+	sceneManager_->Resize(width, height);
 }
 
 void Application::Animate()
@@ -177,7 +178,14 @@ void Application::UpdateSceneChange()
 	ProcessPendingUploadBufferRelease(true);
 
 	renderer_->BeginSceneLoad();
-	sceneManager_->UpdateSceneChange(renderer_->GetDevice(), renderer_->GetCommandList());
+
+	RECT rect;
+	::GetClientRect(hwnd_, &rect);
+
+	UINT width = rect.right - rect.left;
+	UINT height = rect.bottom - rect.top;
+
+	sceneManager_->UpdateSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), width, height);
 	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
 	hasPendingUploadBufferRelease_ = true;
 }
