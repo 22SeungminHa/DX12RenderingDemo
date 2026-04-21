@@ -41,9 +41,9 @@ protected:
 	D3D12_PRIMITIVE_TOPOLOGY primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	UINT slot_ = 0;
-	UINT vertices_ = 0;
+	UINT vertexCount_ = 0;
 	UINT stride_ = 0;
-	UINT offset_ = 0;
+	UINT startVertexLocation_ = 0;
 
 	ComPtr<ID3D12Resource> indexBuffer_ = NULL;
 	ComPtr<ID3D12Resource> indexUploadBuffer_ = NULL;
@@ -52,7 +52,7 @@ protected:
 	/*인덱스 버퍼(인덱스의 배열)와 인덱스 버퍼를 위한 업로드 버퍼에 대한 인터페이스 포인터이다. 
 	인덱스 버퍼는 정점 버퍼(배열)에 대한 인덱스를 가진다.*/
 
-	UINT indices_ = 0;		//인덱스 버퍼에 포함되는 인덱스의 개수이다.
+	UINT indexCount_ = 0;		//인덱스 버퍼에 포함되는 인덱스의 개수이다.
 	UINT startIndex_ = 0; 	//인덱스 버퍼에서 메쉬를 그리기 위해 사용되는 시작 인덱스이다. 
 	int baseVertex_ = 0;		//인덱스 버퍼의 인덱스에 더해질 인덱스이다.
 

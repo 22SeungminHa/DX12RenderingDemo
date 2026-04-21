@@ -1,14 +1,14 @@
 //게임 객체의 정보를 위한 상수 버퍼를 선언한다.
 cbuffer cbGameObjectInfo : register(b0)
 {
-	matrix gmtxWorld : packoffset(c0);
+    matrix gmtxWorld;
 };
 
 //카메라의 정보를 위한 상수 버퍼를 선언한다.
 cbuffer cbCameraInfo : register(b1)
 {
-	matrix gmtxView : packoffset(c0);
-	matrix gmtxProjection : packoffset(c4);
+    matrix gmtxView;
+    matrix gmtxProjection;
 };
 
 //정점 셰이더의 입력을 위한 구조체를 선언한다.
@@ -28,12 +28,14 @@ struct VS_OUTPUT
 //정점 셰이더를 정의한다.
 VS_OUTPUT VSDiffused(VS_INPUT input)
 {
-	VS_OUTPUT output;
-	//정점을 변환(월드 변환, 카메라 변환, 투영 변환)한다.
-	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxWorld), gmtxView),
-		gmtxProjection);
-	output.color = input.color;
-	return(output);
+    VS_OUTPUT output;
+
+    float4 posW = mul(float4(input.position, 1.0f), gmtxWorld);
+    float4 posV = mul(posW, gmtxView);
+    output.position = mul(posV, gmtxProjection);
+    output.color = input.color;
+
+    return output;
 }
 
 //픽셀 셰이더를 정의한다.

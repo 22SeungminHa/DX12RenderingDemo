@@ -1,25 +1,23 @@
 #pragma once
-
-#include "pch.h"
+#include "UploadBuffer.h"
 
 #define ASPECT_RATIO (float(FRAME_BUFFER_WIDTH) / float(FRAME_BUFFER_HEIGHT))
 
-struct VS_CB_CAMERA_INFO
+struct PassCB
 {
-    Matrix m_xmf4x4View;
-    Matrix m_xmf4x4Projection;
+    Matrix view;
+    Matrix proj;
 };
 
 class Camera
 {
 protected:
-    // 카메라 변환 행렬
-    Matrix m_xmf4x4View;
-    // 투영 변환 행렬
-    Matrix m_xmf4x4Projection;
-    // 뷰포트와 씨저 사각형
-    D3D12_VIEWPORT m_d3dViewport;
-    D3D12_RECT m_d3dScissorRect;
+    Matrix m_xmf4x4View; // 카메라 변환 행렬
+    Matrix m_xmf4x4Projection; // 투영 변환 행렬
+    D3D12_VIEWPORT m_d3dViewport; // 뷰포트
+    D3D12_RECT m_d3dScissorRect; // 씨저 사각형
+
+    std::unique_ptr<UploadBuffer<PassCB>> passCB_;
 
 public:
     Camera();

@@ -2,11 +2,12 @@
 
 #include "GameObject.h"
 #include "Camera.h"
+#include "UploadBuffer.h"
 
 // 게임 객체의 정보를 셰이더에게 넘겨주기 위한 구조체(상수 버퍼)이다.
-struct CB_GAMEOBJECT_INFO
+struct ObjectCB
 {
-    Matrix worldMatrix;
+    Matrix world;
 };
 
 class Shader
@@ -39,6 +40,7 @@ public:
 protected:
     std::vector<ComPtr<ID3D12PipelineState>> pipelineStates_;
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
+    std::unique_ptr<UploadBuffer<ObjectCB>> objectCB_;
 };
 
 class DiffusedShader : public Shader

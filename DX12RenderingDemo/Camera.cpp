@@ -41,26 +41,29 @@ void Camera::GenerateViewMatrix(const Vector3& position, const Vector3& lookAt, 
 	m_xmf4x4View = Matrix::CreateLookAt(position, lookAt, up);
 }
 
-void Camera::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
-	* pd3dCommandList)
+void Camera::CreateShaderVariables(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
+	passCB_ = std::make_unique<UploadBuffer<PassCB>>(device, 1, true);
 }
 
-void Camera::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+void Camera::UpdateShaderVariables(ID3D12GraphicsCommandList* cmdList)
 {
-	Matrix view = m_xmf4x4View.Transpose();
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &view, 0);
+	PassCB cbData{};
+	cbData.view = m_xmf4x4View.Transpose();
+	cbData.proj = m_xmf4x4Projection.Transpose();
 
-	Matrix projection = m_xmf4x4Projection.Transpose();
-	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &projection, 16);
+	passCB_->CopyData(0, cbData);
+
+	cmdList->SetGraphicsRootConstantBufferView(1, passCB_->GetResource()->GetGPUVirtualAddress());
 }
 
 void Camera::ReleaseShaderVariables()
 {
+	passCB_.reset();
 }
 
-void Camera::SetViewportsAndScissorRects(ID3D12GraphicsCommandList* pd3dCommandList)
+void Camera::SetViewportsAndScissorRects(ID3D12GraphicsCommandList* cmdList)
 {
-	pd3dCommandList->RSSetViewports(1, &m_d3dViewport);
-	pd3dCommandList->RSSetScissorRects(1, &m_d3dScissorRect);
+	cmdList->RSSetViewports(1, &m_d3dViewport);
+	cmdList->RSSetScissorRects(1, &m_d3dScissorRect);
 }

@@ -165,19 +165,26 @@ void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
 
 void Shader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
 {
-}
-void Shader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
-{
+	objectCB_ = std::make_unique<UploadBuffer<ObjectCB>>(pd3dDevice, 1, true);
 }
 
-void Shader::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, const Matrix& world)
+void Shader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	Matrix transposedWorld = world.Transpose();
-	pd3dCommandList->SetGraphicsRoot32BitConstants(0, 16, &transposedWorld, 0);
+	// 여기서는 공통 셰이더 변수 있으면 처리
+}
+
+void Shader::UpdateShaderVariable(ID3D12GraphicsCommandList* cmdList, const Matrix& world)
+{
+	ObjectCB cbData{};
+	cbData.world = world.Transpose();
+	objectCB_->CopyData(0, cbData);
+
+	cmdList->SetGraphicsRootConstantBufferView(0, objectCB_->GetResource()->GetGPUVirtualAddress());
 }
 
 void Shader::ReleaseShaderVariables()
 {
+	objectCB_.reset();
 }
 
 DiffusedShader::DiffusedShader()

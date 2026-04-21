@@ -15,6 +15,7 @@ void Renderer::Shutdown()
 void Renderer::InitializeCamera(UINT width, UINT height)
 {
     if (!camera_) camera_ = std::make_unique<Camera>();
+    camera_->CreateShaderVariables(d3dCore_.GetDevice(), d3dCore_.GetCommandList());
 
     camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
     camera_->SetScissorRect(0, 0, width, height);
