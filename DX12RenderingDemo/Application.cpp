@@ -88,7 +88,7 @@ void Application::ProcessPendingUploadBufferRelease(bool forceWait)
 		return;
 
 	renderer_->WaitForSceneLoad(pendingSceneLoadFenceValue_);
-	sceneManager_->ReleaseUploadBuffers();
+	sceneManager_->ReleaseCurrentSceneUploadBuffers();
 
 	pendingSceneLoadFenceValue_ = 0;
 	hasPendingUploadBufferRelease_ = false;
@@ -100,7 +100,7 @@ void Application::OnDestroy()
 	ProcessPendingUploadBufferRelease(true);
 
 	if (renderer_) renderer_->WaitForGpuComplete();
-	if (sceneManager_) sceneManager_->ReleaseScene();
+	if (sceneManager_) sceneManager_->ReleaseCurrentScene();
 	if (renderer_) renderer_->Shutdown();
 }
 
@@ -160,15 +160,10 @@ void Application::HandleResize(UINT width, UINT height)
 
 	ProcessPendingUploadBufferRelease(true);
 	renderer_->Resize(width, height);
-	sceneManager_->Resize(width, height);
+	sceneManager_->ResizeCurrentScene(width, height);
 }
 
-void Application::Animate()
-{
-	if (sceneManager_) sceneManager_->Animate(timer_.GetTimeElapsed());
-}
-
-void Application::UpdateSceneChange()
+void Application::ProcessSceneChange()
 {
 	if (!renderer_ || !sceneManager_ || !sceneManager_->HasSceneChange())
 		return;
@@ -185,7 +180,7 @@ void Application::UpdateSceneChange()
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	sceneManager_->UpdateSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), width, height);
+	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), width, height);
 	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
 	hasPendingUploadBufferRelease_ = true;
 }
@@ -205,13 +200,16 @@ void Application::FrameAdvance()
 		return; // resize한 프레임은 바로 종료
 	}
 
-	UpdateSceneChange();
+	ProcessSceneChange();
 
 	if (inputSystem_) inputSystem_->ProcessInput();
 
-	Animate();
+	Scene* currentScene = sceneManager_ ? sceneManager_->GetCurrentScene() : nullptr;
+	if (!currentScene) return;
 
-	if (renderer_ && sceneManager_) renderer_->Render(sceneManager_->GetScene());
+	currentScene->Animate(timer_.GetTimeElapsed());
+
+	if (renderer_) renderer_->Render(currentScene);
 
 	if (hwnd_) {
 		timer_.GetFrameRate(frameRate_ + kTitlePrefixLength, static_cast<int>(kRemain));

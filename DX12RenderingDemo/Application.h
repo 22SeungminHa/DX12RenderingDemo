@@ -19,8 +19,7 @@ public:
 
 private:
 	void ApplyStartupDisplayMode();
-	void UpdateSceneChange();
-	void Animate();
+	void ProcessSceneChange();
 	void ProcessPendingUploadBufferRelease(bool forceWait = false);
 	void HandleResize(UINT width, UINT height); // Ãß°¡
 

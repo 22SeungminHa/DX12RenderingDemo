@@ -35,17 +35,17 @@ void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 	nextSceneType_ = nextScene;
 }
 
-void SceneManager::UpdateSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
+void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
 {
 	if (!sceneChangeRequested_) return;
 
-	ReleaseScene();
+	ReleaseCurrentScene();
 	CreateScene(nextSceneType_, device, cmdList, width, height);
 	sceneChangeRequested_ = false;
 	nextSceneType_ = SCENE_TYPE::NONE;
 }
 
-void SceneManager::ReleaseScene()
+void SceneManager::ReleaseCurrentScene()
 {
 	if (currentScene_) {
 		currentScene_->Unload();
@@ -55,7 +55,7 @@ void SceneManager::ReleaseScene()
 	currentSceneType_ = SCENE_TYPE::NONE;
 }
 
-void SceneManager::ReleaseUploadBuffers()
+void SceneManager::ReleaseCurrentSceneUploadBuffers()
 {
 	if (currentScene_) currentScene_->ReleaseUploadBuffers();
 }
@@ -109,17 +109,7 @@ void SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, 
 	}
 }
 
-void SceneManager::Animate(float deltaTime)
-{
-	if (currentScene_) currentScene_->Animate(deltaTime);
-}
-
-void SceneManager::Render(ID3D12GraphicsCommandList* cmdList)
-{
-	if (currentScene_) currentScene_->Render(cmdList);
-}
-
-void SceneManager::Resize(UINT width, UINT height)
+void SceneManager::ResizeCurrentScene(UINT width, UINT height)
 {
 	if (currentScene_) currentScene_->Resize(width, height);
 }
