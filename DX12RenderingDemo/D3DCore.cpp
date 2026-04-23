@@ -24,12 +24,7 @@ void D3DCore::Shutdown()
     dsvDescriptorHeap_.Reset();
 
     cmdList_.Reset();
-
     uploadCmdAllocator_.Reset();
-    for (auto& allocator : cmdAllocators_) {
-        allocator.Reset();
-    }
-
     cmdQueue_.Reset();
 
     uploadFence_.Reset();
@@ -62,9 +57,8 @@ void D3DCore::Resize(UINT width, UINT height)
 
     WaitForGpuComplete();
 
-    auto& allocator = cmdAllocators_[currentBackBufferIndex_];
-    ThrowIfFailed(allocator->Reset());
-    ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
+    ThrowIfFailed(uploadCmdAllocator_->Reset());
+    ThrowIfFailed(cmdList_->Reset(uploadCmdAllocator_.Get(), nullptr));
 
     clientWidth_ = width;
     clientHeight_ = height;
@@ -85,9 +79,6 @@ void D3DCore::Resize(UINT width, UINT height)
         swapChainDesc.Flags));
 
     currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
-
-    for (auto& value : frameFenceValues_)
-        value = 0;
 
     for (auto& state : renderTargetStates_)
         state = D3D12_RESOURCE_STATE_PRESENT;
@@ -162,9 +153,8 @@ void D3DCore::CreateDirect3DDevice()
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.GetAddressOf())));
     ThrowIfFailed(device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(uploadFence_.GetAddressOf())));
 
-    for (auto& value : frameFenceValues_)
-        value = 0;
     nextFenceValue_ = 1;
+    uploadFenceValue_ = 0;
 
     fenceEvent_.reset(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
     if (!fenceEvent_)
@@ -183,13 +173,6 @@ void D3DCore::CreateCommandObjects()
 
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
 
-    for (UINT i = 0; i < kSwapChainBufferCount; ++i)
-    {
-        ThrowIfFailed(device_->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(cmdAllocators_[i].GetAddressOf())));
-    }
-
     ThrowIfFailed(device_->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS(uploadCmdAllocator_.GetAddressOf())));
@@ -197,7 +180,7 @@ void D3DCore::CreateCommandObjects()
     ThrowIfFailed(device_->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-        cmdAllocators_[0].Get(),
+        uploadCmdAllocator_.Get(),
         nullptr,
         IID_PPV_ARGS(cmdList_.GetAddressOf())));
 
@@ -332,50 +315,21 @@ void D3DCore::CreateDepthStencilObjects()
 
 void D3DCore::WaitForGpuComplete()
 {
-    assert(cmdQueue_ && fence_ && fenceEvent_);
-
-    const UINT64 fenceValue = nextFenceValue_++;
-    ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
-
-    if (fence_->GetCompletedValue() < fenceValue)
-    {
-        ThrowIfFailed(fence_->SetEventOnCompletion(fenceValue, fenceEvent_.get()));
-        ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
-    }
-
-    // 현재 back buffer도 이 fence까지는 완료된 상태라고 볼 수 있음
-    frameFenceValues_[currentBackBufferIndex_] = fenceValue;
+    WaitForFenceValue(Signal());
 }
 
 void D3DCore::MoveToNextFrame()
 {
-    assert(cmdQueue_ && fence_ && fenceEvent_ && swapChain_);
-
-    // 현재 back buffer에 대해 이번 프레임 제출 완료 fence 기록
-    const UINT64 fenceValue = nextFenceValue_++;
-    ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
-    frameFenceValues_[currentBackBufferIndex_] = fenceValue;
-
-    // 다음 back buffer로 이동
     currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
-
-    // 다음 back buffer가 아직 GPU에서 사용 중이면 대기
-    const UINT64 waitFenceValue = frameFenceValues_[currentBackBufferIndex_];
-    if (waitFenceValue != 0 && fence_->GetCompletedValue() < waitFenceValue)
-    {
-        ThrowIfFailed(fence_->SetEventOnCompletion(waitFenceValue, fenceEvent_.get()));
-        ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
-    }
 }
 
-void D3DCore::ResetCommandList()
+void D3DCore::ResetCommandList(ID3D12CommandAllocator* allocator)
 {
-    auto& allocator = cmdAllocators_[currentBackBufferIndex_];
     if (!allocator || !cmdList_)
         return;
 
     ThrowIfFailed(allocator->Reset());
-    ThrowIfFailed(cmdList_->Reset(allocator.Get(), nullptr));
+    ThrowIfFailed(cmdList_->Reset(allocator, nullptr));
 }
 
 void D3DCore::ExecuteCommandList()
@@ -448,8 +402,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetDsvHandle() const
     return dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 }
 
-void D3DCore::BeginRender(const float clearColor[4])
+void D3DCore::BeginRender()
 {
+    float defaultColor[4] = { 0.f,0.f,0.f,1.f };
+
     ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
     UINT currentIndex = currentBackBufferIndex_;
 
@@ -464,7 +420,7 @@ void D3DCore::BeginRender(const float clearColor[4])
     const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetDsvHandle();
 
     cmdList_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-    cmdList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    cmdList_->ClearRenderTargetView(rtvHandle, defaultColor, 0, nullptr);
     cmdList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
@@ -484,4 +440,28 @@ void D3DCore::EndRender()
 void D3DCore::Present(UINT syncInterval, UINT flags)
 {
     ThrowIfFailed(swapChain_->Present(syncInterval, flags));
+}
+
+UINT64 D3DCore::Signal()
+{
+    const UINT64 fenceValue = nextFenceValue_++;
+    ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
+    return fenceValue;
+}
+
+UINT64 D3DCore::GetCompletedFenceValue() const
+{
+    return fence_ ? fence_->GetCompletedValue() : 0;
+}
+
+void D3DCore::WaitForFenceValue(UINT64 fenceValue)
+{
+    if (!fence_ || !fenceEvent_)
+        return;
+
+    if (fence_->GetCompletedValue() >= fenceValue)
+        return;
+
+    ThrowIfFailed(fence_->SetEventOnCompletion(fenceValue, fenceEvent_.get()));
+    ::WaitForSingleObject(fenceEvent_.get(), INFINITE);
 }

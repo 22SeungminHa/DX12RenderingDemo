@@ -13,10 +13,10 @@ public:
 	void Initialize(HWND hWnd, int width, int height);
 	void Shutdown();
 
-	void ResetCommandList();
+	void ResetCommandList(ID3D12CommandAllocator* allocator);
 	void ExecuteCommandList();
 
-	void Resize(UINT width, UINT height); // 추가
+	void Resize(UINT width, UINT height);
 
 	// scene load / upload path
 	void ResetUploadCommandList();
@@ -24,12 +24,16 @@ public:
 	bool IsUploadFenceComplete(UINT64 fenceValue) const;
 	void WaitForUploadFence(UINT64 fenceValue);
 
-	void BeginRender(const float clearColor[4]);
+	void BeginRender();
 	void EndRender();
 
 	void Present(UINT syncInterval = 0, UINT flags = 0);
 	void MoveToNextFrame();
 	void WaitForGpuComplete();
+
+	UINT64 Signal();
+	UINT64 GetCompletedFenceValue() const;
+	void WaitForFenceValue(UINT64 fenceValue);
 
 public:
 	UINT GetClientWidth() const { return clientWidth_; }
@@ -85,8 +89,7 @@ private:
 
 	// Command system
 	ComPtr<ID3D12CommandQueue> cmdQueue_;
-	std::array<ComPtr<ID3D12CommandAllocator>, kSwapChainBufferCount> cmdAllocators_;
-	ComPtr<ID3D12CommandAllocator> uploadCmdAllocator_;   // 추가
+	ComPtr<ID3D12CommandAllocator> uploadCmdAllocator_;
 	ComPtr<ID3D12GraphicsCommandList> cmdList_;
 
 	// Render targets
@@ -105,7 +108,6 @@ private:
 	// Synchronization
 	// frame fence
 	ComPtr<ID3D12Fence> fence_;
-	std::array<UINT64, kSwapChainBufferCount> frameFenceValues_{};
 	UINT64 nextFenceValue_ = 1;
 	unique_handle fenceEvent_{ nullptr };
 	// upload fence

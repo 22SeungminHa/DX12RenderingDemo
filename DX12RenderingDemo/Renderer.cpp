@@ -4,23 +4,61 @@
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
-    CreateShaderVariables();
+    CreateFrameResources();
 }
 
 void Renderer::Shutdown()
 {
-    ReleaseShaderVariables();
+    ReleaseFrameResources();
     d3dCore_.Shutdown();
 }
 
-void Renderer::CreateShaderVariables()
+void Renderer::CreateFrameResources()
 {
-    passCB_ = std::make_unique<UploadBuffer<PassCB>>(d3dCore_.GetDevice(), 1, true);
+    frameResources_.clear();
+    frameResources_.reserve(kNumFrameResources);
+
+    for (UINT i = 0; i < kNumFrameResources; ++i)
+    {
+        frameResources_.push_back(std::make_unique<FrameResource>(
+            d3dCore_.GetDevice(),
+            1,                  // pass count
+            kMaxObjectCount));  // object count
+    }
+
+    currentFrameResourceIndex_ = 0;
+    currentFrameResource_ = frameResources_[0].get();
+}
+
+void Renderer::ReleaseFrameResources()
+{
+    currentFrameResource_ = nullptr;
+    frameResources_.clear();
+}
+
+void Renderer::AdvanceFrameResource()
+{
+    currentFrameResourceIndex_ = (currentFrameResourceIndex_ + 1) % kNumFrameResources;
+    currentFrameResource_ = frameResources_[currentFrameResourceIndex_].get();
+}
+
+void Renderer::WaitForCurrentFrameResource()
+{
+    if (!currentFrameResource_)
+        return;
+
+    if (currentFrameResource_->fenceValue_ == 0)
+        return;
+
+    if (d3dCore_.GetCompletedFenceValue() >= currentFrameResource_->fenceValue_)
+        return;
+
+    d3dCore_.WaitForFenceValue(currentFrameResource_->fenceValue_);
 }
 
 void Renderer::UpdateCameraData(Camera* camera)
 {
-    if (!camera || !passCB_)
+    if (!camera || !currentFrameResource_ || !currentFrameResource_->passCB_)
         return;
 
     auto* cmdList = d3dCore_.GetCommandList();
@@ -32,15 +70,11 @@ void Renderer::UpdateCameraData(Camera* camera)
     cmdList->RSSetScissorRects(1, &scissor);
 
     PassCB passCB = camera->BuildPassCB();
-    passCB_->CopyData(0, passCB);
+    currentFrameResource_->passCB_->CopyData(0, passCB);
 
-    cmdList->SetGraphicsRootConstantBufferView(1, passCB_->GetResource()->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->GetResource()->GetGPUVirtualAddress());
 }
 
-void Renderer::ReleaseShaderVariables()
-{
-    passCB_.reset();
-}
 
 void Renderer::SetViewportsAndScissorRects(Camera* camera)
 {
@@ -58,15 +92,6 @@ void Renderer::Resize(UINT width, UINT height)
         return;
     
     d3dCore_.Resize(width, height);
-
-    //if (camera_)
-    //{
-    //    camera_->SetViewport(0, 0, width, height, 0.0f, 1.0f);
-    //    camera_->SetScissorRect(0, 0, width, height);
-
-    //    const float aspect = static_cast<float>(width) / static_cast<float>(height);
-    //    camera_->GenerateProjectionMatrix(1.0f, 500.0f, aspect, 90.0f);
-    //}
 }
 
 void Renderer::BeginSceneLoad()
@@ -96,19 +121,23 @@ void Renderer::Render(Scene* scene)
     Camera* camera = scene->GetActiveCamera();
     if (!camera) return;
 
-    float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
+    AdvanceFrameResource();
+    WaitForCurrentFrameResource();
 
-    d3dCore_.ResetCommandList();
-    d3dCore_.BeginRender(clearColor);
+    d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
+    d3dCore_.BeginRender();
 
     auto* cmdList = d3dCore_.GetCommandList();
     cmdList->SetGraphicsRootSignature(scene->GetRootSignature());
+    
     UpdateCameraData(camera);
-    scene->Render(d3dCore_.GetCommandList());
+    scene->Render(cmdList);
 
     d3dCore_.EndRender();
     d3dCore_.ExecuteCommandList();
     d3dCore_.Present(0, 0);
+
+    currentFrameResource_->fenceValue_ = d3dCore_.Signal();
     d3dCore_.MoveToNextFrame();
 }
 

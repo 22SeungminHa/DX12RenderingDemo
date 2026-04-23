@@ -1,14 +1,22 @@
 #pragma once
 #include "D3DCore.h"
 #include "Camera.h"
+#include "FrameResource.h"
 
 class Scene;
 
 class Renderer
 {
 private:
+    static constexpr UINT kNumFrameResources = 3;
+    static constexpr UINT kMaxObjectCount = 1000;
+
+private:
     D3DCore d3dCore_;
-    std::unique_ptr<UploadBuffer<PassCB>> passCB_;
+
+    std::vector<std::unique_ptr<FrameResource>> frameResources_;
+    FrameResource* currentFrameResource_ = nullptr;
+    UINT currentFrameResourceIndex_ = 0;
 
 public:
     Renderer() = default;
@@ -37,8 +45,12 @@ public:
     ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
 
 private:
-    void CreateShaderVariables();
-    void ReleaseShaderVariables();
+    void CreateFrameResources();
+    void ReleaseFrameResources();
+
+    void AdvanceFrameResource();
+    void WaitForCurrentFrameResource();
+
     void UpdateCameraData(Camera* camera);
     void SetViewportsAndScissorRects(Camera* camera);
 };

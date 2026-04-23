@@ -21,7 +21,7 @@ private:
 	void ApplyStartupDisplayMode();
 	void ProcessSceneChange();
 	void ProcessPendingUploadBufferRelease(bool forceWait = false);
-	void HandleResize(UINT width, UINT height); // Ãß°¡
+	void HandleResize(UINT width, UINT height);
 
 private:
 	// Constants
