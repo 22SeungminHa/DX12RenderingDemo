@@ -16,13 +16,13 @@ public:
 
 protected:
     Matrix worldMatrix = Matrix::Identity;
-    std::unique_ptr<Mesh> mesh_ = NULL;
+    std::shared_ptr<Mesh> mesh_ = NULL;
     std::unique_ptr<Shader> shader_ = NULL;
 
 public:
     void ReleaseUploadBuffers();
 
-    virtual void SetMesh(Mesh* pMesh);
+    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
     virtual void SetShader(Shader* pShader);
 
     virtual void Animate(float fTimeElapsed);

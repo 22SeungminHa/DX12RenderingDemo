@@ -17,11 +17,6 @@ void GameObject::SetShader(Shader* pShader)
 	shader_.reset(pShader);
 }
 
-void GameObject::SetMesh(Mesh* pMesh)
-{
-	mesh_.reset(pMesh);
-}
-
 void GameObject::ReleaseUploadBuffers()
 {
 	if (mesh_) mesh_->ReleaseUploadBuffers();

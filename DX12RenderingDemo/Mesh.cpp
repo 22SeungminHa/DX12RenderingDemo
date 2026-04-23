@@ -22,18 +22,18 @@ void Mesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 	if (indexBuffer_) {
 		//인덱스 버퍼가 있으면 인덱스 버퍼를 파이프라인(IA: 입력 조립기)에 연결하고 인덱스를 사용하여 렌더링한다.
 		pd3dCommandList->IASetIndexBuffer(&indexBufferView_);
-		pd3dCommandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
+		pd3dCommandList->DrawIndexedInstanced(indexCnt_, 1, 0, 0, 0);
 	}
 	else
 	{
-		pd3dCommandList->DrawInstanced(vertexCount_, 1, startVertexLocation_, 0);
+		pd3dCommandList->DrawInstanced(vertexCnt_, 1, startVertexLocation_, 0);
 	}
 }
 
 TriangleMesh::TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : Mesh(pd3dDevice, pd3dCommandList)
 {
 	// 삼각형 메쉬 정의
-	vertexCount_ = 3;
+	vertexCnt_ = 3;
 	stride_ = sizeof(DiffusedVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
@@ -43,18 +43,18 @@ TriangleMesh::TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	pVertices[1] = DiffusedVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
 	pVertices[2] = DiffusedVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 	
-	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCount_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
+	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCnt_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
 
 	// 정점 버퍼 뷰 생성
 	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vertexBufferView_.StrideInBytes = stride_;
-	vertexBufferView_.SizeInBytes = stride_ * vertexCount_;
+	vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 }
 
 CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList * pd3dCommandList, float fWidth, float fHeight, float fDepth) : Mesh(pd3dDevice, pd3dCommandList)
 {
 	//직육면체는 꼭지점(정점)이 8개이다.
-	vertexCount_ = 8;
+	vertexCnt_ = 8;
 	stride_ = sizeof(DiffusedVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
@@ -69,16 +69,16 @@ CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	pVertices[5] = DiffusedVertex(Vector3(+fx, -fy, -fz), RANDOM_COLOR);
 	pVertices[6] = DiffusedVertex(Vector3(+fx, -fy, +fz), RANDOM_COLOR);
 	pVertices[7] = DiffusedVertex(Vector3(-fx, -fy, +fz), RANDOM_COLOR);
-	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCount_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
+	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCnt_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
 	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vertexBufferView_.StrideInBytes = stride_;
-	vertexBufferView_.SizeInBytes = stride_ * vertexCount_;
+	vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 
 	/*인덱스 버퍼는 직육면체의 6개의 면(사각형)에 대한 기하 정보를 갖는다. 삼각형 리스트로 직육면체를 표현할 것이
    므로 각 면은 2개의 삼각형을 가지고 각 삼각형은 3개의 정점이 필요하다. 즉, 인덱스 버퍼는 전체 36(=6*2*3)개의 인
    덱스를 가져야 한다.*/
 
-	indexCount_ = 36;
+	indexCnt_ = 36;
 	UINT pnIndices[36];
 
 	//ⓐ 앞면(Front) 사각형의 위쪽 삼각형
@@ -119,13 +119,13 @@ CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	//인덱스 버퍼를 생성한다.
 	indexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pnIndices,
-		sizeof(UINT) * indexCount_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
+		sizeof(UINT) * indexCnt_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_INDEX_BUFFER,
 		indexUploadBuffer_);
 
 	//인덱스 버퍼 뷰를 생성한다.
 	indexBufferView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress();
 	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-	indexBufferView_.SizeInBytes = sizeof(UINT) * indexCount_;
+	indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
 }
 
 CubeMeshDiffused::~CubeMeshDiffused()
