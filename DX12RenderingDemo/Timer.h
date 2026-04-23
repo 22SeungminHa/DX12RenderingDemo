@@ -1,36 +1,41 @@
 #pragma once
 #include "pch.h"
 
-const ULONG MAX_SAMPLE_COUNT = 50; // 50회의 프레임 처리시간을 누적하여 평균한다.
-
 class Timer
 {
 public:
-	Timer();
-	virtual ~Timer();
+    Timer();
+    ~Timer() = default;
 
-	void Start() { }
-	void Stop() { }
-	void Reset();
-	void Tick();
-	void WaitForFrameRate(float lockFPS = 0.0f);
-	unsigned long GetFrameRate(LPTSTR lpszString = NULL, int nCharacters = 0);
-	float GetTimeElapsed();
+public:
+    void Reset();
+    void Start();
+    void Stop();
+    void Tick();
+
+    unsigned long GetFrameRate(LPTSTR lpszString = nullptr, int nCharacters = 0) const;
+    float GetTimeElapsed() const;
+    float GetTotalTime() const;
+    bool IsStopped() const { return stopped_; }
 
 private:
-	bool hardwareHasPerformanceCounter_;
-	float timeScale_;
-	float timeElapsed_;
-	__int64 currentTime_;
-	__int64 lastTime_;
-	__int64 performanceFrequency_;
+    __int64 GetCurrentTime() const;
 
-	float frameTime_[MAX_SAMPLE_COUNT];
-	ULONG sampleCount_;
+private:
+    bool hardwareHasPerformanceCounter_ = false;
+    bool stopped_ = false;
 
-	unsigned long currentFrameRate_;
-	unsigned long framesPerSecond_;
-	float fpsTimeElapsed_;
+    float timeScale_ = 0.0f;
+    float timeElapsed_ = 0.0f;
 
-	bool stopped_;
+    __int64 baseTime_ = 0;
+    __int64 pausedTime_ = 0;
+    __int64 stopTime_ = 0;
+    __int64 currentTime_ = 0;
+    __int64 lastTime_ = 0;
+    __int64 performanceFrequency_ = 0;
+
+    unsigned long currentFrameRate_ = 0;
+    unsigned long framesPerSecond_ = 0;
+    float fpsTimeElapsed_ = 0.0f;
 };

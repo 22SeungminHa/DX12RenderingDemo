@@ -106,8 +106,8 @@ void Application::OnDestroy()
 
 LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (msg) {
-
+	switch (msg)
+	{
 	case WM_SIZE:
 	{
 		const UINT width = LOWORD(lParam);
@@ -118,10 +118,14 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 
 		if (wParam == SIZE_MINIMIZED) {
 			isMinimized_ = true;
+			timer_.Stop();
 			break;
 		}
 
-		isMinimized_ = false;
+		if (isMinimized_) {
+			isMinimized_ = false;
+			timer_.Start();
+		}
 
 		if (width == 0 || height == 0) break;
 
@@ -153,6 +157,15 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 		}
 
 		break;
+
+	//case WM_ACTIVATE:
+	//{
+	//	if (LOWORD(wParam) == WA_INACTIVE)
+	//		timer_.Stop();
+	//	else if (!isMinimized_)
+	//		timer_.Start();
+	//	break;
+	//}
 	}
 
 	return 0;
@@ -215,8 +228,10 @@ void Application::FrameAdvance()
 	Scene* currentScene = sceneManager_ ? sceneManager_->GetCurrentScene() : nullptr;
 	if (!currentScene) return;
 
+	const float dt = timer_.GetTimeElapsed();
+
 	currentScene->ProcessInput(*inputSystem_);
-	currentScene->Animate(timer_.GetTimeElapsed());
+	currentScene->Animate(dt);
 
 	if (renderer_) renderer_->Render(currentScene);
 
