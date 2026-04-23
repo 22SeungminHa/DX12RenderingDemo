@@ -1,60 +1,78 @@
 #include "InputSystem.h"
 
-void InputSystem::Initialize(HWND hwnd, SceneManager* sceneManager, Renderer* renderer)
+void InputSystem::Initialize(HWND hwnd)
 {
-	hwnd_ = hwnd;
-	sceneManager_ = sceneManager;
-	renderer_ = renderer;
+    hwnd_ = hwnd;
+    ::ZeroMemory(currentKeys_, sizeof(currentKeys_));
+    ::ZeroMemory(previousKeys_, sizeof(previousKeys_));
 }
 
-void InputSystem::ProcessInput()
+void InputSystem::Update()
 {
-	if (!sceneManager_) return;
+    ::memcpy(previousKeys_, currentKeys_, sizeof(currentKeys_));
+    ::GetKeyboardState(currentKeys_);
 
-	UCHAR keysBuffer[256] = {};
-	::GetKeyboardState(keysBuffer);
-
-	sceneManager_->ProcessInput(keysBuffer);
+    mouseDelta_.x = mousePosition_.x - previousMousePosition_.x;
+    mouseDelta_.y = mousePosition_.y - previousMousePosition_.y;
+    previousMousePosition_ = mousePosition_;
 }
 
-void InputSystem::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void InputSystem::HandleMouseMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (sceneManager_)
-		sceneManager_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
+    mousePosition_.x = GET_X_LPARAM(lParam);
+    mousePosition_.y = GET_Y_LPARAM(lParam);
 
-	switch (msg) {
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
+    switch (msg)
+    {
+    case WM_LBUTTONDOWN:
+        leftMouseDown_ = true;
+        break;
+    case WM_LBUTTONUP:
+        leftMouseDown_ = false;
+        break;
+    case WM_RBUTTONDOWN:
+        rightMouseDown_ = true;
+        break;
+    case WM_RBUTTONUP:
+        rightMouseDown_ = false;
+        break;
+    default:
+        break;
+    }
 }
 
-void InputSystem::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void InputSystem::HandleKeyboardMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (sceneManager_) sceneManager_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
+    switch (msg)
+    {
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+        currentKeys_[wParam & 0xff] = 0x80;
+        break;
 
-	switch (msg) {
-	case WM_KEYUP:
-		switch (wParam) {
-		case VK_ESCAPE:
-			::PostQuitMessage(0);
-			break;
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        currentKeys_[wParam & 0xff] = 0x00;
+        break;
 
-		case VK_SPACE:
-			break;
+    default:
+        break;
+    }
+}
 
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
+bool InputSystem::IsKeyDown(int vk) const
+{
+    return (currentKeys_[vk] & 0x80) != 0;
+}
+
+bool InputSystem::WasKeyPressed(int vk) const
+{
+    return ((currentKeys_[vk] & 0x80) != 0) &&
+        ((previousKeys_[vk] & 0x80) == 0);
+}
+
+bool InputSystem::WasKeyReleased(int vk) const
+{
+    return ((currentKeys_[vk] & 0x80) == 0) &&
+        ((previousKeys_[vk] & 0x80) != 0);
 }

@@ -1,22 +1,39 @@
 #pragma once
-#include "SceneManager.h"
-#include "Renderer.h"
+#include "pch.h"
 
 class InputSystem
 {
-private:
-	SceneManager* sceneManager_ = nullptr;
-	Renderer* renderer_ = nullptr;
-	HWND hwnd_ = nullptr;
-
 public:
-	InputSystem() = default;
-	~InputSystem() = default;
+    InputSystem() = default;
+    ~InputSystem() = default;
 
-	void Initialize(HWND hwnd, SceneManager* sceneManager, Renderer* renderer);
+    void Initialize(HWND hwnd);
 
-	void ProcessInput();
+    void Update();
 
-	void OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	void OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    void HandleMouseMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+    void HandleKeyboardMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+
+    bool IsKeyDown(int vk) const;
+    bool WasKeyPressed(int vk) const;
+    bool WasKeyReleased(int vk) const;
+
+    bool IsLeftMouseDown() const { return leftMouseDown_; }
+    bool IsRightMouseDown() const { return rightMouseDown_; }
+
+    POINT GetMousePosition() const { return mousePosition_; }
+    POINT GetMouseDelta() const { return mouseDelta_; }
+
+private:
+    HWND hwnd_ = nullptr;
+
+    UCHAR currentKeys_[256]{};
+    UCHAR previousKeys_[256]{};
+
+    bool leftMouseDown_ = false;
+    bool rightMouseDown_ = false;
+
+    POINT mousePosition_{};
+    POINT previousMousePosition_{};
+    POINT mouseDelta_{};
 };
