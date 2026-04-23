@@ -1,5 +1,6 @@
 #pragma once
 #include "Shader.h"
+#include "InputSystem.h"
 
 enum class SCENE_TYPE
 {
@@ -17,6 +18,7 @@ public:
 	virtual ~Scene() = default;
 
 	virtual SCENE_TYPE GetSceneType() const = 0;
+
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
@@ -26,10 +28,7 @@ public:
 	void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
-	virtual void ProcessInput(const UCHAR* keysBuffer);
-	virtual void OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	virtual void OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
+	virtual void ProcessInput(const InputSystem& input);
 	virtual void Animate(float deltaTime);
 	virtual void Render(ID3D12GraphicsCommandList* cmdList);
 
@@ -40,15 +39,20 @@ protected:
 	virtual void OnUnload() {}
 	virtual void OnResize(UINT width, UINT height) {}
 	virtual void OnReleaseUploadBuffers() {}
-	virtual void InitializeCamera() {}
+
+	virtual void SetupCameraDesc() {}
+	void CreateCamera();
+	void UpdateCameraProjection(UINT width, UINT height);
 
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;
+
 	std::vector<std::unique_ptr<Camera>> cameras_;
 	Camera* activeCamera_ = nullptr;
-
-	ComPtr<ID3D12RootSignature> rootSignature_;
+	CameraDesc cameraDesc_;
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;
+
+	ComPtr<ID3D12RootSignature> rootSignature_;
 };

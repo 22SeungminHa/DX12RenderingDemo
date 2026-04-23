@@ -41,6 +41,7 @@ void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsComman
 
 	ReleaseCurrentScene();
 	CreateScene(nextSceneType_, device, cmdList, width, height);
+	
 	sceneChangeRequested_ = false;
 	nextSceneType_ = SCENE_TYPE::NONE;
 }
@@ -58,55 +59,6 @@ void SceneManager::ReleaseCurrentScene()
 void SceneManager::ReleaseCurrentSceneUploadBuffers()
 {
 	if (currentScene_) currentScene_->ReleaseUploadBuffers();
-}
-
-void SceneManager::ProcessInput(const UCHAR* keysBuffer)
-{
-	if (currentScene_) currentScene_->ProcessInput(keysBuffer);
-}
-
-void SceneManager::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	if (currentScene_) currentScene_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
-
-	switch (msg)
-	{
-	case WM_KEYUP:
-		switch (wParam)
-		{
-		case VK_SPACE:
-			if (currentSceneType_ == SCENE_TYPE::TEST1)
-				RequestChangeScene(SCENE_TYPE::TEST2);
-			else if (currentSceneType_ == SCENE_TYPE::TEST2)
-				RequestChangeScene(SCENE_TYPE::TEST1);
-			break;
-
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void SceneManager::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	if (currentScene_) currentScene_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
-
-	switch (msg)
-	{
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
 }
 
 void SceneManager::ResizeCurrentScene(UINT width, UINT height)

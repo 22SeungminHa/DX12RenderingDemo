@@ -33,7 +33,7 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 	renderer_->Initialize(hwnd_, width, height);
 
 	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
-	inputSystem_->Initialize(hwnd_, sceneManager_.get(), renderer_.get());
+	inputSystem_->Initialize(hwnd_);
 
 	timer_.Reset();
 }
@@ -135,14 +135,20 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
 		if (inputSystem_) {
-			inputSystem_->OnProcessingMouseMessage(hwnd, msg, wParam, lParam);
+			inputSystem_->HandleMouseMessage(msg, wParam, lParam);
 		}
 		break;
 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
 		if (inputSystem_) {
-			inputSystem_->OnProcessingKeyboardMessage(hwnd, msg, wParam, lParam);
+			inputSystem_->HandleKeyboardMessage(msg, wParam, lParam);
+		}
+
+		if (msg == WM_KEYUP && wParam == VK_ESCAPE) {
+			::PostQuitMessage(0);
 		}
 		break;
 	}
@@ -202,11 +208,12 @@ void Application::FrameAdvance()
 
 	ProcessSceneChange();
 
-	if (inputSystem_) inputSystem_->ProcessInput();
+	if (inputSystem_) inputSystem_->Update();
 
 	Scene* currentScene = sceneManager_ ? sceneManager_->GetCurrentScene() : nullptr;
 	if (!currentScene) return;
 
+	currentScene->ProcessInput(*inputSystem_);
 	currentScene->Animate(timer_.GetTimeElapsed());
 
 	if (renderer_) renderer_->Render(currentScene);

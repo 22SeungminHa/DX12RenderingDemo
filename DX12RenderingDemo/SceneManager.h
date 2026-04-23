@@ -16,11 +16,6 @@ public:
 
     void ReleaseCurrentScene();
     void ReleaseCurrentSceneUploadBuffers();
-
-    void ProcessInput(const UCHAR* keysBuffer);
-    void OnProcessingKeyboardMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
-    void OnProcessingMouseMessage(HWND hWnd, UINT messageID, WPARAM wParam, LPARAM lParam);
-
     void ResizeCurrentScene(UINT width, UINT height);
 
 private:

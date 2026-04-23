@@ -49,6 +49,10 @@ ComPtr<ID3D12RootSignature> Scene::CreateGraphicsRootSignature(ID3D12Device* dev
 void Scene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	rootSignature_ = CreateGraphicsRootSignature(device);
+
+	SetupCameraDesc();
+	CreateCamera();
+
 	OnLoad(device, cmdList);
 }
 
@@ -67,6 +71,7 @@ void Scene::Resize(UINT width, UINT height)
 	clientWidth_ = width;
 	clientHeight_ = height;
 
+	UpdateCameraProjection(width, height);
 	OnResize(width, height);
 }
 
@@ -79,37 +84,7 @@ void Scene::ReleaseUploadBuffers()
 	OnReleaseUploadBuffers();
 }
 
-void Scene::OnProcessingMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg) {
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		break;
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	default:
-		break;
-	}
-}
-
-void Scene::OnProcessingKeyboardMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg) {
-	case WM_KEYUP:
-		switch (wParam) {
-		default:
-			break;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void Scene::ProcessInput(const UCHAR* keysBuffer)
+void Scene::ProcessInput(const InputSystem& input)
 {
 }
 
@@ -129,4 +104,29 @@ void Scene::Render(ID3D12GraphicsCommandList* cmdList)
 	for (auto& object : objects_) {
 		if (object) object->Render(cmdList, activeCamera_);
 	}
+}
+
+void Scene::CreateCamera()
+{
+	auto camera = std::make_unique<Camera>();
+	float aspect = (clientHeight_ == 0) ? 1.0f : static_cast<float>(clientWidth_) / clientHeight_;
+
+	camera->SetViewport(0, 0, static_cast<float>(clientWidth_), static_cast<float>(clientHeight_), 0.0f, 1.0f);
+	camera->SetScissorRect(0, 0, clientWidth_, clientHeight_);
+	camera->SetProjection(cameraDesc_.nearZ, cameraDesc_.farZ, aspect, cameraDesc_.fovY);
+	camera->SetLookAt(cameraDesc_.eye, cameraDesc_.target, cameraDesc_.up);
+
+	activeCamera_ = camera.get();
+	cameras_.push_back(std::move(camera));
+}
+
+void Scene::UpdateCameraProjection(UINT width, UINT height)
+{
+	if (!activeCamera_) return;
+
+	float aspect = (height == 0) ? 1.0f : static_cast<float>(width) / height;
+
+	activeCamera_->SetViewport(0, 0, static_cast<float>(width), static_cast<float>(height));
+	activeCamera_->SetScissorRect(0, 0, width, height);
+	activeCamera_->SetProjection(cameraDesc_.nearZ, cameraDesc_.farZ, aspect, cameraDesc_.fovY);
 }
