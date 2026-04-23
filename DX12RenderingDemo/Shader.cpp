@@ -1,13 +1,5 @@
 #include "Shader.h"
 
-Shader::Shader()
-{
-}
-
-Shader::~Shader()
-{
-}
-
 D3D12_RASTERIZER_DESC Shader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
@@ -149,6 +141,7 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
 		&d3dPipelineStateDesc,
 		IID_PPV_ARGS(pso.GetAddressOf())));
+
 	pipelineStates_.push_back(std::move(pso));
 }
 
@@ -161,30 +154,6 @@ void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
 void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
 {
 	OnPrepareRender(pd3dCommandList);
-}
-
-void Shader::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
-{
-	objectCB_ = std::make_unique<UploadBuffer<ObjectCB>>(pd3dDevice, 1, true);
-}
-
-void Shader::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
-{
-	// 여기서는 공통 셰이더 변수 있으면 처리
-}
-
-void Shader::UpdateShaderVariable(ID3D12GraphicsCommandList* cmdList, const Matrix& world)
-{
-	ObjectCB cbData{};
-	cbData.world = world.Transpose();
-	objectCB_->CopyData(0, cbData);
-
-	cmdList->SetGraphicsRootConstantBufferView(0, objectCB_->GetResource()->GetGPUVirtualAddress());
-}
-
-void Shader::ReleaseShaderVariables()
-{
-	objectCB_.reset();
 }
 
 DiffusedShader::DiffusedShader()

@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Renderer.h"
 
 Scene::Scene(UINT width, UINT height)
 {
@@ -95,14 +96,16 @@ void Scene::Animate(float deltaTime)
 	}
 }
 
-void Scene::Render(ID3D12GraphicsCommandList* cmdList)
+void Scene::Render(Renderer* renderer, ID3D12GraphicsCommandList* cmdList)
 {
-	if (!cmdList || !rootSignature_)
+	if (!renderer || !cmdList || !rootSignature_)
 		return;
 
-	//씬을 렌더링하는 것은 씬을 구성하는 게임 객체(셰이더를 포함하는 객체)들을 렌더링하는 것이다.
 	for (auto& object : objects_) {
-		if (object) object->Render(cmdList, activeCamera_);
+		if (!object) continue;
+
+		renderer->UpdateObjectData(object.get());
+		object->Render(cmdList, activeCamera_);
 	}
 }
 

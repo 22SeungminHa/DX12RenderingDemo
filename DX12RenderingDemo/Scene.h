@@ -2,6 +2,8 @@
 #include "Shader.h"
 #include "InputSystem.h"
 
+class Renderer;
+
 enum class SCENE_TYPE
 {
 	NONE,
@@ -30,7 +32,7 @@ public:
 	//씬에서 마우스와 키보드 메시지를 처리한다.
 	virtual void ProcessInput(const InputSystem& input);
 	virtual void Animate(float deltaTime);
-	virtual void Render(ID3D12GraphicsCommandList* cmdList);
+	virtual void Render(Renderer* renderer, ID3D12GraphicsCommandList* cmdList);
 
 protected:
 	ComPtr<ID3D12RootSignature> CreateGraphicsRootSignature(ID3D12Device* device);

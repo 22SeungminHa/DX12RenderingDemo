@@ -9,12 +9,6 @@ GameObject::GameObject()
 
 GameObject::~GameObject()
 {
-	if (shader_) shader_->ReleaseShaderVariables();
-}
-
-void GameObject::SetShader(Shader* pShader)
-{
-	shader_.reset(pShader);
 }
 
 void GameObject::ReleaseUploadBuffers()
@@ -34,13 +28,7 @@ void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCam
 {
 	OnPrepareRender();
 
-	if (shader_)
-	{
-		//게임 객체의 월드 변환 행렬을 셰이더의 상수 버퍼로 전달(복사)한다.
-		shader_->UpdateShaderVariable(pd3dCommandList, worldMatrix);
-		shader_->Render(pd3dCommandList, pCamera);
-	}
-
+	if (shader_) shader_->Render(pd3dCommandList, pCamera);
 	if (mesh_) mesh_->Render(pd3dCommandList);
 }
 

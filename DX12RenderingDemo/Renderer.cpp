@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "Scene.h"
+#include "GameObject.h"
 
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
@@ -44,14 +45,9 @@ void Renderer::AdvanceFrameResource()
 
 void Renderer::WaitForCurrentFrameResource()
 {
-    if (!currentFrameResource_)
-        return;
-
-    if (currentFrameResource_->fenceValue_ == 0)
-        return;
-
-    if (d3dCore_.GetCompletedFenceValue() >= currentFrameResource_->fenceValue_)
-        return;
+    if (!currentFrameResource_) return;
+    if (currentFrameResource_->fenceValue_ == 0) return;
+    if (d3dCore_.GetCompletedFenceValue() >= currentFrameResource_->fenceValue_) return;
 
     d3dCore_.WaitForFenceValue(currentFrameResource_->fenceValue_);
 }
@@ -75,6 +71,24 @@ void Renderer::UpdateCameraData(Camera* camera)
     cmdList->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->GetResource()->GetGPUVirtualAddress());
 }
 
+void Renderer::UpdateObjectData(const GameObject* object)
+{
+    if (!object || !currentFrameResource_ || !currentFrameResource_->objectCB_)
+        return;
+
+    ObjectCB objectCB{};
+    objectCB.world = object->GetWorldMatrix().Transpose();
+
+    const UINT objectIndex = object->GetObjectCBIndex();
+    currentFrameResource_->objectCB_->CopyData(objectIndex, objectCB);
+
+    const UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectCB));
+    D3D12_GPU_VIRTUAL_ADDRESS objCBAddress =
+        currentFrameResource_->objectCB_->GetResource()->GetGPUVirtualAddress()
+        + (static_cast<UINT64>(objectIndex) * objCBByteSize);
+
+    d3dCore_.GetCommandList()->SetGraphicsRootConstantBufferView(0, objCBAddress);
+}
 
 void Renderer::SetViewportsAndScissorRects(Camera* camera)
 {
@@ -131,7 +145,8 @@ void Renderer::Render(Scene* scene)
     cmdList->SetGraphicsRootSignature(scene->GetRootSignature());
     
     UpdateCameraData(camera);
-    scene->Render(cmdList);
+
+    scene->Render(this, cmdList);
 
     d3dCore_.EndRender();
     d3dCore_.ExecuteCommandList();

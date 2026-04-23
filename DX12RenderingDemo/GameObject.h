@@ -14,21 +14,27 @@ public:
 public:
     void Rotate(const Vector3& axis, float angle);
 
-protected:
-    Matrix worldMatrix = Matrix::Identity;
-    std::shared_ptr<Mesh> mesh_ = NULL;
-    std::unique_ptr<Shader> shader_ = NULL;
+    void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
+    UINT GetObjectCBIndex() const { return objectCBIndex_; }
+    
+    const Matrix& GetWorldMatrix() const { return worldMatrix; }
 
-public:
     void ReleaseUploadBuffers();
 
     virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
-    virtual void SetShader(Shader* pShader);
+    virtual void SetShader(const std::shared_ptr<Shader>& shader) { shader_ = shader; }
 
     virtual void Animate(float fTimeElapsed);
-
     virtual void OnPrepareRender();
     virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
+
+protected:
+    Matrix worldMatrix = Matrix::Identity;
+
+    std::shared_ptr<Mesh> mesh_ = NULL;
+    std::shared_ptr<Shader> shader_ = NULL;
+
+    UINT objectCBIndex_ = 0;
 };
 
 class RotatingObject : public GameObject

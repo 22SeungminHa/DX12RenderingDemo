@@ -4,6 +4,7 @@
 #include "FrameResource.h"
 
 class Scene;
+class GameObject;
 
 class Renderer
 {
@@ -39,6 +40,8 @@ public:
     
     // sync
     void WaitForGpuComplete();
+
+    void UpdateObjectData(const GameObject* object);
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }

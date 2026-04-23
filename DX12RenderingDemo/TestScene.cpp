@@ -4,13 +4,13 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 {
     auto cubeMesh = std::make_shared<CubeMeshDiffused>(device, cmdList, 12.0f, 12.0f, 12.0f);
 
-    auto rotatingObject = std::make_unique<RotatingObject>();
-    rotatingObject->SetMesh(cubeMesh);
-
-    auto shader = std::make_unique<DiffusedShader>();
+    auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
-    shader->CreateShaderVariables(device, cmdList);
-    rotatingObject->SetShader(shader.release());
+
+    auto rotatingObject = std::make_unique<RotatingObject>();
+    rotatingObject->SetObjectCBIndex(0);
+    rotatingObject->SetMesh(cubeMesh);
+    rotatingObject->SetShader(shader);
 
     objects_.clear();
     objects_.push_back(std::move(rotatingObject));
@@ -29,13 +29,13 @@ void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 {
     auto triMesh = std::make_shared<TriangleMesh>(device, cmdList);
 
-    auto rotatingObject = std::make_unique<RotatingObject>();
-    rotatingObject->SetMesh(triMesh);
-
-    auto shader = std::make_unique<DiffusedShader>();
+    auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
-    shader->CreateShaderVariables(device, cmdList);
-    rotatingObject->SetShader(shader.release());
+
+    auto rotatingObject = std::make_unique<RotatingObject>();
+    rotatingObject->SetObjectCBIndex(0);
+    rotatingObject->SetMesh(triMesh);
+    rotatingObject->SetShader(shader);
 
     objects_.clear();
     objects_.push_back(std::move(rotatingObject));
