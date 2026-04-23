@@ -134,22 +134,24 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
-		if (inputSystem_) {
-			inputSystem_->HandleMouseMessage(msg, wParam, lParam);
-		}
+		if (inputSystem_) inputSystem_->HandleMouseMessage(msg, wParam, lParam);
 		break;
 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
-		if (inputSystem_) {
-			inputSystem_->HandleKeyboardMessage(msg, wParam, lParam);
+		if (inputSystem_) inputSystem_->HandleKeyboardMessage(msg, wParam, lParam);
+
+		if (msg == WM_KEYUP && wParam == VK_ESCAPE)
+			::PostQuitMessage(0);
+
+		if (msg == WM_KEYUP && wParam == VK_SPACE && sceneManager_) {
+			SCENE_TYPE type = sceneManager_->GetCurrentSceneType();
+			if (type == SCENE_TYPE::TEST1) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
+			else if (type == SCENE_TYPE::TEST2) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
 		}
 
-		if (msg == WM_KEYUP && wParam == VK_ESCAPE) {
-			::PostQuitMessage(0);
-		}
 		break;
 	}
 

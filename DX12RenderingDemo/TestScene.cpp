@@ -2,8 +2,6 @@
 
 void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    SetupCameraDesc();
-
     auto cubeMesh = std::make_unique<CubeMeshDiffused>(device, cmdList, 12.0f, 12.0f, 12.0f);
 
     auto rotatingObject = std::make_unique<RotatingObject>();
