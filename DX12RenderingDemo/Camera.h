@@ -2,7 +2,16 @@
 #include "UploadBuffer.h"
 #include "ShaderTypes.h"
 
-#define ASPECT_RATIO (float(FRAME_BUFFER_WIDTH) / float(FRAME_BUFFER_HEIGHT))
+struct CameraDesc
+{
+    Vector3 eye = { 0,0,-10 };
+    Vector3 target = { 0,0,0 };
+    Vector3 up = Vector3::Up;
+
+    float nearZ = 1.0f;
+    float farZ = 1000.0f;
+    float fovY = 90.0f;
+};
 
 class Camera
 {
