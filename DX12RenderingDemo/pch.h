@@ -34,6 +34,8 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <cstdio>
+#include <iostream>
 
 #include <shellapi.h>
 
@@ -61,7 +63,6 @@
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 using namespace DirectX::SimpleMath;
-
 using Microsoft::WRL::ComPtr;
 
 extern ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ComPtr<ID3D12Resource>& pd3dUploadBuffer);
@@ -82,9 +83,9 @@ public:
     // 상수 버퍼의 크기는 반드시 최소 하드웨어 할당 크기(흔히 256바이트)의 배수여야 한다.
     static UINT CalcConstantBufferByteSize(UINT byteSize) { return (byteSize + 255) & ~255; }
 
-    static Microsoft::WRL::ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
-    static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* initData, UINT64 byteSize, Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
-    static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target);
+    static ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
+    static ComPtr<ID3D12Resource> CreateDefaultBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* initData, UINT64 byteSize, ComPtr<ID3D12Resource>& uploadBuffer);
+    static ComPtr<ID3DBlob> CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target);
 };
 
 class DxException
@@ -127,4 +128,24 @@ public:
         throw DxException(hr__, L## #hrExpr, wfn, __LINE__);                               \
     }                                                                                      \
 }
+#endif
+
+#ifdef _DEBUG
+#define OPEN_DEBUG_CONSOLE()                         \
+{                                                    \
+    AllocConsole();                                  \
+    FILE* fp;                                        \
+    freopen_s(&fp, "CONOUT$", "w", stdout);          \
+    freopen_s(&fp, "CONOUT$", "w", stderr);          \
+    freopen_s(&fp, "CONIN$",  "r", stdin);           \
+    std::ios::sync_with_stdio();                     \
+}
+#define CLOSE_DEBUG_CONSOLE() FreeConsole()
+#define LOG(x) std::cout << x << std::endl
+
+#else
+#define OPEN_DEBUG_CONSOLE()
+#define CLOSE_DEBUG_CONSOLE()
+#define LOG(x)
+
 #endif
