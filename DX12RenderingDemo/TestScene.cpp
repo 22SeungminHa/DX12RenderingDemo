@@ -1,19 +1,24 @@
 #include "TestScene.h"
+#include "FBXLoader.h"
 
 void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    auto cubeMesh = std::make_shared<CubeMeshDiffused>(device, cmdList, 12.0f, 12.0f, 12.0f);
+    auto mesh = FBXLoader::LoadDiffusedMesh(
+        device,
+        cmdList,
+        "../Assets/Meshes/MicroSub.fbx"
+    );
 
     auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
-    auto rotatingObject = std::make_unique<RotatingObject>();
-    rotatingObject->SetObjectCBIndex(0);
-    rotatingObject->SetMesh(cubeMesh);
-    rotatingObject->SetShader(shader);
+    auto object = std::make_unique<RotatingObject>();
+    object->SetMesh(mesh);
+    object->SetObjectCBIndex(0);
+    object->SetShader(shader);
 
     objects_.clear();
-    objects_.push_back(std::move(rotatingObject));
+    objects_.push_back(std::move(object));
 }
 
 void TestScene1::SetupCameraDesc()

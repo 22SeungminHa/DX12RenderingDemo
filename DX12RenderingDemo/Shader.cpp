@@ -3,7 +3,7 @@
 D3D12_RASTERIZER_DESC Shader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
-	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
 	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;  // D3D12_CULL_MODE_BACK, D3D12_CULL_MODE_NONE, D3D12_CULL_MODE_FRONT.
 	d3dRasterizerDesc.FrontCounterClockwise = TRUE;
 	d3dRasterizerDesc.DepthBias = 0;

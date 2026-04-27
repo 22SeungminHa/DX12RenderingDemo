@@ -1,9 +1,12 @@
 #pragma once
-#include "pch.h"
+#include "Mesh.h"
 
 class FBXLoader
 {
 public:
-	static void PrintFBXVertices(const std::string& filePath);
+    static std::shared_ptr<Mesh> LoadDiffusedMesh(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        const std::string& filePath);
 };
 

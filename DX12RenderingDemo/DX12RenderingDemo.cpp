@@ -4,7 +4,6 @@
 #include "pch.h"
 #include "DX12RenderingDemo.h"
 #include "Application.h"
-#include "FBXLoader.h"
 
 Application application;
 
