@@ -37,10 +37,27 @@ public:
     // pass data
     PassCB BuildPassCB() const;
 
+    void Rotate(float deltaYaw, float deltaPitch);
+    void MoveForward(float distance);
+    void MoveRight(float distance);
+    void MoveUp(float distance);
+
+    Vector3 GetPosition() const { return position_; }
+    Vector3 GetForward() const;
+    Vector3 GetRight() const;
+    Vector3 GetUp() const;
+
+protected:
+    void UpdateViewMatrix();
+
 protected:
     Matrix view_ = Matrix::Identity;
     Matrix projection_ = Matrix::Identity;
 
     D3D12_VIEWPORT viewport_{};
     D3D12_RECT scissorRect_{};
+
+    Vector3 position_ = { 0.0f, 0.0f, -10.0f };
+    float yaw_ = 0.0f;
+    float pitch_ = 0.0f;
 };

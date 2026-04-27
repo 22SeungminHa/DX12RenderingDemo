@@ -8,7 +8,15 @@ Camera::Camera()
 
 void Camera::SetLookAt(const Vector3& position, const Vector3& target, const Vector3& up)
 {
-    view_ = Matrix::CreateLookAt(position, target, up);
+    position_ = position;
+
+    Vector3 forward = target - position;
+    forward.Normalize();
+
+    pitch_ = std::asin(forward.y);
+    yaw_ = std::atan2(forward.x, forward.z);
+
+    UpdateViewMatrix();
 }
 
 void Camera::SetProjection(float nearPlane, float farPlane, float aspectRatio, float fovY)
@@ -41,4 +49,63 @@ PassCB Camera::BuildPassCB() const
     passCB.view = view_.Transpose();
     passCB.proj = projection_.Transpose();
     return passCB;
+}
+
+Vector3 Camera::GetForward() const
+{
+    Vector3 forward;
+    forward.x = std::cos(pitch_) * std::sin(yaw_);
+    forward.y = std::sin(pitch_);
+    forward.z = std::cos(pitch_) * std::cos(yaw_);
+    forward.Normalize();
+    return forward;
+}
+
+Vector3 Camera::GetRight() const
+{
+    Vector3 right = Vector3::Up.Cross(GetForward());
+    right.Normalize();
+    return right;
+}
+
+Vector3 Camera::GetUp() const
+{
+    Vector3 up = GetForward().Cross(GetRight());
+    up.Normalize();
+    return up;
+}
+
+void Camera::Rotate(float deltaYaw, float deltaPitch)
+{
+    yaw_ += deltaYaw;
+    pitch_ += deltaPitch;
+
+    constexpr float limit = XMConvertToRadians(89.0f);
+    pitch_ = std::clamp(pitch_, -limit, limit);
+
+    UpdateViewMatrix();
+}
+
+void Camera::MoveForward(float distance)
+{
+    position_ += GetForward() * distance;
+    UpdateViewMatrix();
+}
+
+void Camera::MoveRight(float distance)
+{
+    position_ += GetRight() * distance;
+    UpdateViewMatrix();
+}
+
+void Camera::MoveUp(float distance)
+{
+    position_ += GetUp() * distance;
+    UpdateViewMatrix();
+}
+
+void Camera::UpdateViewMatrix()
+{
+    Vector3 target = position_ + GetForward();
+    view_ = Matrix::CreateLookAt(position_, target, Vector3::Up);
 }

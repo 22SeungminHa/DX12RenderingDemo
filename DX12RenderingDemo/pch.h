@@ -36,6 +36,7 @@
 #include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <cmath>
 
 #include <shellapi.h>
 

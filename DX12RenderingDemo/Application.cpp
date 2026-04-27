@@ -230,7 +230,7 @@ void Application::FrameAdvance()
 
 	const float dt = timer_.GetTimeElapsed();
 
-	currentScene->ProcessInput(*inputSystem_);
+	currentScene->ProcessInput(*inputSystem_, dt);
 	currentScene->Animate(dt);
 
 	if (renderer_) renderer_->Render(currentScene);

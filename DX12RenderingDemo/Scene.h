@@ -30,7 +30,7 @@ public:
 	void ReleaseUploadBuffers();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
-	virtual void ProcessInput(const InputSystem& input);
+	virtual void ProcessInput(const InputSystem& input, float deltaTime);
 	virtual void Animate(float deltaTime);
 	virtual void Render(Renderer* renderer, ID3D12GraphicsCommandList* cmdList);
 

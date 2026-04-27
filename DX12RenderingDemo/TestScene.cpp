@@ -12,7 +12,7 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
     auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
-    auto object = std::make_unique<RotatingObject>();
+    auto object = std::make_unique<GameObject>();
     object->SetMesh(mesh);
     object->SetObjectCBIndex(0);
     object->SetShader(shader);

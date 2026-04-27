@@ -85,8 +85,37 @@ void Scene::ReleaseUploadBuffers()
 	OnReleaseUploadBuffers();
 }
 
-void Scene::ProcessInput(const InputSystem& input)
+void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 {
+	if (!activeCamera_) return;
+
+	constexpr float moveSpeed = 20.0f;
+	constexpr float mouseSensitivity = 0.005f;
+	constexpr float zoomSpeed = 0.03f;
+
+	const float moveDistance = moveSpeed * deltaTime;
+
+	if (input.IsKeyDown('W'))
+		activeCamera_->MoveForward(moveDistance);
+
+	if (input.IsKeyDown('S'))
+		activeCamera_->MoveForward(-moveDistance);
+
+	if (input.IsKeyDown('D'))
+		activeCamera_->MoveRight(-moveDistance);
+
+	if (input.IsKeyDown('A'))
+		activeCamera_->MoveRight(moveDistance);
+
+	if (input.IsLeftMouseDown())
+	{
+		POINT delta = input.GetMouseDelta();
+
+		activeCamera_->Rotate(
+			delta.x * mouseSensitivity,
+			delta.y * mouseSensitivity
+		);
+	}
 }
 
 void Scene::Animate(float deltaTime)
