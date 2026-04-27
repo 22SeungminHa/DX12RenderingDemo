@@ -55,10 +55,14 @@
 
 #include <DXGIDebug.h>
 
+#include "d3dx12.h"
+
 #include "SimpleMath.h"
 #include "SimpleMath.inl"
 
-#include "d3dx12.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;

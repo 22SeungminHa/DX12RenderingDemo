@@ -135,6 +135,7 @@
     </ClInclude>
     <ClInclude Include="DX12RenderingDemo.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="InputSystem.h" />
@@ -163,6 +164,7 @@
     </ClCompile>
     <ClCompile Include="DX12RenderingDemo.cpp" />
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="InputSystem.cpp" />
