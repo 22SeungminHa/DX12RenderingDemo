@@ -34,12 +34,12 @@ Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
     return S * R * T;
 }
 
-std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
+std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     aiMesh* mesh)
 {
-    std::vector<DiffusedVertex> vertices;
+    std::vector<LitVertex> vertices;
     std::vector<UINT> indices;
 
     vertices.reserve(mesh->mNumVertices);
@@ -69,7 +69,7 @@ std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
         }
     }
 
-    return std::make_shared<LoadedMeshDiffused>(
+    return std::make_shared<LoadedMeshLit>(
         device,
         cmdList,
         vertices,
@@ -77,7 +77,7 @@ std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
     );
 }
 
-std::unique_ptr<GameObject> FBXLoader::LoadDiffusedModel(
+std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::string& filePath,
@@ -134,7 +134,7 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
 
         LOG(indent << "  Mesh[" << i << "] Index: " << meshIndex);
 
-        auto mesh = CreateDiffusedMesh(device, cmdList, aiMesh);
+        auto mesh = CreateLitMesh(device, cmdList, aiMesh);
 
         auto meshObject = std::make_unique<GameObject>();
         meshObject->SetObjectCBIndex(objectCBIndex++);

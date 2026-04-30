@@ -33,11 +33,11 @@ protected:
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
 };
 
-class DiffusedShader : public Shader
+class LitShader : public Shader
 {
 public:
-    DiffusedShader();
-    virtual ~DiffusedShader();
+    LitShader();
+    virtual ~LitShader();
 
     virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
     virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob);

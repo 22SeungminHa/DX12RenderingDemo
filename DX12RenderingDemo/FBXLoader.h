@@ -10,12 +10,12 @@ class FBXLoader
 public:
     static Matrix ToMatrix(const aiMatrix4x4& m);
 
-    static std::shared_ptr<Mesh> CreateDiffusedMesh(
+    static std::shared_ptr<Mesh> CreateLitMesh(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         aiMesh* mesh);
 
-    static std::unique_ptr<GameObject> LoadDiffusedModel(
+    static std::unique_ptr<GameObject> LoadLitModel(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const std::string& filePath,

@@ -34,14 +34,14 @@ TriangleMesh::TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 {
 	// 삼각형 메쉬 정의
 	vertexCnt_ = 3;
-	stride_ = sizeof(DiffusedVertex);
+	stride_ = sizeof(LitVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	// 정점의 색상을 시계방향 순서대로 R, G, B 로 지정 RGBA로 색상을 표현.
-	DiffusedVertex pVertices[3];
-	pVertices[0] = DiffusedVertex(Vector3(0.0f, 6.0f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-	pVertices[1] = DiffusedVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
-	pVertices[2] = DiffusedVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+	LitVertex pVertices[3];
+	pVertices[0] = LitVertex(Vector3(0.0f, 6.0f, 0.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	pVertices[1] = LitVertex(Vector3(6.0f, -6.0f, 0.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f));
+	pVertices[2] = LitVertex(Vector3(-6.0f, -6.0f, 0.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
 	
 	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCnt_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
 
@@ -51,24 +51,24 @@ TriangleMesh::TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 }
 
-CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList * pd3dCommandList, float fWidth, float fHeight, float fDepth) : Mesh(pd3dDevice, pd3dCommandList)
+CubeMeshLit::CubeMeshLit(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList * pd3dCommandList, float fWidth, float fHeight, float fDepth) : Mesh(pd3dDevice, pd3dCommandList)
 {
 	//직육면체는 꼭지점(정점)이 8개이다.
 	vertexCnt_ = 8;
-	stride_ = sizeof(DiffusedVertex);
+	stride_ = sizeof(LitVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
 
 	//정점 버퍼는 직육면체의 꼭지점 8개에 대한 정점 데이터를 가진다.
-	DiffusedVertex pVertices[8];
-	pVertices[0] = DiffusedVertex(Vector3(-fx, +fy, -fz), RANDOM_COLOR);
-	pVertices[1] = DiffusedVertex(Vector3(+fx, +fy, -fz), RANDOM_COLOR);
-	pVertices[2] = DiffusedVertex(Vector3(+fx, +fy, +fz), RANDOM_COLOR);
-	pVertices[3] = DiffusedVertex(Vector3(-fx, +fy, +fz), RANDOM_COLOR);
-	pVertices[4] = DiffusedVertex(Vector3(-fx, -fy, -fz), RANDOM_COLOR);
-	pVertices[5] = DiffusedVertex(Vector3(+fx, -fy, -fz), RANDOM_COLOR);
-	pVertices[6] = DiffusedVertex(Vector3(+fx, -fy, +fz), RANDOM_COLOR);
-	pVertices[7] = DiffusedVertex(Vector3(-fx, -fy, +fz), RANDOM_COLOR);
+	LitVertex pVertices[8];
+	pVertices[0] = LitVertex(Vector3(-fx, +fy, -fz), RANDOM_COLOR);
+	pVertices[1] = LitVertex(Vector3(+fx, +fy, -fz), RANDOM_COLOR);
+	pVertices[2] = LitVertex(Vector3(+fx, +fy, +fz), RANDOM_COLOR);
+	pVertices[3] = LitVertex(Vector3(-fx, +fy, +fz), RANDOM_COLOR);
+	pVertices[4] = LitVertex(Vector3(-fx, -fy, -fz), RANDOM_COLOR);
+	pVertices[5] = LitVertex(Vector3(+fx, -fy, -fz), RANDOM_COLOR);
+	pVertices[6] = LitVertex(Vector3(+fx, -fy, +fz), RANDOM_COLOR);
+	pVertices[7] = LitVertex(Vector3(-fx, -fy, +fz), RANDOM_COLOR);
 	vertexBuffer_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pVertices, stride_ * vertexCnt_, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertexUploadBuffer_);
 	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vertexBufferView_.StrideInBytes = stride_;
@@ -128,26 +128,26 @@ CubeMeshDiffused::CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
 }
 
-CubeMeshDiffused::~CubeMeshDiffused()
+CubeMeshLit::~CubeMeshLit()
 {
 }
 
-LoadedMeshDiffused::LoadedMeshDiffused(
+LoadedMeshLit::LoadedMeshLit(
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,
-	const std::vector<DiffusedVertex>& vertices,
+	const std::vector<LitVertex>& vertices,
 	const std::vector<UINT>& indices)
 	: Mesh(device, cmdList)
 {
 	vertexCnt_ = static_cast<UINT>(vertices.size());
 	indexCnt_ = static_cast<UINT>(indices.size());
-	stride_ = sizeof(DiffusedVertex);
+	stride_ = sizeof(LitVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	vertexBuffer_ = ::CreateBufferResource(
 		device,
 		cmdList,
-		const_cast<DiffusedVertex*>(vertices.data()),
+		const_cast<LitVertex*>(vertices.data()),
 		stride_ * vertexCnt_,
 		D3D12_HEAP_TYPE_DEFAULT,
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,

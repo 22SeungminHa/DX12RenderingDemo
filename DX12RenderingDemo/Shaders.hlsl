@@ -16,6 +16,12 @@ cbuffer cbCameraInfo : register(b1)
     float gPad1;
 
     float4 gLightColor;
+
+    float4 gAmbientColor;
+
+    float gSpecularPower;
+    float gSpecularStrength;
+    float2 gPad2;
 };
 
 struct VS_INPUT
@@ -33,7 +39,7 @@ struct VS_OUTPUT
     float3 normalW : NORMAL;
 };
 
-VS_OUTPUT VSDiffused(VS_INPUT input)
+VS_OUTPUT VSLit(VS_INPUT input)
 {
     VS_OUTPUT output;
 
@@ -50,16 +56,24 @@ VS_OUTPUT VSDiffused(VS_INPUT input)
     return output;
 }
 
-float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
+float4 PSLit(VS_OUTPUT input) : SV_TARGET
 {
     float3 normalW = normalize(input.normalW);
 
     float3 lightDir = normalize(-gLightDir);
+    float3 viewDir = normalize(gEyePosW - input.positionW);
 
     float ndotl = saturate(dot(normalW, lightDir));
 
-    float3 ambient = input.color.rgb * 0.15f;
+    float3 ambient = input.color.rgb * gAmbientColor.rgb;
+
     float3 diffuse = input.color.rgb * gLightColor.rgb * ndotl;
 
-    return float4(ambient + diffuse, input.color.a);
+    float3 halfDir = normalize(lightDir + viewDir);
+    float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
+    float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
+
+    float3 finalColor = ambient + diffuse + specular;
+
+    return float4(finalColor, input.color.a);
 }

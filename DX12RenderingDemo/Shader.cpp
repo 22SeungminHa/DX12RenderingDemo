@@ -107,7 +107,7 @@ D3D12_SHADER_BYTECODE Shader::CompileShaderFromFile(
 
 	if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
 	ThrowIfFailed(hr);
-
+	
 	D3D12_SHADER_BYTECODE d3dShaderByteCode{};
 	d3dShaderByteCode.BytecodeLength = pd3dShaderBlob->GetBufferSize();
 	d3dShaderByteCode.pShaderBytecode = pd3dShaderBlob->GetBufferPointer();
@@ -156,15 +156,15 @@ void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
 	OnPrepareRender(pd3dCommandList);
 }
 
-DiffusedShader::DiffusedShader()
+LitShader::LitShader()
 {
 }
 
-DiffusedShader::~DiffusedShader()
+LitShader::~LitShader()
 {
 }
 
-D3D12_INPUT_LAYOUT_DESC DiffusedShader::CreateInputLayout()
+D3D12_INPUT_LAYOUT_DESC LitShader::CreateInputLayout()
 {
 	inputElementDescs_ = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -179,17 +179,17 @@ D3D12_INPUT_LAYOUT_DESC DiffusedShader::CreateInputLayout()
 	return d3dInputLayoutDesc;
 }
 
-D3D12_SHADER_BYTECODE DiffusedShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE LitShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSDiffused", "vs_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSLit", "vs_5_1", pd3dShaderBlob);
 }
 
-D3D12_SHADER_BYTECODE DiffusedShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE LitShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSDiffused", "ps_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSLit", "ps_5_1", pd3dShaderBlob);
 }
 
-void DiffusedShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void LitShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
 	pipelineStates_.clear();
 	pipelineStates_.reserve(1);

@@ -24,4 +24,10 @@ struct PassCB
     float pad0 = 0.0f;
 
     Light mainLight;
+
+    Vector4 ambientColor = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
+
+    float specularPower = 128.0f;
+    float specularStrength = 0.5f;
+    Vector2 pad1 = Vector2::Zero;
 };

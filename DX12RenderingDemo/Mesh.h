@@ -39,22 +39,22 @@ public:
 	virtual ~TriangleMesh(){ }
 };
 
-class CubeMeshDiffused : public Mesh
+class CubeMeshLit : public Mesh
 {
 public:
 	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다.
-	CubeMeshDiffused(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
-	virtual ~CubeMeshDiffused();
+	CubeMeshLit(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
+	virtual ~CubeMeshLit();
 };
 
-class LoadedMeshDiffused : public Mesh
+class LoadedMeshLit : public Mesh
 {
 public:
-	LoadedMeshDiffused(
+	LoadedMeshLit(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
-		const std::vector<DiffusedVertex>& vertices,
+		const std::vector<LitVertex>& vertices,
 		const std::vector<UINT>& indices);
 
-	virtual ~LoadedMeshDiffused() {}
+	virtual ~LoadedMeshLit() {}
 };

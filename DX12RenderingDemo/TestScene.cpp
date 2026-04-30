@@ -7,7 +7,7 @@
 
 void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    auto shader = std::make_shared<DiffusedShader>();
+    auto shader = std::make_shared<LitShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
     auto material = std::make_shared<Material>();
@@ -15,7 +15,7 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 
     UINT objectCBIndex = 0;
 
-    auto object = FBXLoader::LoadDiffusedModel(
+    auto object = FBXLoader::LoadLitModel(
         device,
         cmdList,
         "../Assets/Meshes/MicroSub.fbx",
@@ -44,7 +44,7 @@ void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 {
     auto triMesh = std::make_shared<TriangleMesh>(device, cmdList);
 
-    auto shader = std::make_shared<DiffusedShader>();
+    auto shader = std::make_shared<LitShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
     auto material = std::make_shared<Material>();
