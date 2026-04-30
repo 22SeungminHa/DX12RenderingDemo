@@ -16,7 +16,7 @@ public:
     void ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height);
 
     void ReleaseCurrentScene();
-    void ReleaseCurrentSceneUploadBuffers();
+    void ReleaseCurrentSceneUploadResources();
     void ResizeCurrentScene(UINT width, UINT height);
 
 private:

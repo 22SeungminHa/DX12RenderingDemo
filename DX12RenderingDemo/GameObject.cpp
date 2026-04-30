@@ -12,9 +12,9 @@ GameObject::~GameObject()
 {
 }
 
-void GameObject::ReleaseUploadBuffers()
+void GameObject::ReleaseUploadResources()
 {
-	meshRenderer_.ReleaseUploadBuffers();
+	meshRenderer_.ReleaseUploadResources();
 }
 
 void GameObject::Animate(float fTimeElapsed)

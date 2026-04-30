@@ -9,7 +9,7 @@ public:
 	virtual ~Mesh();
 
 public:
-	void ReleaseUploadBuffers();
+	void ReleaseUploadResources();
 	virtual void Render(ID3D12GraphicsCommandList* cmdList);
 
 protected:

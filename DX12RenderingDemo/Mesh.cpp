@@ -8,7 +8,7 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::ReleaseUploadBuffers()
+void Mesh::ReleaseUploadResources()
 {
 	vertexUploadBuffer_.Reset();
 	indexUploadBuffer_.Reset();

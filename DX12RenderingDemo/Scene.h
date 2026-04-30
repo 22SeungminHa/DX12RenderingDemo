@@ -29,7 +29,7 @@ public:
 	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void Unload();
 	void Resize(UINT width, UINT height);
-	void ReleaseUploadBuffers();
+	void ReleaseUploadResources();
 
 	//씬에서 마우스와 키보드 메시지를 처리한다.
 	virtual void ProcessInput(const InputSystem& input, float deltaTime);
@@ -41,7 +41,8 @@ protected:
 	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) = 0;
 	virtual void OnUnload() {}
 	virtual void OnResize(UINT width, UINT height) {}
-	virtual void OnReleaseUploadBuffers() {}
+	virtual void OnReleaseUploadResources() {}
+	virtual void OnProcessInput(const InputSystem& input, float deltaTime) {};
 
 	virtual void SetupCameraDesc() {}
 	void CreateCamera();

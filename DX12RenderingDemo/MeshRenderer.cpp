@@ -1,8 +1,8 @@
 #include "MeshRenderer.h"
 #include "Mesh.h"
 
-void MeshRenderer::ReleaseUploadBuffers()
+void MeshRenderer::ReleaseUploadResources()
 {
     if (mesh_)
-        mesh_->ReleaseUploadBuffers();
+        mesh_->ReleaseUploadResources();
 }

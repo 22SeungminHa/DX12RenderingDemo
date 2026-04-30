@@ -23,7 +23,7 @@ public:
     MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
     const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
 
-    void ReleaseUploadBuffers();
+    void ReleaseUploadResources();
 
     virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
     virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }

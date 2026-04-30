@@ -20,7 +20,7 @@ public:
 private:
 	void ApplyStartupDisplayMode();
 	void ProcessSceneChange();
-	void ProcessPendingUploadBufferRelease(bool forceWait = false);
+	void ProcessPendingUploadResourcesRelease(bool forceWait = false);
 	void HandleResize(UINT width, UINT height);
 
 private:

@@ -77,13 +77,13 @@ void Scene::Resize(UINT width, UINT height)
 	OnResize(width, height);
 }
 
-void Scene::ReleaseUploadBuffers()
+void Scene::ReleaseUploadResources()
 {
 	for (auto& object : objects_) {
-		if (object) object->ReleaseUploadBuffers();
+		if (object) object->ReleaseUploadResources();
 	}
 
-	OnReleaseUploadBuffers();
+	OnReleaseUploadResources();
 }
 
 void Scene::ProcessInput(const InputSystem& input, float deltaTime)

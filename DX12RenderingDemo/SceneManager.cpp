@@ -57,9 +57,9 @@ void SceneManager::ReleaseCurrentScene()
 	currentSceneType_ = SCENE_TYPE::NONE;
 }
 
-void SceneManager::ReleaseCurrentSceneUploadBuffers()
+void SceneManager::ReleaseCurrentSceneUploadResources()
 {
-	if (currentScene_) currentScene_->ReleaseUploadBuffers();
+	if (currentScene_) currentScene_->ReleaseUploadResources();
 }
 
 void SceneManager::ResizeCurrentScene(UINT width, UINT height)

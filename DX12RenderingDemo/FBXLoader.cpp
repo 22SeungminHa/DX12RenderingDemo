@@ -16,7 +16,7 @@ std::shared_ptr<Mesh> FBXLoader::LoadDiffusedMesh(
 
     if (!scene || !scene->mRootNode || scene->mNumMeshes == 0)
     {
-        LOG("FBX Load Failed: " << importer.GetErrorString() << std::endl);
+        LOG("FBX Load Failed: " << importer.GetErrorString());
         return nullptr;
     }
 
@@ -47,9 +47,9 @@ std::shared_ptr<Mesh> FBXLoader::LoadDiffusedMesh(
         }
     }
 
-    LOG("FBX Mesh Load Success" << std::endl);
-    LOG("Vertex Count: " << vertices.size() << std::endl);
-    LOG("Index Count: " << indices.size() << std::endl);
+    LOG("FBX Mesh Load Success");
+    LOG("Vertex Count: " << vertices.size());
+    LOG("Index Count: " << indices.size());
 
     return std::make_shared<LoadedMeshDiffused>(
         device,

@@ -79,7 +79,7 @@ void Application::ApplyStartupDisplayMode()
 	}
 }
 
-void Application::ProcessPendingUploadBufferRelease(bool forceWait)
+void Application::ProcessPendingUploadResourcesRelease(bool forceWait)
 {
 	if (!hasPendingUploadBufferRelease_ || !renderer_ || !sceneManager_)
 		return;
@@ -88,7 +88,7 @@ void Application::ProcessPendingUploadBufferRelease(bool forceWait)
 		return;
 
 	renderer_->WaitForSceneLoad(pendingSceneLoadFenceValue_);
-	sceneManager_->ReleaseCurrentSceneUploadBuffers();
+	sceneManager_->ReleaseCurrentSceneUploadResources();
 
 	pendingSceneLoadFenceValue_ = 0;
 	hasPendingUploadBufferRelease_ = false;
@@ -97,7 +97,7 @@ void Application::ProcessPendingUploadBufferRelease(bool forceWait)
 void Application::OnDestroy()
 {
 	// scene load 업로드가 남아 있으면 여기서만 정리
-	ProcessPendingUploadBufferRelease(true);
+	ProcessPendingUploadResourcesRelease(true);
 
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseCurrentScene();
@@ -179,7 +179,7 @@ void Application::HandleResize(UINT width, UINT height)
 	if (width == 0 || height == 0)
 		return;
 
-	ProcessPendingUploadBufferRelease(true);
+	ProcessPendingUploadResourcesRelease(true);
 	renderer_->Resize(width, height);
 	sceneManager_->ResizeCurrentScene(width, height);
 }
@@ -191,7 +191,7 @@ void Application::ProcessSceneChange()
 
 	// 이전 scene load의 upload buffer가 아직 남아 있다면
 	// 새 scene 전환 전에만 안전하게 정리
-	ProcessPendingUploadBufferRelease(true);
+	ProcessPendingUploadResourcesRelease(true);
 
 	renderer_->BeginSceneLoad();
 
@@ -210,7 +210,7 @@ void Application::FrameAdvance()
 {
 	timer_.Tick();
 
-	ProcessPendingUploadBufferRelease(false);
+	ProcessPendingUploadResourcesRelease(false);
 
 	if (isMinimized_)
 		return;
