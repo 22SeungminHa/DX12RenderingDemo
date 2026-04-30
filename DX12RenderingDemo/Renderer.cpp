@@ -81,8 +81,16 @@ void Renderer::UpdateObjectData(const GameObject* object)
     if (!object || !currentFrameResource_ || !currentFrameResource_->objectCB_)
         return;
 
+    Matrix world = object->GetWorldMatrix();
+
     ObjectCB objectCB{};
-    objectCB.world = object->GetWorldMatrix().Transpose();
+    objectCB.world = world.Transpose();
+
+    Matrix worldInvTranspose = world;
+    worldInvTranspose.Translation(Vector3::Zero);
+    worldInvTranspose = worldInvTranspose.Invert().Transpose();
+
+    objectCB.worldInvTranspose = worldInvTranspose.Transpose();
 
     const UINT objectIndex = object->GetObjectCBIndex();
     currentFrameResource_->objectCB_->CopyData(objectIndex, objectCB);

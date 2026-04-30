@@ -48,9 +48,14 @@ std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
     {
         const aiVector3D& pos = mesh->mVertices[i];
 
+        aiVector3D normal = mesh->HasNormals()
+            ? mesh->mNormals[i]
+            : aiVector3D(0, 1, 0);
+
         vertices.emplace_back(
             Vector3(pos.x, pos.y, pos.z),
-            Vector4(1.0f, 1.0f, 1.0f, 1.0f)
+            Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+            Vector3(normal.x, normal.y, normal.z)
         );
     }
 

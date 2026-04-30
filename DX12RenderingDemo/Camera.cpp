@@ -53,6 +53,13 @@ PassCB Camera::BuildPassCB() const
     PassCB passCB{};
     passCB.view = view_.Transpose();
     passCB.proj = projection_.Transpose();
+
+    passCB.eyePosW = position_;
+
+    passCB.mainLight.direction = Vector3(0.577f, -0.577f, 0.577f);
+    passCB.mainLight.direction.Normalize();
+    passCB.mainLight.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
     return passCB;
 }
 

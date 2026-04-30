@@ -1,45 +1,65 @@
-//게임 객체의 정보를 위한 상수 버퍼를 선언한다.
 cbuffer cbGameObjectInfo : register(b0)
 {
     matrix gmtxWorld;
+    matrix gmtxWorldInvTranspose;
 };
 
-//카메라의 정보를 위한 상수 버퍼를 선언한다.
 cbuffer cbCameraInfo : register(b1)
 {
     matrix gmtxView;
     matrix gmtxProjection;
+
+    float3 gEyePosW;
+    float gPad0;
+
+    float3 gLightDir;
+    float gPad1;
+
+    float4 gLightColor;
 };
 
-//정점 셰이더의 입력을 위한 구조체를 선언한다.
 struct VS_INPUT
 {
-	float3 position : POSITION;
-	float4 color : COLOR;
+    float3 position : POSITION;
+    float4 color : COLOR;
+    float3 normal : NORMAL;
 };
 
-//정점 셰이더의 출력(픽셀 셰이더의 입력)을 위한 구조체를 선언한다.
 struct VS_OUTPUT
 {
-	float4 position : SV_POSITION;
-	float4 color : COLOR;
+    float4 position : SV_POSITION;
+    float3 positionW : POSITION;
+    float4 color : COLOR;
+    float3 normalW : NORMAL;
 };
 
-//정점 셰이더를 정의한다.
 VS_OUTPUT VSDiffused(VS_INPUT input)
 {
     VS_OUTPUT output;
 
     float4 posW = mul(float4(input.position, 1.0f), gmtxWorld);
     float4 posV = mul(posW, gmtxView);
+
     output.position = mul(posV, gmtxProjection);
+    output.positionW = posW.xyz;
     output.color = input.color;
+
+    output.normalW = mul(input.normal, (float3x3) gmtxWorldInvTranspose);
+    output.normalW = normalize(output.normalW);
 
     return output;
 }
 
-//픽셀 셰이더를 정의한다.
 float4 PSDiffused(VS_OUTPUT input) : SV_TARGET
 {
-	return(input.color);
+    float3 normalW = normalize(input.normalW);
+
+    float3 lightDir = normalize(-gLightDir);
+
+    float ndotl = saturate(dot(normalW, lightDir));
+
+    float3 ambient = input.color.rgb * 0.15f;
+    float3 diffuse = input.color.rgb * gLightColor.rgb * ndotl;
+
+    return float4(ambient + diffuse, input.color.a);
 }

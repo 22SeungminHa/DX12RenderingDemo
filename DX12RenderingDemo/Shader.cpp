@@ -3,7 +3,7 @@
 D3D12_RASTERIZER_DESC Shader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc{};
-	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; // D3D12_FILL_MODE_SOLID, D3D12_FILL_MODE_WIREFRAME
 	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;  // D3D12_CULL_MODE_BACK, D3D12_CULL_MODE_NONE, D3D12_CULL_MODE_FRONT.
 	d3dRasterizerDesc.FrontCounterClockwise = TRUE;
 	d3dRasterizerDesc.DepthBias = 0;
@@ -167,14 +167,15 @@ DiffusedShader::~DiffusedShader()
 D3D12_INPUT_LAYOUT_DESC DiffusedShader::CreateInputLayout()
 {
 	inputElementDescs_ = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-	
+
 	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc{};
 	d3dInputLayoutDesc.pInputElementDescs = inputElementDescs_.data();
-	d3dInputLayoutDesc.NumElements = inputElementDescs_.size();
-	
+	d3dInputLayoutDesc.NumElements = static_cast<UINT>(inputElementDescs_.size());
+
 	return d3dInputLayoutDesc;
 }
 
