@@ -47,7 +47,7 @@ protected:
 
 	virtual CameraDesc SetupCameraDesc() const { return CameraDesc{}; }
 	void CreateCamera();
-	void UpdateCameraProjection(UINT width, UINT height);
+	void ResizeCamera(UINT width, UINT height);
 
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;

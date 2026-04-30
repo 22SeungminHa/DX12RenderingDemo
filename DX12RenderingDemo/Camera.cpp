@@ -115,13 +115,17 @@ void Camera::UpdateViewMatrix()
     view_ = Matrix::CreateLookAt(position_, target, Vector3::Up);
 }
 
-void Camera::Initialize(float aspectRatio)
+void Camera::Initialize(UINT width, UINT height)
 {
-    SetProjection(desc_.nearZ, desc_.farZ, aspectRatio, desc_.fovY);
+    Resize(width, height);
     SetLookAt(desc_.eye, desc_.target, desc_.up);
 }
 
-void Camera::UpdateProjection(float aspectRatio)
+void Camera::Resize(UINT width, UINT height)
 {
-    SetProjection(desc_.nearZ, desc_.farZ, aspectRatio, desc_.fovY);
+    float aspect = (height == 0) ? 1.0f : static_cast<float>(width) / height;
+
+    SetViewport(0, 0, static_cast<float>(width), static_cast<float>(height));
+    SetScissorRect(0, 0, width, height);
+    SetProjection(desc_.nearZ, desc_.farZ, aspect, desc_.fovY);
 }

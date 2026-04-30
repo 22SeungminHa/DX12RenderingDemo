@@ -72,7 +72,7 @@ void Scene::Resize(UINT width, UINT height)
 	clientWidth_ = width;
 	clientHeight_ = height;
 
-	UpdateCameraProjection(width, height);
+	ResizeCamera(width, height);
 	OnResize(width, height);
 }
 
@@ -140,26 +140,17 @@ void Scene::AnimateObject(GameObject* object, float deltaTime)
 void Scene::CreateCamera()
 {
 	auto camera = std::make_unique<Camera>();
-
-	float aspect = (clientHeight_ == 0) ? 1.0f : static_cast<float>(clientWidth_) / clientHeight_;
-
-	camera->SetViewport(0, 0, static_cast<float>(clientWidth_), static_cast<float>(clientHeight_), 0.0f, 1.0f);
-	camera->SetScissorRect(0, 0, clientWidth_, clientHeight_);
 	
 	camera->SetDesc(SetupCameraDesc());
-	camera->Initialize(aspect);
+	camera->Initialize(clientWidth_, clientHeight_);
 
 	activeCamera_ = camera.get();
 	cameras_.push_back(std::move(camera));
 }
 
-void Scene::UpdateCameraProjection(UINT width, UINT height)
+void Scene::ResizeCamera(UINT width, UINT height)
 {
 	if (!activeCamera_) return;
 
-	float aspect = (height == 0) ? 1.0f : static_cast<float>(width) / height;
-
-	activeCamera_->SetViewport(0, 0, static_cast<float>(width), static_cast<float>(height));
-	activeCamera_->SetScissorRect(0, 0, width, height);
-	activeCamera_->UpdateProjection(aspect);
+	activeCamera_->Resize(width, height);
 }

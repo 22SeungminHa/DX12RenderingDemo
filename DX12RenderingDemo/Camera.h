@@ -49,8 +49,8 @@ public:
     void MoveRight(float distance);
     void MoveUp(float distance);
 
-    void Initialize(float aspectRatio);
-    void UpdateProjection(float aspectRatio);
+    void Initialize(UINT width, UINT height);
+    void Resize(UINT width, UINT height);
 
 protected:
     void UpdateViewMatrix();
