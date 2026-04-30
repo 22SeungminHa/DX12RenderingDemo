@@ -6,7 +6,6 @@
 
 GameObject::GameObject()
 {
-	worldMatrix = Matrix::Identity;
 } 
 
 GameObject::~GameObject()
@@ -39,8 +38,7 @@ void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCam
 
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
-	Matrix mtxRotate = Matrix::CreateFromAxisAngle(axis, XMConvertToRadians(angle));
-	worldMatrix = mtxRotate * worldMatrix;
+	transform_.rotation += axis * XMConvertToRadians(angle);
 }
 
 RotatingObject::RotatingObject()

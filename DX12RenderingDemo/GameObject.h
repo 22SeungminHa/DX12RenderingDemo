@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "Transform.h"
 
 class Material;
 class Mesh;
@@ -17,7 +18,7 @@ public:
     void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
     UINT GetObjectCBIndex() const { return objectCBIndex_; }
     
-    const Matrix& GetWorldMatrix() const { return worldMatrix; }
+    const Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
 
     void ReleaseUploadBuffers();
 
@@ -29,7 +30,7 @@ public:
     virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
 
 protected:
-    Matrix worldMatrix = Matrix::Identity;
+    Transform transform_;
 
     std::shared_ptr<Mesh> mesh_ = NULL;
     std::shared_ptr<Material> material_ = NULL;
