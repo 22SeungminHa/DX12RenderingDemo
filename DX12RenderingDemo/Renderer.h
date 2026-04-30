@@ -1,10 +1,10 @@
 #pragma once
 #include "D3DCore.h"
-#include "Camera.h"
 #include "FrameResource.h"
 
 class Scene;
 class GameObject;
+class Camera;
 
 class Renderer
 {

@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include "Scene.h"
 #include "TestScene.h"
 
 std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)

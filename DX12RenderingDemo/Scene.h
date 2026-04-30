@@ -1,8 +1,9 @@
 #pragma once
-#include "Shader.h"
-#include "InputSystem.h"
+#include "Camera.h"
+#include "GameObject.h"
 
 class Renderer;
+class InputSystem;
 
 enum class SCENE_TYPE
 {

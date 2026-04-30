@@ -1,5 +1,7 @@
 #pragma once
-#include "Mesh.h"
+#include "pch.h"
+
+class Mesh;
 
 class FBXLoader
 {

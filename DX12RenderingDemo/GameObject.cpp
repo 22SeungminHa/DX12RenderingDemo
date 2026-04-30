@@ -1,6 +1,8 @@
 #include "GameObject.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "Material.h"
+#include "Mesh.h"
 
 GameObject::GameObject()
 {
@@ -28,8 +30,11 @@ void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCam
 {
 	OnPrepareRender();
 
-	if (shader_) shader_->Render(pd3dCommandList, pCamera);
-	if (mesh_) mesh_->Render(pd3dCommandList);
+	if (material_ && material_->GetShader())
+		material_->GetShader()->Render(pd3dCommandList, pCamera);
+
+	if (mesh_)
+		mesh_->Render(pd3dCommandList);
 }
 
 void GameObject::Rotate(const Vector3& axis, float angle)

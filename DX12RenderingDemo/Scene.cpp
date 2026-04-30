@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "Renderer.h"
+#include "InputSystem.h"
 
 Scene::Scene(UINT width, UINT height)
 {

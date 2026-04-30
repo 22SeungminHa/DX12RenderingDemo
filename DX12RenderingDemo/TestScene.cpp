@@ -1,5 +1,9 @@
 #include "TestScene.h"
 #include "FBXLoader.h"
+#include "Material.h"
+#include "Shader.h"
+#include "GameObject.h"
+#include "Mesh.h"
 
 void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
@@ -12,10 +16,13 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
     auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
+    auto material = std::make_shared<Material>();
+    material->SetShader(shader);
+
     auto object = std::make_unique<GameObject>();
     object->SetMesh(mesh);
     object->SetObjectCBIndex(0);
-    object->SetShader(shader);
+    object->SetMaterial(material);
 
     objects_.clear();
     objects_.push_back(std::move(object));
@@ -37,10 +44,13 @@ void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
     auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
+    auto material = std::make_shared<Material>();
+    material->SetShader(shader);
+
     auto rotatingObject = std::make_unique<RotatingObject>();
     rotatingObject->SetObjectCBIndex(0);
     rotatingObject->SetMesh(triMesh);
-    rotatingObject->SetShader(shader);
+    rotatingObject->SetMaterial(material);
 
     objects_.clear();
     objects_.push_back(std::move(rotatingObject));

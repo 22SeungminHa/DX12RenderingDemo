@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "GameObject.h"
+#include "Camera.h"
 
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {

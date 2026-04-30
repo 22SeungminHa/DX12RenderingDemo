@@ -1,4 +1,5 @@
 #include "FBXLoader.h"
+#include "Mesh.h"
 
 std::shared_ptr<Mesh> FBXLoader::LoadDiffusedMesh(
     ID3D12Device* device,

@@ -1,9 +1,9 @@
 #pragma once
+#include "pch.h"
 
-#include "Mesh.h"
-#include "Camera.h"
-
-class Shader;
+class Material;
+class Mesh;
+class Camera;
 
 class GameObject
 {
@@ -22,7 +22,7 @@ public:
     void ReleaseUploadBuffers();
 
     virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
-    virtual void SetShader(const std::shared_ptr<Shader>& shader) { shader_ = shader; }
+    virtual void SetMaterial(const std::shared_ptr<Material>& material) { material_ = material; }
 
     virtual void Animate(float fTimeElapsed);
     virtual void OnPrepareRender();
@@ -32,7 +32,7 @@ protected:
     Matrix worldMatrix = Matrix::Identity;
 
     std::shared_ptr<Mesh> mesh_ = NULL;
-    std::shared_ptr<Shader> shader_ = NULL;
+    std::shared_ptr<Material> material_ = NULL;
 
     UINT objectCBIndex_ = 0;
 };

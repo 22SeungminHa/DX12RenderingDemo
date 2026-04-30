@@ -1,10 +1,7 @@
 #pragma once
-
-#include "GameObject.h"
-#include "Camera.h"
-#include "UploadBuffer.h"
-#include "ShaderTypes.h"
 #include "Asset.h"
+
+class Camera;
 
 class Shader : public Asset
 {
