@@ -2,6 +2,10 @@
 #include "Scene.h"
 #include "GameObject.h"
 #include "Camera.h"
+#include "MeshRenderer.h"
+#include "Material.h"
+#include "Shader.h"
+#include "Mesh.h"
 
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
@@ -147,7 +151,7 @@ void Renderer::Render(Scene* scene)
     
     UpdateCameraData(camera);
 
-    scene->Render(this, cmdList);
+    RenderObjects(scene, camera);
 
     d3dCore_.EndRender();
     d3dCore_.ExecuteCommandList();
@@ -160,4 +164,49 @@ void Renderer::Render(Scene* scene)
 void Renderer::WaitForGpuComplete()
 {
     d3dCore_.WaitForGpuComplete();
+}
+
+void Renderer::RenderObjects(Scene* scene, Camera* camera)
+{
+    if (!scene || !camera)
+        return;
+
+    const auto& objects = scene->GetObjects();
+
+    for (const auto& object : objects)
+    {
+        if (!object)
+            continue;
+
+        RenderObject(object.get(), camera);
+    }
+}
+
+void Renderer::RenderObject(GameObject* object, Camera* camera)
+{
+    if (!object)
+        return;
+
+    object->OnPrepareRender();
+
+    UpdateObjectData(object);
+
+    DrawMeshRenderer(object->GetMeshRenderer(), camera);
+}
+
+void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera)
+{
+    if (!meshRenderer || !meshRenderer->IsRenderable())
+        return;
+
+    auto* cmdList = d3dCore_.GetCommandList();
+
+    Material* material = meshRenderer->GetMaterial();
+    Mesh* mesh = meshRenderer->GetMesh();
+
+    if (material && material->GetShader())
+        material->GetShader()->Render(cmdList, camera);
+
+    if (mesh)
+        mesh->Render(cmdList);
 }

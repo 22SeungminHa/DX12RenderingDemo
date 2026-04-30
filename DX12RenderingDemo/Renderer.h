@@ -5,6 +5,7 @@
 class Scene;
 class GameObject;
 class Camera;
+class MeshRenderer;
 
 class Renderer
 {
@@ -48,6 +49,10 @@ public:
     ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
 
 private:
+    void RenderObjects(Scene* scene, Camera* camera);
+    void RenderObject(GameObject* object, Camera* camera);
+    void DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera);
+
     void CreateFrameResources();
     void ReleaseFrameResources();
 

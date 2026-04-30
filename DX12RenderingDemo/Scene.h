@@ -24,6 +24,7 @@ public:
 
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
+	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
 
 	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void Unload();
@@ -33,7 +34,6 @@ public:
 	//씬에서 마우스와 키보드 메시지를 처리한다.
 	virtual void ProcessInput(const InputSystem& input, float deltaTime);
 	virtual void Animate(float deltaTime);
-	virtual void Render(Renderer* renderer, ID3D12GraphicsCommandList* cmdList);
 
 protected:
 	ComPtr<ID3D12RootSignature> CreateGraphicsRootSignature(ID3D12Device* device);

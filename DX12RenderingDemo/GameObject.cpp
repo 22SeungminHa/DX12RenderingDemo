@@ -25,13 +25,6 @@ void GameObject::OnPrepareRender()
 {
 }
 
-void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
-{
-	OnPrepareRender();
-
-	meshRenderer_.Render(pd3dCommandList, pCamera);
-}
-
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
 	transform_.rotation += axis * XMConvertToRadians(angle);

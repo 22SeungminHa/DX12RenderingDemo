@@ -5,7 +5,6 @@
 
 class Material;
 class Mesh;
-class Camera;
 
 class GameObject
 {
@@ -18,8 +17,11 @@ public:
 
     void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
     UINT GetObjectCBIndex() const { return objectCBIndex_; }
-    
+
     const Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
+
+    MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
+    const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
 
     void ReleaseUploadBuffers();
 
@@ -28,7 +30,6 @@ public:
 
     virtual void Animate(float fTimeElapsed);
     virtual void OnPrepareRender();
-    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera);
 
 protected:
     Transform transform_;

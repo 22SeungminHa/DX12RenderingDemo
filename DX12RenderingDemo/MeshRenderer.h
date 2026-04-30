@@ -3,7 +3,6 @@
 
 class Mesh;
 class Material;
-class Camera;
 
 class MeshRenderer
 {
@@ -17,8 +16,9 @@ public:
     Mesh* GetMesh() const { return mesh_.get(); }
     Material* GetMaterial() const { return material_.get(); }
 
+    bool IsRenderable() const { return mesh_ && material_; }
+
     void ReleaseUploadBuffers();
-    void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera);
 
 private:
     std::shared_ptr<Mesh> mesh_;

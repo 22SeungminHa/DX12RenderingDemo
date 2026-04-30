@@ -126,19 +126,6 @@ void Scene::Animate(float deltaTime)
 	}
 }
 
-void Scene::Render(Renderer* renderer, ID3D12GraphicsCommandList* cmdList)
-{
-	if (!renderer || !cmdList || !rootSignature_)
-		return;
-
-	for (auto& object : objects_) {
-		if (!object) continue;
-
-		renderer->UpdateObjectData(object.get());
-		object->Render(cmdList, activeCamera_);
-	}
-}
-
 void Scene::CreateCamera()
 {
 	auto camera = std::make_unique<Camera>();
