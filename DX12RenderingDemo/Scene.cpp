@@ -122,7 +122,19 @@ void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 void Scene::Animate(float deltaTime)
 {
 	for (auto& object : objects_) {
-		if (object) object->Animate(deltaTime);
+		AnimateObject(object.get(), deltaTime);
+	}
+}
+
+void Scene::AnimateObject(GameObject* object, float deltaTime)
+{
+	if (!object) return;
+
+	object->Animate(deltaTime);
+
+	for (auto& child : object->GetChildren())
+	{
+		AnimateObject(child.get(), deltaTime);
 	}
 }
 

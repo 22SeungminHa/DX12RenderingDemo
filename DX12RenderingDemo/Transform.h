@@ -9,13 +9,13 @@ public:
     Vector3 scale = Vector3::One;
 
 public:
-    Matrix GetWorldMatrix() const
-    {
-        Matrix S = Matrix::CreateScale(scale);
-        Matrix R = Matrix::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
-        Matrix T = Matrix::CreateTranslation(position);
+    void SetParent(Transform* parent) { parent_ = parent; }
+    Transform* GetParent() const { return parent_; }
 
-        return S * R * T;
-    }
+    Matrix GetLocalMatrix() const;
+    Matrix GetWorldMatrix() const;
+
+private:
+    Transform* parent_ = nullptr;
 };
 

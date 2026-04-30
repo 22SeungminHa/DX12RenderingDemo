@@ -13,12 +13,20 @@ public:
     virtual ~GameObject();
 
 public:
+    void AddChild(std::unique_ptr<GameObject> child);
+    void RemoveChild(GameObject* child);
+
     void Rotate(const Vector3& axis, float angle);
 
     void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
     UINT GetObjectCBIndex() const { return objectCBIndex_; }
 
-    const Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
+    const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
+
+    Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
+    
+    Transform* GetTransform() { return &transform_; }
+    const Transform* GetTransform() const { return &transform_; }
 
     MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
     const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
@@ -36,6 +44,8 @@ protected:
     MeshRenderer meshRenderer_;
 
     UINT objectCBIndex_ = 0;
+
+    std::vector<std::unique_ptr<GameObject>> children_;
 };
 
 class RotatingObject : public GameObject

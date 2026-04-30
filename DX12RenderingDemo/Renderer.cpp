@@ -168,30 +168,31 @@ void Renderer::WaitForGpuComplete()
 
 void Renderer::RenderObjects(Scene* scene, Camera* camera)
 {
-    if (!scene || !camera)
-        return;
+    if (!scene || !camera) return;
 
     const auto& objects = scene->GetObjects();
 
     for (const auto& object : objects)
     {
-        if (!object)
-            continue;
-
+        if (!object) continue;
         RenderObject(object.get(), camera);
     }
 }
 
 void Renderer::RenderObject(GameObject* object, Camera* camera)
 {
-    if (!object)
-        return;
+    if (!object) return;
 
     object->OnPrepareRender();
 
     UpdateObjectData(object);
 
     DrawMeshRenderer(object->GetMeshRenderer(), camera);
+
+    for (const auto& child : object->GetChildren())
+    {
+        RenderObject(child.get(), camera);
+    }
 }
 
 void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera)
