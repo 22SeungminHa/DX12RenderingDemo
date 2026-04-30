@@ -2,6 +2,8 @@
 
 Matrix Transform::GetLocalMatrix() const
 {
+    if (useLocalMatrix_) return localMatrix_;
+
     Matrix S = Matrix::CreateScale(scale);
     Matrix R = Matrix::CreateFromYawPitchRoll(rotation.y, rotation.x, rotation.z);
     Matrix T = Matrix::CreateTranslation(position);

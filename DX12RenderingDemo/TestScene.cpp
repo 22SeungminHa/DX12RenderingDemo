@@ -7,25 +7,26 @@
 
 void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
-    auto mesh = FBXLoader::LoadDiffusedMesh(
-        device,
-        cmdList,
-        "../Assets/Meshes/MicroSub.fbx"
-    );
-
     auto shader = std::make_shared<DiffusedShader>();
     shader->CreateShader(device, rootSignature_.Get());
 
     auto material = std::make_shared<Material>();
     material->SetShader(shader);
 
-    auto object = std::make_unique<GameObject>();
-    object->SetMesh(mesh);
-    object->SetObjectCBIndex(0);
-    object->SetMaterial(material);
+    UINT objectCBIndex = 0;
+
+    auto object = FBXLoader::LogLoadDiffusedModel(
+        device,
+        cmdList,
+        "../Assets/Meshes/MicroSub.fbx",
+        material,
+        objectCBIndex
+    );
 
     objects_.clear();
-    objects_.push_back(std::move(object));
+
+    if (object)
+        objects_.push_back(std::move(object));
 }
 
 void TestScene1::SetupCameraDesc()

@@ -18,8 +18,7 @@ void GameObject::ReleaseUploadResources()
 
     for (auto& child : children_)
     {
-        if (child)
-            child->ReleaseUploadResources();
+        if (child) child->ReleaseUploadResources();
     }
 }
 
