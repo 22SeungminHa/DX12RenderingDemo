@@ -15,7 +15,7 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
 
     UINT objectCBIndex = 0;
 
-    auto object = FBXLoader::LogLoadDiffusedModel(
+    auto object = FBXLoader::LoadDiffusedModel(
         device,
         cmdList,
         "../Assets/Meshes/MicroSub.fbx",

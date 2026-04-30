@@ -34,83 +34,6 @@ Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
     return S * R * T;
 }
 
-std::unique_ptr<GameObject> FBXLoader::LoadDiffusedModel(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    const std::string& filePath,
-    const std::shared_ptr<Material>& material,
-    UINT& objectCBIndex)
-{
-    Assimp::Importer importer;
-
-    const aiScene* scene = importer.ReadFile(
-        filePath,
-        aiProcess_Triangulate |
-        aiProcess_JoinIdenticalVertices
-    );
-
-    if (!scene || !scene->mRootNode)
-    {
-        LOG("FBX Load Failed: " << importer.GetErrorString());
-        return nullptr;
-    }
-
-    return ProcessNode(
-        device,
-        cmdList,
-        scene,
-        scene->mRootNode,
-        material,
-        objectCBIndex
-    );
-}
-
-std::unique_ptr<GameObject> FBXLoader::ProcessNode(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    const aiScene* scene,
-    aiNode* node,
-    const std::shared_ptr<Material>& material,
-    UINT& objectCBIndex)
-{
-    auto object = std::make_unique<GameObject>();
-
-    object->SetObjectCBIndex(objectCBIndex++);
-    object->GetTransform()->SetLocalMatrix(ToMatrix(node->mTransformation));
-
-    for (UINT i = 0; i < node->mNumMeshes; ++i)
-    {
-        UINT meshIndex = node->mMeshes[i];
-        aiMesh* aiMesh = scene->mMeshes[meshIndex];
-
-        auto mesh = CreateDiffusedMesh(device, cmdList, aiMesh);
-
-        auto meshObject = std::make_unique<GameObject>();
-        meshObject->SetObjectCBIndex(objectCBIndex++);
-        meshObject->SetMesh(mesh);
-        meshObject->SetMaterial(material);
-
-        object->AddChild(std::move(meshObject));
-    }
-
-    for (UINT i = 0; i < node->mNumChildren; ++i)
-    {
-        auto child = ProcessNode(
-            device,
-            cmdList,
-            scene,
-            node->mChildren[i],
-            material,
-            objectCBIndex
-        );
-
-        if (child)
-            object->AddChild(std::move(child));
-    }
-
-    return object;
-}
-
 std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
@@ -149,7 +72,7 @@ std::shared_ptr<Mesh> FBXLoader::CreateDiffusedMesh(
     );
 }
 
-std::unique_ptr<GameObject> FBXLoader::LogLoadDiffusedModel(
+std::unique_ptr<GameObject> FBXLoader::LoadDiffusedModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::string& filePath,
@@ -170,7 +93,7 @@ std::unique_ptr<GameObject> FBXLoader::LogLoadDiffusedModel(
         return nullptr;
     }
 
-    return LogProcessNode(
+    return ProcessNode(
         device,
         cmdList,
         scene,
@@ -181,7 +104,7 @@ std::unique_ptr<GameObject> FBXLoader::LogLoadDiffusedModel(
     );
 }
 
-std::unique_ptr<GameObject> FBXLoader::LogProcessNode(
+std::unique_ptr<GameObject> FBXLoader::ProcessNode(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const aiScene* scene,
@@ -218,7 +141,7 @@ std::unique_ptr<GameObject> FBXLoader::LogProcessNode(
 
     for (UINT i = 0; i < node->mNumChildren; ++i)
     {
-        auto child = LogProcessNode(
+        auto child = ProcessNode(
             device,
             cmdList,
             scene,
