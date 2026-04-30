@@ -6,6 +6,11 @@ Camera::Camera()
 	scissorRect_ = { 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT };
 }
 
+void Camera::SetDesc(const CameraDesc& desc)
+{
+    desc_ = desc;
+}
+
 void Camera::SetLookAt(const Vector3& position, const Vector3& target, const Vector3& up)
 {
     position_ = position;
@@ -108,4 +113,15 @@ void Camera::UpdateViewMatrix()
 {
     Vector3 target = position_ + GetForward();
     view_ = Matrix::CreateLookAt(position_, target, Vector3::Up);
+}
+
+void Camera::Initialize(float aspectRatio)
+{
+    SetProjection(desc_.nearZ, desc_.farZ, aspectRatio, desc_.fovY);
+    SetLookAt(desc_.eye, desc_.target, desc_.up);
+}
+
+void Camera::UpdateProjection(float aspectRatio)
+{
+    SetProjection(desc_.nearZ, desc_.farZ, aspectRatio, desc_.fovY);
 }

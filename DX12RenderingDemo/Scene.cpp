@@ -52,7 +52,6 @@ void Scene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
 {
 	rootSignature_ = CreateGraphicsRootSignature(device);
 
-	SetupCameraDesc();
 	CreateCamera();
 
 	OnLoad(device, cmdList);
@@ -141,12 +140,14 @@ void Scene::AnimateObject(GameObject* object, float deltaTime)
 void Scene::CreateCamera()
 {
 	auto camera = std::make_unique<Camera>();
+
 	float aspect = (clientHeight_ == 0) ? 1.0f : static_cast<float>(clientWidth_) / clientHeight_;
 
 	camera->SetViewport(0, 0, static_cast<float>(clientWidth_), static_cast<float>(clientHeight_), 0.0f, 1.0f);
 	camera->SetScissorRect(0, 0, clientWidth_, clientHeight_);
-	camera->SetProjection(cameraDesc_.nearZ, cameraDesc_.farZ, aspect, cameraDesc_.fovY);
-	camera->SetLookAt(cameraDesc_.eye, cameraDesc_.target, cameraDesc_.up);
+	
+	camera->SetDesc(SetupCameraDesc());
+	camera->Initialize(aspect);
 
 	activeCamera_ = camera.get();
 	cameras_.push_back(std::move(camera));
@@ -160,5 +161,5 @@ void Scene::UpdateCameraProjection(UINT width, UINT height)
 
 	activeCamera_->SetViewport(0, 0, static_cast<float>(width), static_cast<float>(height));
 	activeCamera_->SetScissorRect(0, 0, width, height);
-	activeCamera_->SetProjection(cameraDesc_.nearZ, cameraDesc_.farZ, aspect, cameraDesc_.fovY);
+	activeCamera_->UpdateProjection(aspect);
 }

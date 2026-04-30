@@ -8,7 +8,7 @@ public:
 
     virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST1; }
     virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) override;
-    virtual void SetupCameraDesc() override;
+    virtual CameraDesc SetupCameraDesc() const override;
 };
 
 class TestScene2 : public Scene {
@@ -18,5 +18,5 @@ public:
 
     virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST2; }
     virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) override;
-    virtual void SetupCameraDesc() override;
+    virtual CameraDesc SetupCameraDesc() const override;
 };

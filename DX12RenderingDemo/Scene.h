@@ -45,7 +45,7 @@ protected:
 	virtual void OnReleaseUploadResources() {}
 	virtual void OnProcessInput(const InputSystem& input, float deltaTime) {};
 
-	virtual void SetupCameraDesc() {}
+	virtual CameraDesc SetupCameraDesc() const { return CameraDesc{}; }
 	void CreateCamera();
 	void UpdateCameraProjection(UINT width, UINT height);
 
@@ -54,7 +54,6 @@ protected:
 
 	std::vector<std::unique_ptr<Camera>> cameras_;
 	Camera* activeCamera_ = nullptr;
-	CameraDesc cameraDesc_;
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;

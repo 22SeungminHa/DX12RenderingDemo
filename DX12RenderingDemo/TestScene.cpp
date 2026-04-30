@@ -29,13 +29,15 @@ void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
         objects_.push_back(std::move(object));
 }
 
-void TestScene1::SetupCameraDesc()
+CameraDesc TestScene1::SetupCameraDesc() const
 {
-    cameraDesc_.eye = { 0.0f, 15.0f, -25.0f };
-    cameraDesc_.target = { 0.0f, 0.0f, 0.0f };
-    cameraDesc_.nearZ = 1.0f;
-    cameraDesc_.farZ = 500.0f;
-    cameraDesc_.fovY = 90.0f;
+    CameraDesc desc{};
+    desc.eye = { 0.0f, 15.0f, -25.0f };
+    desc.target = { 0.0f, 0.0f, 0.0f };
+    desc.nearZ = 1.0f;
+    desc.farZ = 500.0f;
+    desc.fovY = 90.0f;
+    return desc;
 }
 
 void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
@@ -57,11 +59,13 @@ void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList
     objects_.push_back(std::move(rotatingObject));
 }
 
-void TestScene2::SetupCameraDesc()
+CameraDesc TestScene2::SetupCameraDesc() const
 {
-    cameraDesc_.eye = { 0.0f, 15.0f, -25.0f };
-    cameraDesc_.target = { 0.0f, 0.0f, 0.0f };
-    cameraDesc_.nearZ = 1.0f;
-    cameraDesc_.farZ = 500.0f;
-    cameraDesc_.fovY = 90.0f;
+    CameraDesc desc{};
+    desc.eye = { 0.0f, 15.0f, -25.0f };
+    desc.target = { 0.0f, 0.0f, 0.0f };
+    desc.nearZ = 1.0f;
+    desc.farZ = 500.0f;
+    desc.fovY = 90.0f;
+    return desc;
 }

@@ -4,8 +4,8 @@
 
 struct CameraDesc
 {
-    Vector3 eye = { 0,0,-10 };
-    Vector3 target = { 0,0,0 };
+    Vector3 eye = { 0.0f, 0.0f, -10.0f };
+    Vector3 target = { 0.0f, 0.0f, 0.0f };
     Vector3 up = Vector3::Up;
 
     float nearZ = 1.0f;
@@ -23,6 +23,7 @@ public:
     // view / projection
     void SetLookAt(const Vector3& position, const Vector3& target, const Vector3& up = Vector3::Up);
     void SetProjection(float nearPlane, float farPlane, float aspectRatio, float fovY);
+    void SetDesc(const CameraDesc& desc);
 
     // viewport / scissor
     void SetViewport(float x, float y, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f);
@@ -33,6 +34,12 @@ public:
     const Matrix& GetProjectionMatrix() const { return projection_; }
     const D3D12_VIEWPORT& GetViewport() const { return viewport_; }
     const D3D12_RECT& GetScissorRect() const { return scissorRect_; }
+    const CameraDesc& GetDesc() const { return desc_; }
+
+    Vector3 GetPosition() const { return position_; }
+    Vector3 GetForward() const;
+    Vector3 GetRight() const;
+    Vector3 GetUp() const;
 
     // pass data
     PassCB BuildPassCB() const;
@@ -42,10 +49,8 @@ public:
     void MoveRight(float distance);
     void MoveUp(float distance);
 
-    Vector3 GetPosition() const { return position_; }
-    Vector3 GetForward() const;
-    Vector3 GetRight() const;
-    Vector3 GetUp() const;
+    void Initialize(float aspectRatio);
+    void UpdateProjection(float aspectRatio);
 
 protected:
     void UpdateViewMatrix();
@@ -60,4 +65,6 @@ protected:
     Vector3 position_ = { 0.0f, 0.0f, -10.0f };
     float yaw_ = 0.0f;
     float pitch_ = 0.0f;
+
+    CameraDesc desc_;
 };
