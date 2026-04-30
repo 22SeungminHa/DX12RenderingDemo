@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Transform.h"
+#include "MeshRenderer.h"
 
 class Material;
 class Mesh;
@@ -22,8 +23,8 @@ public:
 
     void ReleaseUploadBuffers();
 
-    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
-    virtual void SetMaterial(const std::shared_ptr<Material>& material) { material_ = material; }
+    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
+    virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }
 
     virtual void Animate(float fTimeElapsed);
     virtual void OnPrepareRender();
@@ -31,9 +32,7 @@ public:
 
 protected:
     Transform transform_;
-
-    std::shared_ptr<Mesh> mesh_ = NULL;
-    std::shared_ptr<Material> material_ = NULL;
+    MeshRenderer meshRenderer_;
 
     UINT objectCBIndex_ = 0;
 };

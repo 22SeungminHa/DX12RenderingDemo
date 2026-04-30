@@ -14,7 +14,7 @@ GameObject::~GameObject()
 
 void GameObject::ReleaseUploadBuffers()
 {
-	if (mesh_) mesh_->ReleaseUploadBuffers();
+	meshRenderer_.ReleaseUploadBuffers();
 }
 
 void GameObject::Animate(float fTimeElapsed)
@@ -29,11 +29,7 @@ void GameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCam
 {
 	OnPrepareRender();
 
-	if (material_ && material_->GetShader())
-		material_->GetShader()->Render(pd3dCommandList, pCamera);
-
-	if (mesh_)
-		mesh_->Render(pd3dCommandList);
+	meshRenderer_.Render(pd3dCommandList, pCamera);
 }
 
 void GameObject::Rotate(const Vector3& axis, float angle)
