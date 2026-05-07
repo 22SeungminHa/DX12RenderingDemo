@@ -32,21 +32,6 @@ protected:
 	int baseVertex_ = 0;
 };
 
-class TriangleMesh : public Mesh
-{
-public:
-	TriangleMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual ~TriangleMesh(){ }
-};
-
-class CubeMeshLit : public Mesh
-{
-public:
-	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다.
-	CubeMeshLit(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
-	virtual ~CubeMeshLit();
-};
-
 class LoadedMeshLit : public Mesh
 {
 public:

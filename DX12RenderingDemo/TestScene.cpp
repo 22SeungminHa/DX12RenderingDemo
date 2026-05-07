@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include "GameObject.h"
 #include "Mesh.h"
+#include "Texture.h"
 
 void TestScene::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature)
 {
@@ -12,6 +13,16 @@ void TestScene::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 
     auto material = std::make_shared<Material>();
     material->SetShader(shader);
+
+    auto texture = std::make_shared<Texture>();
+
+    texture->LoadDDS(
+        device,
+        cmdList,
+        L"../Assets/Textures/MicroSub_Albedo.dds"
+    );
+
+    material->SetTexture(texture);
 
     UINT objectCBIndex = 0;
 

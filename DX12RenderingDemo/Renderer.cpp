@@ -6,18 +6,21 @@
 #include "Material.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Texture.h"
 
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
 
     CreateRootSignature();
+    CreateSrvDescriptorHeap();
     CreateFrameResources();
 }
 
 void Renderer::Shutdown()
 {
     ReleaseFrameResources();
+    ReleaseSrvDescriptorHeap();
     ReleaseRootSignature();
 
     d3dCore_.Shutdown();
@@ -25,7 +28,7 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[2]{};
+    D3D12_ROOT_PARAMETER rootParameters[3]{};
 
     // b0 : ObjectCB
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -39,6 +42,34 @@ void Renderer::CreateRootSignature()
     rootParameters[1].Descriptor.RegisterSpace = 0;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    // t0 : Texture SRV
+    D3D12_DESCRIPTOR_RANGE srvRange{};
+    srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    srvRange.NumDescriptors = 1;
+    srvRange.BaseShaderRegister = 0;
+    srvRange.RegisterSpace = 0;
+    srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[2].DescriptorTable.pDescriptorRanges = &srvRange;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    D3D12_STATIC_SAMPLER_DESC sampler{};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler.MipLODBias = 0.0f;
+    sampler.MaxAnisotropy = 1;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+    sampler.MinLOD = 0.0f;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderRegister = 0;
+    sampler.RegisterSpace = 0;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
     D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
@@ -48,8 +79,8 @@ void Renderer::CreateRootSignature()
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
     rootSignatureDesc.NumParameters = _countof(rootParameters);
     rootSignatureDesc.pParameters = rootParameters;
-    rootSignatureDesc.NumStaticSamplers = 0;
-    rootSignatureDesc.pStaticSamplers = nullptr;
+    rootSignatureDesc.NumStaticSamplers = 1;
+    rootSignatureDesc.pStaticSamplers = &sampler;
     rootSignatureDesc.Flags = rootSignatureFlags;
 
     ComPtr<ID3DBlob> signatureBlob;
@@ -99,6 +130,64 @@ void Renderer::ReleaseFrameResources()
 {
     currentFrameResource_ = nullptr;
     frameResources_.clear();
+}
+
+void Renderer::CreateSrvDescriptorHeap()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
+    heapDesc.NumDescriptors = 1;
+    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    heapDesc.NodeMask = 0;
+
+    ThrowIfFailed(
+        d3dCore_.GetDevice()->CreateDescriptorHeap(
+            &heapDesc,
+            IID_PPV_ARGS(srvDescriptorHeap_.GetAddressOf()))
+    );
+
+    srvDescriptorSize_ =
+        d3dCore_.GetDevice()->GetDescriptorHandleIncrementSize(
+            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+}
+
+void Renderer::ReleaseSrvDescriptorHeap()
+{
+    srvDescriptorHeap_.Reset();
+    srvDescriptorSize_ = 0;
+}
+
+void Renderer::BindTexture(Texture* texture)
+{
+    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
+        return;
+
+    auto* device = d3dCore_.GetDevice();
+    auto* cmdList = d3dCore_.GetCommandList();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = texture->GetResource()->GetDesc().Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle =
+        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+
+    device->CreateShaderResourceView(
+        texture->GetResource(),
+        &srvDesc,
+        cpuHandle);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle =
+        srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+
+    cmdList->SetGraphicsRootDescriptorTable(2, gpuHandle);
 }
 
 void Renderer::AdvanceFrameResource()
@@ -272,8 +361,14 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
     Material* material = meshRenderer->GetMaterial();
     Mesh* mesh = meshRenderer->GetMesh();
 
-    if (material && material->GetShader())
-        material->GetShader()->Render(cmdList, camera);
+    if (material)
+    {
+        if (material->GetTexture())
+            BindTexture(material->GetTexture());
+
+        if (material->GetShader())
+            material->GetShader()->Render(cmdList, camera);
+    }
 
     if (mesh)
         mesh->Render(cmdList);

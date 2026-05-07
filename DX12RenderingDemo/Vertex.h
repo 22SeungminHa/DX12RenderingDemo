@@ -16,6 +16,7 @@ class LitVertex : public Vertex
 protected:
     Vector4 diffuse_;
     Vector3 normal_;
+    Vector2 texCoord_;
 
 public:
     LitVertex()
@@ -23,34 +24,19 @@ public:
         position_ = Vector3::Zero;
         diffuse_ = Vector4::One;
         normal_ = Vector3::Up;
+        texCoord_ = Vector2::Zero;
     }
 
-    LitVertex(const Vector3& position, const Vector4& diffuse)
-    {
-        position_ = position;
-        diffuse_ = diffuse;
-        normal_ = Vector3::Up;
-    }
-
-    LitVertex(float x, float y, float z, const Vector4& diffuse)
-    {
-        position_ = Vector3(x, y, z);
-        diffuse_ = diffuse;
-        normal_ = Vector3::Up;
-    }
-
-    LitVertex(const Vector3& position, const Vector4& diffuse, const Vector3& normal)
+    LitVertex(
+        const Vector3& position,
+        const Vector4& diffuse,
+        const Vector3& normal,
+        const Vector2& texCoord)
     {
         position_ = position;
         diffuse_ = diffuse;
         normal_ = normal;
-    }
-
-    LitVertex(float x, float y, float z, const Vector4& diffuse, const Vector3& normal)
-    {
-        position_ = Vector3(x, y, z);
-        diffuse_ = diffuse;
-        normal_ = normal;
+        texCoord_ = texCoord;
     }
 
     ~LitVertex() {}

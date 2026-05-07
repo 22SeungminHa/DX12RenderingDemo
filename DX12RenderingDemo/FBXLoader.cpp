@@ -52,10 +52,15 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
             ? mesh->mNormals[i]
             : aiVector3D(0, 1, 0);
 
+        aiVector3D texCoord = mesh->HasTextureCoords(0)
+            ? mesh->mTextureCoords[0][i]
+            : aiVector3D(0.0f, 0.0f, 0.0f);
+
         vertices.emplace_back(
             Vector3(pos.x, pos.y, pos.z),
             Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-            Vector3(normal.x, normal.y, normal.z)
+            Vector3(normal.x, normal.y, normal.z),
+            Vector2(texCoord.x, texCoord.y)
         );
     }
 
@@ -89,7 +94,8 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     const aiScene* scene = importer.ReadFile(
         filePath,
         aiProcess_Triangulate |
-        aiProcess_JoinIdenticalVertices
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_FlipUVs
     );
 
     if (!scene || !scene->mRootNode)

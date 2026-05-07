@@ -6,6 +6,7 @@ class Scene;
 class GameObject;
 class Camera;
 class MeshRenderer;
+class Texture;
 
 class Renderer
 {
@@ -21,6 +22,9 @@ private:
     std::vector<std::unique_ptr<FrameResource>> frameResources_;
     FrameResource* currentFrameResource_ = nullptr;
     UINT currentFrameResourceIndex_ = 0;
+
+    ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
+    UINT srvDescriptorSize_ = 0;
 
 public:
     Renderer() = default;
@@ -45,6 +49,11 @@ public:
     void WaitForGpuComplete();
 
     void UpdateObjectData(const GameObject* object);
+
+    void CreateSrvDescriptorHeap();
+    void ReleaseSrvDescriptorHeap();
+
+    void BindTexture(Texture* texture);
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
