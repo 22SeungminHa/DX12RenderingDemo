@@ -201,7 +201,7 @@ void Application::ProcessSceneChange()
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), width, height);
+	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), renderer_->GetRootSignature(), width, height);
 	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
 	hasPendingUploadBufferRelease_ = true;
 }

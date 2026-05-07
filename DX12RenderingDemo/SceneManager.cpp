@@ -14,13 +14,13 @@ std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UIN
 	}
 }
 
-void SceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
+void SceneManager::CreateScene(SCENE_TYPE sceneType, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, UINT width, UINT height)
 {
 	currentScene_ = CreateSceneByType(sceneType, width, height);
 
 	if (currentScene_) {
 		currentSceneType_ = sceneType;
-		currentScene_->Load(device, cmdList);
+		currentScene_->Load(device, cmdList, rootSignature);
 	}
 	else {
 		currentSceneType_ = SCENE_TYPE::NONE;
@@ -36,12 +36,12 @@ void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
 	nextSceneType_ = nextScene;
 }
 
-void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, UINT width, UINT height)
+void SceneManager::ProcessSceneChange(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, UINT width, UINT height)
 {
 	if (!sceneChangeRequested_) return;
 
 	ReleaseCurrentScene();
-	CreateScene(nextSceneType_, device, cmdList, width, height);
+	CreateScene(nextSceneType_, device, cmdList, rootSignature, width, height);
 	
 	sceneChangeRequested_ = false;
 	nextSceneType_ = SCENE_TYPE::NONE;

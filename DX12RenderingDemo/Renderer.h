@@ -16,6 +16,8 @@ private:
 private:
     D3DCore d3dCore_;
 
+    ComPtr<ID3D12RootSignature> rootSignature_;
+
     std::vector<std::unique_ptr<FrameResource>> frameResources_;
     FrameResource* currentFrameResource_ = nullptr;
     UINT currentFrameResourceIndex_ = 0;
@@ -47,11 +49,15 @@ public:
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
+    ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
 private:
     void RenderObjects(Scene* scene, Camera* camera);
     void RenderObject(GameObject* object, Camera* camera);
     void DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera);
+
+    void CreateRootSignature();
+    void ReleaseRootSignature();
 
     void CreateFrameResources();
     void ReleaseFrameResources();

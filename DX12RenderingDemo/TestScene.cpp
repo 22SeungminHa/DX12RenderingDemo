@@ -5,10 +5,10 @@
 #include "GameObject.h"
 #include "Mesh.h"
 
-void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void TestScene1::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature)
 {
     auto shader = std::make_shared<LitShader>();
-    shader->CreateShader(device, rootSignature_.Get());
+    shader->CreateShader(device, rootSignature);
 
     auto material = std::make_shared<Material>();
     material->SetShader(shader);
@@ -40,12 +40,12 @@ CameraDesc TestScene1::SetupCameraDesc() const
     return desc;
 }
 
-void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList)
+void TestScene2::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature)
 {
     auto triMesh = std::make_shared<TriangleMesh>(device, cmdList);
 
     auto shader = std::make_shared<LitShader>();
-    shader->CreateShader(device, rootSignature_.Get());
+    shader->CreateShader(device, rootSignature);
 
     auto material = std::make_shared<Material>();
     material->SetShader(shader);

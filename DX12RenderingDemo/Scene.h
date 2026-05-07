@@ -23,10 +23,9 @@ public:
 	virtual SCENE_TYPE GetSceneType() const = 0;
 
 	Camera* GetActiveCamera() const { return activeCamera_; }
-	ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
 
-	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature);
 	void Unload();
 	void Resize(UINT width, UINT height);
 	void ReleaseUploadResources();
@@ -37,9 +36,7 @@ public:
 	virtual void AnimateObject(GameObject* object, float deltaTime);
 
 protected:
-	ComPtr<ID3D12RootSignature> CreateGraphicsRootSignature(ID3D12Device* device);
-
-	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) = 0;
+	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature) = 0;
 	virtual void OnUnload() {}
 	virtual void OnResize(UINT width, UINT height) {}
 	virtual void OnReleaseUploadResources() {}
@@ -57,6 +54,4 @@ protected:
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;
-
-	ComPtr<ID3D12RootSignature> rootSignature_;
 };
