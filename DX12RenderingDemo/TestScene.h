@@ -1,22 +1,12 @@
 #pragma once
 #include "Scene.h"
 
-class TestScene1 : public Scene {
+class TestScene : public Scene {
 public:
-    TestScene1(UINT width, UINT height) : Scene(width, height) {};
-    virtual ~TestScene1() = default;
+    TestScene(UINT width, UINT height) : Scene(width, height) {};
+    virtual ~TestScene() = default;
 
-    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST1; }
-    virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature) override;
-    virtual CameraDesc SetupCameraDesc() const override;
-};
-
-class TestScene2 : public Scene {
-public:
-    TestScene2(UINT width, UINT height) : Scene(width, height) {};
-    virtual ~TestScene2() = default;
-
-    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST2; }
+    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST; }
     virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature) override;
     virtual CameraDesc SetupCameraDesc() const override;
 };

@@ -11,8 +11,7 @@ enum class SCENE_TYPE
 	TITLE,
 	GAME,
 	LOADING,
-	TEST1,
-	TEST2
+	TEST
 };
 
 class Scene {

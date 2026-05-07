@@ -32,7 +32,7 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 
 	renderer_->Initialize(hwnd_, width, height);
 
-	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
+	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
 	inputSystem_->Initialize(hwnd_);
 
 	timer_.Reset();
@@ -150,11 +150,11 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 		if (msg == WM_KEYUP && wParam == VK_ESCAPE)
 			::PostQuitMessage(0);
 
-		if (msg == WM_KEYUP && wParam == VK_SPACE && sceneManager_) {
-			SCENE_TYPE type = sceneManager_->GetCurrentSceneType();
-			if (type == SCENE_TYPE::TEST1) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
-			else if (type == SCENE_TYPE::TEST2) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST1);
-		}
+		//if (msg == WM_KEYUP && wParam == VK_SPACE && sceneManager_) {
+		//	SCENE_TYPE type = sceneManager_->GetCurrentSceneType();
+		//	if (type == SCENE_TYPE::TEST) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
+		//	else if (type == SCENE_TYPE::TEST2) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
+		//}
 
 		break;
 

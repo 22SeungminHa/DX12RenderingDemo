@@ -5,10 +5,8 @@
 std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)
 {
 	switch (sceneType) {
-	case SCENE_TYPE::TEST1:
-		return std::make_unique<TestScene1>(width, height);
-	case SCENE_TYPE::TEST2:
-		return std::make_unique<TestScene2>(width, height);
+	case SCENE_TYPE::TEST:
+		return std::make_unique<TestScene>(width, height);
 	default:
 		return nullptr;
 	}

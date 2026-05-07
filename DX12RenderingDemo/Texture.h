@@ -27,6 +27,6 @@ public:
     }
 
 private:
-    Microsoft::WRL::ComPtr<ID3D12Resource> texture_;
-    Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer_;
+    ComPtr<ID3D12Resource> texture_;
+    ComPtr<ID3D12Resource> uploadBuffer_;
 };
