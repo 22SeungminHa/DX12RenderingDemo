@@ -86,6 +86,8 @@ void Scene::ReleaseUploadResources()
 
 void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 {
+	OnProcessInput(input, deltaTime);
+
 	if (!activeCamera_) return;
 
 	constexpr float moveSpeed = 20.0f;

@@ -22,7 +22,7 @@ void GameObject::ReleaseUploadResources()
     }
 }
 
-void GameObject::Animate(float fTimeElapsed)
+void GameObject::Animate(float deltaTime)
 {
 }
 
@@ -32,10 +32,10 @@ void GameObject::OnPrepareRender()
 
 void GameObject::AddChild(std::unique_ptr<GameObject> child)
 {
-	if (!child) return;
+    if (!child) return;
 
-	child->GetTransform()->SetParent(&transform_);
-	children_.push_back(std::move(child));
+    child->GetTransform()->SetParent(&transform_);
+    children_.push_back(std::move(child));
 }
 
 void GameObject::RemoveChild(GameObject* child)
@@ -53,20 +53,20 @@ void GameObject::RemoveChild(GameObject* child)
 
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
-	transform_.rotation += axis * XMConvertToRadians(angle);
+    transform_.rotation += axis * XMConvertToRadians(angle);
 }
 
 RotatingObject::RotatingObject()
 {
-	rotationAxis_ = Vector3::Up;
-	rotationSpeed_ = 90.0f;
+    rotationAxis_ = Vector3::Up;
+    rotationSpeed_ = 90.0f;
 }
 
 RotatingObject::~RotatingObject()
 {
 }
 
-void RotatingObject::Animate(float fTimeElapsed)
+void RotatingObject::Animate(float deltaTime)
 {
-	GameObject::Rotate(rotationAxis_, rotationSpeed_ * fTimeElapsed);
+    GameObject::Rotate(rotationAxis_, rotationSpeed_ * deltaTime);
 }

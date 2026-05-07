@@ -36,7 +36,7 @@ public:
     virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
     virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }
 
-    virtual void Animate(float fTimeElapsed);
+    virtual void Animate(float deltaTime);
     virtual void OnPrepareRender();
 
 protected:
@@ -59,8 +59,8 @@ private:
     float rotationSpeed_;
 
 public:
-    void SetRotationSpeed(float fRotationSpeed) { rotationSpeed_ = fRotationSpeed; }
-    void SetRotationAxis(const Vector3& xmf3RotationAxis) { rotationAxis_ = xmf3RotationAxis; }
+    void SetRotationSpeed(float rotationSpeed) { rotationSpeed_ = rotationSpeed; }
+    void SetRotationAxis(const Vector3& rotationAxis) { rotationAxis_ = rotationAxis; }
 
-    virtual void Animate(float fTimeElapsed);
+    virtual void Animate(float deltaTime);
 };
