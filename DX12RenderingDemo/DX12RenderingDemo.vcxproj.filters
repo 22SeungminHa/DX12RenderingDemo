@@ -117,6 +117,9 @@
     <ClInclude Include="UploadBuffer.h">
       <Filter>소스 파일\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>소스 파일\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -184,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="InputSystem.cpp">
       <Filter>소스 파일\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>소스 파일\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
