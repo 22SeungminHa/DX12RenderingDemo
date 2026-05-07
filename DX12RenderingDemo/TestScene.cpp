@@ -11,18 +11,33 @@ void TestScene::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
     auto shader = std::make_shared<LitShader>();
     shader->CreateShader(device, rootSignature);
 
-    auto material = std::make_shared<Material>();
-    material->SetShader(shader);
+    std::vector<std::shared_ptr<Material>> materials;
 
-    auto texture = std::make_shared<Texture>();
-
-    texture->LoadDDS(
+    auto bodyTexture = std::make_shared<Texture>();
+    bodyTexture->LoadDDS(
         device,
         cmdList,
         L"../Assets/Textures/MicroSub_Albedo.dds"
     );
 
-    material->SetTexture(texture);
+    auto bodyMaterial = std::make_shared<Material>();
+    bodyMaterial->SetShader(shader);
+    bodyMaterial->SetTexture(bodyTexture);
+
+    materials.push_back(bodyMaterial);
+
+    auto glassTexture = std::make_shared<Texture>();
+    glassTexture->LoadDDS(
+        device,
+        cmdList,
+        L"../Assets/Textures/MicroSub_Glass_MetallicSmoothness.dds"
+    );
+
+    auto glassMaterial = std::make_shared<Material>();
+    glassMaterial->SetShader(shader);
+    glassMaterial->SetTexture(glassTexture);
+
+    materials.push_back(glassMaterial);
 
     UINT objectCBIndex = 0;
 
@@ -30,7 +45,7 @@ void TestScene::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
         device,
         cmdList,
         "../Assets/Meshes/MicroSub.fbx",
-        material,
+        materials,
         objectCBIndex
     );
 

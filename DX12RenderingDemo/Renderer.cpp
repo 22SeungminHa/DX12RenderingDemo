@@ -135,7 +135,7 @@ void Renderer::ReleaseFrameResources()
 void Renderer::CreateSrvDescriptorHeap()
 {
     D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
-    heapDesc.NumDescriptors = 1;
+    heapDesc.NumDescriptors = kMaxSrvDescriptorCount;
     heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     heapDesc.NodeMask = 0;
@@ -155,15 +155,24 @@ void Renderer::ReleaseSrvDescriptorHeap()
 {
     srvDescriptorHeap_.Reset();
     srvDescriptorSize_ = 0;
+    nextSrvDescriptorIndex_ = 0;
 }
 
-void Renderer::BindTexture(Texture* texture)
+void Renderer::CreateTextureSrv(Texture* texture)
 {
     if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
         return;
 
+    if (texture->HasSrvIndex())
+        return;
+
+    if (nextSrvDescriptorIndex_ >= kMaxSrvDescriptorCount)
+        return;
+
+    UINT srvIndex = nextSrvDescriptorIndex_++;
+    texture->SetSrvIndex(srvIndex);
+
     auto* device = d3dCore_.GetDevice();
-    auto* cmdList = d3dCore_.GetCommandList();
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -176,16 +185,33 @@ void Renderer::BindTexture(Texture* texture)
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle =
         srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 
+    cpuHandle.ptr += static_cast<SIZE_T>(srvIndex) * srvDescriptorSize_;
+
     device->CreateShaderResourceView(
         texture->GetResource(),
         &srvDesc,
         cpuHandle);
+}
+
+void Renderer::BindTexture(Texture* texture)
+{
+    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
+        return;
+
+    CreateTextureSrv(texture);
+
+    if (!texture->HasSrvIndex())
+        return;
+
+    auto* cmdList = d3dCore_.GetCommandList();
 
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle =
         srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+
+    gpuHandle.ptr += static_cast<SIZE_T>(texture->GetSrvIndex()) * srvDescriptorSize_;
 
     cmdList->SetGraphicsRootDescriptorTable(2, gpuHandle);
 }

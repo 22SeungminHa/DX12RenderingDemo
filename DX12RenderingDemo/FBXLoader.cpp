@@ -86,7 +86,7 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::string& filePath,
-    const std::shared_ptr<Material>& material,
+    const std::vector<std::shared_ptr<Material>>& materials,
     UINT& objectCBIndex)
 {
     Assimp::Importer importer;
@@ -109,7 +109,7 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
         cmdList,
         scene,
         scene->mRootNode,
-        material,
+        materials,
         objectCBIndex,
         0
     );
@@ -120,9 +120,9 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
     ID3D12GraphicsCommandList* cmdList,
     const aiScene* scene,
     aiNode* node,
-    const std::shared_ptr<Material>& material,
+    const std::vector<std::shared_ptr<Material>>& materials,
     UINT& objectCBIndex,
-    int depth)
+    int depth) 
 {
     std::string indent(depth * 2, ' ');
     LOG(indent << "Node: " << node->mName.C_Str());
@@ -142,10 +142,25 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
 
         auto mesh = CreateLitMesh(device, cmdList, aiMesh);
 
+        UINT materialIndex = aiMesh->mMaterialIndex;
+
+        std::shared_ptr<Material> meshMaterial = nullptr;
+
+        if (materialIndex < materials.size())
+        {
+            meshMaterial = materials[materialIndex];
+        }
+        else if (!materials.empty())
+        {
+            meshMaterial = materials[0];
+        }
+
+        LOG(indent << "  MaterialIndex: " << materialIndex);
+
         auto meshObject = std::make_unique<GameObject>();
         meshObject->SetObjectCBIndex(objectCBIndex++);
         meshObject->SetMesh(mesh);
-        meshObject->SetMaterial(material);
+        meshObject->SetMaterial(meshMaterial);
 
         object->AddChild(std::move(meshObject));
     }
@@ -157,7 +172,7 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
             cmdList,
             scene,
             node->mChildren[i],
-            material,
+            materials,
             objectCBIndex,
             depth + 1
         );

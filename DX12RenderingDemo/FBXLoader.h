@@ -19,15 +19,15 @@ public:
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const std::string& filePath,
-        const std::shared_ptr<Material>& material,
+        const std::vector<std::shared_ptr<Material>>& materials,
         UINT& objectCBIndex);
-    
+
     static std::unique_ptr<GameObject> ProcessNode(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const aiScene* scene,
         aiNode* node,
-        const std::shared_ptr<Material>& material,
+        const std::vector<std::shared_ptr<Material>>& materials,
         UINT& objectCBIndex,
         int depth = 0
     );

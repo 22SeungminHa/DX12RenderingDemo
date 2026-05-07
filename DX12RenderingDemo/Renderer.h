@@ -13,6 +13,7 @@ class Renderer
 private:
     static constexpr UINT kNumFrameResources = 3;
     static constexpr UINT kMaxObjectCount = 1000;
+    static constexpr UINT kMaxSrvDescriptorCount = 128;
 
 private:
     D3DCore d3dCore_;
@@ -25,6 +26,7 @@ private:
 
     ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
     UINT srvDescriptorSize_ = 0;
+    UINT nextSrvDescriptorIndex_ = 0;
 
 public:
     Renderer() = default;
@@ -53,6 +55,7 @@ public:
     void CreateSrvDescriptorHeap();
     void ReleaseSrvDescriptorHeap();
 
+    void CreateTextureSrv(Texture* texture);
     void BindTexture(Texture* texture);
 
     // getters

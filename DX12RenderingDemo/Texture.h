@@ -16,6 +16,10 @@ public:
     ID3D12Resource* GetResource() const { return texture_.Get(); }
     ID3D12Resource* GetUploadBuffer() const { return uploadBuffer_.Get(); }
 
+    void SetSrvIndex(UINT index) { srvIndex_ = index; }
+    UINT GetSrvIndex() const { return srvIndex_; }
+    bool HasSrvIndex() const { return srvIndex_ != UINT_MAX; }
+
     void ReleaseUploadBuffer()
     {
         uploadBuffer_.Reset();
@@ -24,4 +28,6 @@ public:
 private:
     ComPtr<ID3D12Resource> texture_;
     ComPtr<ID3D12Resource> uploadBuffer_;
+
+    UINT srvIndex_ = UINT_MAX;
 };
