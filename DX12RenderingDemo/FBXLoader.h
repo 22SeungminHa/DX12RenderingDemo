@@ -4,6 +4,8 @@
 class Mesh;
 class GameObject;
 class Material;
+class Shader;
+class Texture;
 
 class FBXLoader
 {
@@ -19,7 +21,7 @@ public:
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const std::string& filePath,
-        const std::vector<std::shared_ptr<Material>>& materials,
+        const std::shared_ptr<Shader>& shader,
         UINT& objectCBIndex);
 
     static std::unique_ptr<GameObject> ProcessNode(
@@ -31,5 +33,22 @@ public:
         UINT& objectCBIndex,
         int depth = 0
     );
+
+    static std::vector<std::shared_ptr<Material>> LoadMaterials(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        const aiScene* scene,
+        const std::string& modelPath,
+        const std::shared_ptr<Shader>& shader
+    );
+
+    static std::shared_ptr<Texture> LoadMaterialTexture(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        const std::string& modelPath,
+        aiMaterial* material
+    );
+
+    static void DebugPrintMaterial(aiMaterial* material, UINT index);
 };
 

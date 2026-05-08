@@ -92,7 +92,7 @@ void Renderer::CreateRootSignature()
             D3D_ROOT_SIGNATURE_VERSION_1,
             signatureBlob.GetAddressOf(),
             errorBlob.GetAddressOf()),
-        errorBlob.Get()
+            errorBlob.Get()
     );
 
     ThrowIfFailed(

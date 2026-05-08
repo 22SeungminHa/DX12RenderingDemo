@@ -1,6 +1,9 @@
 #include "FBXLoader.h"
 #include "Mesh.h"
 #include "GameObject.h"
+#include "Material.h"
+#include "Texture.h"
+#include "Shader.h"
 
 Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
 {
@@ -82,11 +85,126 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
     );
 }
 
+std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    const aiScene* scene,
+    const std::string& modelPath,
+    const std::shared_ptr<Shader>& shader)
+{
+    std::vector<std::shared_ptr<Material>> materials;
+
+    if (!scene)
+        return materials;
+
+    materials.reserve(scene->mNumMaterials);
+
+    for (UINT i = 0; i < scene->mNumMaterials; ++i)
+    {
+        aiMaterial* aiMat = scene->mMaterials[i];
+
+        //DebugPrintMaterial(aiMat, i);
+
+        auto material = std::make_shared<Material>();
+        material->SetShader(shader);
+
+        auto texture = LoadMaterialTexture(
+            device,
+            cmdList,
+            modelPath,
+            aiMat
+        );
+
+        if (texture)
+            material->SetTexture(texture);
+
+        materials.push_back(material);
+
+        LOG("Loaded Material[" << i << "]");
+    }
+
+    return materials;
+}
+
+void FBXLoader::DebugPrintMaterial(aiMaterial* material, UINT index)
+{
+    if (!material)
+        return;
+
+    aiString name;
+    material->Get(AI_MATKEY_NAME, name);
+
+    LOG("========== Material[" << index << "] ==========");
+    LOG("Name: " << name.C_Str());
+
+    for (int type = aiTextureType_NONE; type <= aiTextureType_UNKNOWN; ++type)
+    {
+        UINT count = material->GetTextureCount(static_cast<aiTextureType>(type));
+
+        if (count == 0)
+            continue;
+
+        LOG("TextureType[" << type << "] Count: " << count);
+
+        for (UINT i = 0; i < count; ++i)
+        {
+            aiString path;
+            if (material->GetTexture(static_cast<aiTextureType>(type), i, &path) == AI_SUCCESS)
+            {
+                LOG("  Path[" << i << "]: " << path.C_Str());
+            }
+        }
+    }
+}
+
+std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    const std::string& modelPath,
+    aiMaterial* material)
+{
+    if (!material)
+        return nullptr;
+
+    aiString materialName;
+    material->Get(AI_MATKEY_NAME, materialName);
+
+    std::string textureFileName =
+        std::string(materialName.C_Str()) + ".dds";
+
+    std::filesystem::path modelDir =
+        std::filesystem::path(modelPath).parent_path();
+
+    std::filesystem::path texturePath =
+        modelDir.parent_path() / "Textures" / textureFileName;
+
+    LOG("Material Name: " << materialName.C_Str());
+    LOG("Texture Path: " << texturePath.string());
+
+    if (!std::filesystem::exists(texturePath))
+    {
+        LOG("Texture file not found");
+        return nullptr;
+    }
+
+    auto texture = std::make_shared<Texture>();
+
+    texture->LoadDDS(
+        device,
+        cmdList,
+        texturePath.wstring()
+    );
+
+    LOG("Texture Loaded");
+
+    return texture;
+}
+
 std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::string& filePath,
-    const std::vector<std::shared_ptr<Material>>& materials,
+    const std::shared_ptr<Shader>& shader,
     UINT& objectCBIndex)
 {
     Assimp::Importer importer;
@@ -103,6 +221,14 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
         LOG("FBX Load Failed: " << importer.GetErrorString());
         return nullptr;
     }
+
+    auto materials = LoadMaterials(
+        device,
+        cmdList,
+        scene,
+        filePath,
+        shader
+    );
 
     return ProcessNode(
         device,
