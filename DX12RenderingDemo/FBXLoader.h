@@ -48,7 +48,5 @@ public:
         const std::string& modelPath,
         aiMaterial* material
     );
-
-    static void DebugPrintMaterial(aiMaterial* material, UINT index);
 };
 

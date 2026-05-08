@@ -103,9 +103,12 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
     {
         aiMaterial* aiMat = scene->mMaterials[i];
 
-        //DebugPrintMaterial(aiMat, i);
-
         auto material = std::make_shared<Material>();
+
+        aiString materialName;
+        aiMat->Get(AI_MATKEY_NAME, materialName);
+
+        material->SetName(materialName.C_Str());
         material->SetShader(shader);
 
         auto texture = LoadMaterialTexture(
@@ -120,41 +123,10 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
 
         materials.push_back(material);
 
-        LOG("Loaded Material[" << i << "]");
+        LOG("Loaded Material[" << i << "]: " << material->GetName());
     }
 
     return materials;
-}
-
-void FBXLoader::DebugPrintMaterial(aiMaterial* material, UINT index)
-{
-    if (!material)
-        return;
-
-    aiString name;
-    material->Get(AI_MATKEY_NAME, name);
-
-    LOG("========== Material[" << index << "] ==========");
-    LOG("Name: " << name.C_Str());
-
-    for (int type = aiTextureType_NONE; type <= aiTextureType_UNKNOWN; ++type)
-    {
-        UINT count = material->GetTextureCount(static_cast<aiTextureType>(type));
-
-        if (count == 0)
-            continue;
-
-        LOG("TextureType[" << type << "] Count: " << count);
-
-        for (UINT i = 0; i < count; ++i)
-        {
-            aiString path;
-            if (material->GetTexture(static_cast<aiTextureType>(type), i, &path) == AI_SUCCESS)
-            {
-                LOG("  Path[" << i << "]: " << path.C_Str());
-            }
-        }
-    }
 }
 
 std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
@@ -179,7 +151,6 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
         modelDir.parent_path() / "Textures" / textureFileName;
 
     LOG("Material Name: " << materialName.C_Str());
-    LOG("Texture Path: " << texturePath.string());
 
     if (!std::filesystem::exists(texturePath))
     {
