@@ -135,6 +135,19 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
             "_Normal"
         );
 
+        if (!normalTexture)
+        {
+            LOG("Normal map not found. Use default_nmap.dds");
+
+            normalTexture = LoadMaterialTexture(
+                device,
+                cmdList,
+                modelPath,
+                "default_nmap",
+                ""
+            );
+        }
+
         if (normalTexture)
             material->SetTexture(TextureType::Normal, normalTexture);
 

@@ -233,7 +233,10 @@ void Renderer::CreateMaterialSrv(Material* material)
         return;
 
     if (!normalTexture || !normalTexture->GetResource())
-        normalTexture = baseColorTexture;
+    {
+        LOG("Normal texture is missing");
+        return;
+    }
 
     constexpr UINT kMaterialTextureCount = 2;
 
