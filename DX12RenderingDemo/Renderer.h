@@ -9,6 +9,12 @@ class MeshRenderer;
 class Texture;
 class Material;
 
+struct MaterialSrvInfo
+{
+    UINT startIndex = UINT_MAX;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
+};
+
 class Renderer
 {
 private:
@@ -28,6 +34,8 @@ private:
     ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
     UINT srvDescriptorSize_ = 0;
     UINT nextSrvDescriptorIndex_ = 0;
+
+    std::unordered_map<const Material*, MaterialSrvInfo> materialSrvTable_;
 
 public:
     Renderer() = default;
@@ -57,6 +65,7 @@ public:
     void ReleaseSrvDescriptorHeap();
 
     void CreateMaterialSrv(Material* material);
+    void CreateSrvForTexture(Texture* texture, UINT descriptorIndex);
     void BindMaterialTextures(Material* material);
 
     // getters

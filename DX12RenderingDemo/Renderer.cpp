@@ -153,6 +153,8 @@ void Renderer::CreateSrvDescriptorHeap()
 
 void Renderer::ReleaseSrvDescriptorHeap()
 {
+    materialSrvTable_.clear();
+
     srvDescriptorHeap_.Reset();
     srvDescriptorSize_ = 0;
     nextSrvDescriptorIndex_ = 0;
@@ -165,7 +167,8 @@ void Renderer::BindMaterialTextures(Material* material)
 
     CreateMaterialSrv(material);
 
-    if (!material->HasSrvStartIndex())
+    auto iter = materialSrvTable_.find(material);
+    if (iter == materialSrvTable_.end())
         return;
 
     auto* cmdList = d3dCore_.GetCommandList();
@@ -173,14 +176,10 @@ void Renderer::BindMaterialTextures(Material* material)
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle =
-        srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-
-    gpuHandle.ptr +=
-        static_cast<SIZE_T>(material->GetSrvStartIndex()) *
-        srvDescriptorSize_;
-
-    cmdList->SetGraphicsRootDescriptorTable(2, gpuHandle);
+    cmdList->SetGraphicsRootDescriptorTable(
+        2,
+        iter->second.gpuHandle
+    );
 }
 
 void Renderer::CreateMaterialSrv(Material* material)
@@ -188,14 +187,17 @@ void Renderer::CreateMaterialSrv(Material* material)
     if (!material || !srvDescriptorHeap_)
         return;
 
-    if (material->HasSrvStartIndex())
+    if (materialSrvTable_.contains(material))
         return;
 
     Texture* baseColorTexture = material->GetBaseColorTexture();
     Texture* normalTexture = material->GetNormalTexture();
 
     if (!baseColorTexture || !baseColorTexture->GetResource())
+    {
+        LOG("BaseColor texture is missing");
         return;
+    }
 
     if (!normalTexture || !normalTexture->GetResource())
     {
@@ -206,46 +208,55 @@ void Renderer::CreateMaterialSrv(Material* material)
     constexpr UINT kMaterialTextureCount = 2;
 
     if (nextSrvDescriptorIndex_ + kMaterialTextureCount > kMaxSrvDescriptorCount)
-        return;
-
-    UINT startIndex = nextSrvDescriptorIndex_;
-    material->SetSrvStartIndex(startIndex);
-
-    Texture* textures[kMaterialTextureCount] =
     {
-        baseColorTexture,
-        normalTexture
-    };
+        LOG("SRV descriptor heap is full");
+        return;
+    }
+
+    const UINT startIndex = nextSrvDescriptorIndex_;
+
+    CreateSrvForTexture(baseColorTexture, startIndex + 0);
+    CreateSrvForTexture(normalTexture, startIndex + 1);
+
+    MaterialSrvInfo srvInfo{};
+    srvInfo.startIndex = startIndex;
+    srvInfo.gpuHandle = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+    srvInfo.gpuHandle.ptr +=
+        static_cast<SIZE_T>(startIndex) *
+        srvDescriptorSize_;
+
+    materialSrvTable_[material] = srvInfo;
+
+    nextSrvDescriptorIndex_ += kMaterialTextureCount;
+}
+
+void Renderer::CreateSrvForTexture(Texture* texture, UINT descriptorIndex)
+{
+    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
+        return;
 
     auto* device = d3dCore_.GetDevice();
 
-    for (UINT i = 0; i < kMaterialTextureCount; ++i)
-    {
-        Texture* texture = textures[i];
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = texture->GetResource()->GetDesc().Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.Format = texture->GetResource()->GetDesc().Format;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-        srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
-        srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle =
+        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle =
-            srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+    cpuHandle.ptr +=
+        static_cast<SIZE_T>(descriptorIndex) *
+        srvDescriptorSize_;
 
-        cpuHandle.ptr +=
-            static_cast<SIZE_T>(startIndex + i) *
-            srvDescriptorSize_;
-
-        device->CreateShaderResourceView(
-            texture->GetResource(),
-            &srvDesc,
-            cpuHandle
-        );
-    }
-
-    nextSrvDescriptorIndex_ += kMaterialTextureCount;
+    device->CreateShaderResourceView(
+        texture->GetResource(),
+        &srvDesc,
+        cpuHandle
+    );
 }
 
 void Renderer::AdvanceFrameResource()
