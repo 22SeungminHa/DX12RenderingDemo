@@ -119,7 +119,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
         );
 
         if (texture)
-            material->SetTexture(texture);
+            material->SetTexture(TextureType::BaseColor, texture);
 
         materials.push_back(material);
 

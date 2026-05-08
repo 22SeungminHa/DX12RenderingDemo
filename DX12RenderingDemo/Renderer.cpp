@@ -389,8 +389,8 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
 
     if (material)
     {
-        if (material->GetTexture())
-            BindTexture(material->GetTexture());
+        if (material->GetBaseColorTexture())
+            BindTexture(material->GetBaseColorTexture());
 
         if (material->GetShader())
             material->GetShader()->Render(cmdList, camera);

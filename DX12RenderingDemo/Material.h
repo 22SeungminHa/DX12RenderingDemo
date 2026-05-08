@@ -4,6 +4,15 @@
 class Shader;
 class Texture;
 
+enum class TextureType
+{
+    BaseColor,
+    Normal,
+    MetallicRoughness,
+    Emissive,
+    end
+};
+
 class Material
 {
 public:
@@ -16,12 +25,14 @@ public:
     void SetShader(std::shared_ptr<Shader> shader) { shader_ = std::move(shader); }
     Shader* GetShader() const { return shader_.get(); }
 
-    void SetTexture(std::shared_ptr<Texture> texture) { texture_ = std::move(texture); }
-    Texture* GetTexture() const { return texture_.get(); }
+    void SetTexture(TextureType type, std::shared_ptr<Texture> texture) { textures_[static_cast<size_t>(type)] = std::move(texture); }
+    Texture* GetTexture(TextureType type) const { return textures_[static_cast<size_t>(type)].get(); }
+    Texture* GetBaseColorTexture() const { return GetTexture(TextureType::BaseColor); }
+    Texture* GetNormalTexture() const { return GetTexture(TextureType::Normal); }
 
 private:
     std::string name_;
 
     std::shared_ptr<Shader> shader_;
-    std::shared_ptr<Texture> texture_;
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures_;
 };
