@@ -7,6 +7,7 @@ class GameObject;
 class Camera;
 class MeshRenderer;
 class Texture;
+class Material;
 
 class Renderer
 {
@@ -56,7 +57,8 @@ public:
     void ReleaseSrvDescriptorHeap();
 
     void CreateTextureSrv(Texture* texture);
-    void BindTexture(Texture* texture);
+    void BindMaterialTextures(Material* material);
+    void CreateMaterialSrv(Material* material);
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }

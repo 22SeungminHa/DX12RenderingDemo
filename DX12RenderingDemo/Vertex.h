@@ -16,6 +16,7 @@ class LitVertex : public Vertex
 protected:
     Vector4 diffuse_;
     Vector3 normal_;
+    Vector3 tangent_;
     Vector2 texCoord_;
 
 public:
@@ -24,6 +25,7 @@ public:
         position_ = Vector3::Zero;
         diffuse_ = Vector4::One;
         normal_ = Vector3::Up;
+        tangent_ = Vector3::Right;
         texCoord_ = Vector2::Zero;
     }
 
@@ -31,11 +33,13 @@ public:
         const Vector3& position,
         const Vector4& diffuse,
         const Vector3& normal,
+        const Vector3& tangent,
         const Vector2& texCoord)
     {
         position_ = position;
         diffuse_ = diffuse;
         normal_ = normal;
+        tangent_ = tangent;
         texCoord_ = texCoord;
     }
 

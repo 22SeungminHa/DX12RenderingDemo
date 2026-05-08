@@ -30,8 +30,13 @@ public:
     Texture* GetBaseColorTexture() const { return GetTexture(TextureType::BaseColor); }
     Texture* GetNormalTexture() const { return GetTexture(TextureType::Normal); }
 
+    void SetSrvStartIndex(UINT index) { srvStartIndex_ = index; }
+    UINT GetSrvStartIndex() const { return srvStartIndex_; }
+    bool HasSrvStartIndex() const { return srvStartIndex_ != UINT_MAX; }
+
 private:
     std::string name_;
+    UINT srvStartIndex_ = UINT_MAX;
 
     std::shared_ptr<Shader> shader_;
     std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures_;

@@ -46,7 +46,8 @@ public:
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const std::string& modelPath,
-        aiMaterial* material
+        const std::string& materialName,
+        const std::string& suffix
     );
 };
 

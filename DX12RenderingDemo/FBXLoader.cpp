@@ -59,10 +59,15 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
             ? mesh->mTextureCoords[0][i]
             : aiVector3D(0.0f, 0.0f, 0.0f);
 
+        aiVector3D tangent = mesh->HasTangentsAndBitangents()
+            ? mesh->mTangents[i]
+            : aiVector3D(1.0f, 0.0f, 0.0f);
+
         vertices.emplace_back(
             Vector3(pos.x, pos.y, pos.z),
             Vector4(1.0f, 1.0f, 1.0f, 1.0f),
             Vector3(normal.x, normal.y, normal.z),
+            Vector3(tangent.x, tangent.y, tangent.z),
             Vector2(texCoord.x, texCoord.y)
         );
     }
@@ -111,15 +116,27 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
         material->SetName(materialName.C_Str());
         material->SetShader(shader);
 
-        auto texture = LoadMaterialTexture(
+        auto baseColorTexture = LoadMaterialTexture(
             device,
             cmdList,
             modelPath,
-            aiMat
+            material->GetName(),
+            ""
         );
 
-        if (texture)
-            material->SetTexture(TextureType::BaseColor, texture);
+        if (baseColorTexture)
+            material->SetTexture(TextureType::BaseColor, baseColorTexture);
+
+        auto normalTexture = LoadMaterialTexture(
+            device,
+            cmdList,
+            modelPath,
+            material->GetName(),
+            "_Normal"
+        );
+
+        if (normalTexture)
+            material->SetTexture(TextureType::Normal, normalTexture);
 
         materials.push_back(material);
 
@@ -133,16 +150,10 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::string& modelPath,
-    aiMaterial* material)
+    const std::string& materialName,
+    const std::string& suffix)
 {
-    if (!material)
-        return nullptr;
-
-    aiString materialName;
-    material->Get(AI_MATKEY_NAME, materialName);
-
-    std::string textureFileName =
-        std::string(materialName.C_Str()) + ".dds";
+    std::string textureFileName = materialName + suffix + ".dds";
 
     std::filesystem::path modelDir =
         std::filesystem::path(modelPath).parent_path();
@@ -150,11 +161,9 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
     std::filesystem::path texturePath =
         modelDir.parent_path() / "Textures" / textureFileName;
 
-    LOG("Material Name: " << materialName.C_Str());
-
     if (!std::filesystem::exists(texturePath))
     {
-        LOG("Texture file not found");
+        LOG("Texture file not found: " << texturePath.string());
         return nullptr;
     }
 
@@ -166,7 +175,7 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
         texturePath.wstring()
     );
 
-    LOG("Texture Loaded");
+    LOG("Texture Loaded: " << texturePath.string());
 
     return texture;
 }
@@ -184,7 +193,8 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
         filePath,
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_FlipUVs
+        aiProcess_FlipUVs |
+        aiProcess_CalcTangentSpace
     );
 
     if (!scene || !scene->mRootNode)
