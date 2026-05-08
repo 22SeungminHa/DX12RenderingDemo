@@ -56,9 +56,8 @@ public:
     void CreateSrvDescriptorHeap();
     void ReleaseSrvDescriptorHeap();
 
-    void CreateTextureSrv(Texture* texture);
-    void BindMaterialTextures(Material* material);
     void CreateMaterialSrv(Material* material);
+    void BindMaterialTextures(Material* material);
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }

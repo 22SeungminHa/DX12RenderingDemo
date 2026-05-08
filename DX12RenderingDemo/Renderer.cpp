@@ -158,41 +158,6 @@ void Renderer::ReleaseSrvDescriptorHeap()
     nextSrvDescriptorIndex_ = 0;
 }
 
-void Renderer::CreateTextureSrv(Texture* texture)
-{
-    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
-        return;
-
-    if (texture->HasSrvIndex())
-        return;
-
-    if (nextSrvDescriptorIndex_ >= kMaxSrvDescriptorCount)
-        return;
-
-    UINT srvIndex = nextSrvDescriptorIndex_++;
-    texture->SetSrvIndex(srvIndex);
-
-    auto* device = d3dCore_.GetDevice();
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = texture->GetResource()->GetDesc().Format;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
-    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle =
-        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-
-    cpuHandle.ptr += static_cast<SIZE_T>(srvIndex) * srvDescriptorSize_;
-
-    device->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        cpuHandle);
-}
-
 void Renderer::BindMaterialTextures(Material* material)
 {
     if (!material || !srvDescriptorHeap_)
@@ -329,7 +294,7 @@ void Renderer::UpdateObjectData(const GameObject* object)
 
     Matrix worldInvTranspose = world;
     worldInvTranspose.Translation(Vector3::Zero);
-    worldInvTranspose = worldInvTranspose.Invert().Transpose();
+    worldInvTranspose = worldInvTranspose.Invert();
 
     objectCB.worldInvTranspose = worldInvTranspose.Transpose();
 

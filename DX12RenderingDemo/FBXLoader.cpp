@@ -124,6 +124,19 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
             ""
         );
 
+        if (!baseColorTexture)
+        {
+            LOG("BaseColor texture not found. Use Default_BaseColor.dds");
+
+            baseColorTexture = LoadMaterialTexture(
+                device,
+                cmdList,
+                modelPath,
+                "Default_BaseColor",
+                ""
+            );
+        }
+
         if (baseColorTexture)
             material->SetTexture(TextureType::BaseColor, baseColorTexture);
 
@@ -137,13 +150,13 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
 
         if (!normalTexture)
         {
-            LOG("Normal map not found. Use default_nmap.dds");
+            LOG("Normal map not found. Use Default_Normal.dds");
 
             normalTexture = LoadMaterialTexture(
                 device,
                 cmdList,
                 modelPath,
-                "default_nmap",
+                "Default_Normal",
                 ""
             );
         }
