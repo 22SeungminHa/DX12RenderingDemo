@@ -4,6 +4,7 @@
 
 class Renderer;
 class InputSystem;
+class AssetManager;
 
 enum class SCENE_TYPE
 {
@@ -24,7 +25,11 @@ public:
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
 
-	void Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature);
+	void Load(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12RootSignature* rootSignature,
+		AssetManager& assetManager);
 	void Unload();
 	void Resize(UINT width, UINT height);
 	void ReleaseUploadResources();
@@ -35,7 +40,11 @@ public:
 	virtual void AnimateObject(GameObject* object, float deltaTime);
 
 protected:
-	virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature) = 0;
+	virtual void OnLoad(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12RootSignature* rootSignature,
+		AssetManager& assetManager) = 0;
 	virtual void OnUnload() {}
 	virtual void OnResize(UINT width, UINT height) {}
 	virtual void OnReleaseUploadResources() {}

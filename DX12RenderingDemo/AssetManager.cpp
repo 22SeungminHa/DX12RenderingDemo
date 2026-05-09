@@ -7,14 +7,19 @@ std::shared_ptr<Texture> AssetManager::LoadTexture(
     ID3D12GraphicsCommandList* cmdList,
     const std::wstring& filePath)
 {
-    if (auto iter = textures_.find(filePath); iter != textures_.end())
+    std::filesystem::path normalizedPath =
+        std::filesystem::weakly_canonical(filePath);
+
+    std::wstring key = normalizedPath.wstring();
+
+    if (auto iter = textures_.find(key); iter != textures_.end())
         return iter->second;
 
     auto texture = std::make_shared<Texture>();
-    texture->LoadDDS(device, cmdList, filePath);
-    texture->SetName(std::filesystem::path(filePath).filename().string());
+    texture->LoadDDS(device, cmdList, key);
+    texture->SetName(normalizedPath.filename().string());
 
-    textures_[filePath] = texture;
+    textures_[key] = texture;
     return texture;
 }
 

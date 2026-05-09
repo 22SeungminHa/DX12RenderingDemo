@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "Renderer.h"
 #include "InputSystem.h"
+#include "AssetManager.h"
 
 Scene::Scene(UINT width, UINT height)
 {
@@ -8,11 +9,15 @@ Scene::Scene(UINT width, UINT height)
 	clientHeight_ = height;
 };
 
-void Scene::Load(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature)
+void Scene::Load(
+	ID3D12Device* device,
+	ID3D12GraphicsCommandList* cmdList,
+	ID3D12RootSignature* rootSignature,
+	AssetManager& assetManager)
 {
 	CreateCamera();
 
-	OnLoad(device, cmdList, rootSignature);
+	OnLoad(device, cmdList, rootSignature, assetManager);
 }
 
 void Scene::Unload()

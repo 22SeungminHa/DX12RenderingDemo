@@ -6,6 +6,7 @@ Application::Application()
 	sceneManager_ = std::make_unique<SceneManager>();
 	renderer_ = std::make_unique<Renderer>();
 	inputSystem_ = std::make_unique<InputSystem>();
+	assetManager_ = std::make_unique<AssetManager>();
 
 	_tcscpy_s(frameRate_, kTitlePrefix);
 }
@@ -102,6 +103,7 @@ void Application::OnDestroy()
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseCurrentScene();
 	if (renderer_) renderer_->Shutdown();
+	if (assetManager_) assetManager_->Clear();
 }
 
 LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -201,7 +203,14 @@ void Application::ProcessSceneChange()
 	UINT width = rect.right - rect.left;
 	UINT height = rect.bottom - rect.top;
 
-	sceneManager_->ProcessSceneChange(renderer_->GetDevice(), renderer_->GetCommandList(), renderer_->GetRootSignature(), width, height);
+	sceneManager_->ProcessSceneChange(
+		renderer_->GetDevice(),
+		renderer_->GetCommandList(),
+		renderer_->GetRootSignature(),
+		*assetManager_,
+		width,
+		height
+	);
 	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
 	hasPendingUploadBufferRelease_ = true;
 }

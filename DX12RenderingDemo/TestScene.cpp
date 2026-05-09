@@ -5,17 +5,22 @@
 #include "GameObject.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "AssetManager.h"
 
-void TestScene::OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature)
+void TestScene::OnLoad(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    ID3D12RootSignature* rootSignature,
+    AssetManager& assetManager)
 {
-    auto shader = std::make_shared<LitShader>();
-    shader->CreateShader(device, rootSignature);
+    auto shader = assetManager.LoadLitShader(device, rootSignature);
 
     UINT objectCBIndex = 0;
-    
+
     auto object = FBXLoader::LoadLitModel(
         device,
         cmdList,
+        assetManager,
         "../Assets/Meshes/MicroSub.fbx",
         shader,
         objectCBIndex

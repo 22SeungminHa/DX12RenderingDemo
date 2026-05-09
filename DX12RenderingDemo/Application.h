@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include "Renderer.h"
 #include "InputSystem.h"
+#include "AssetManager.h"
 
 class Application
 {
@@ -53,6 +54,7 @@ private:
 	std::unique_ptr<SceneManager> sceneManager_;
 	std::unique_ptr<Renderer> renderer_;
 	std::unique_ptr<InputSystem> inputSystem_;
+	std::unique_ptr<AssetManager> assetManager_;
 
 	// scene load 완료 후 upload buffer 지연 해제용
 	UINT64 pendingSceneLoadFenceValue_ = 0;

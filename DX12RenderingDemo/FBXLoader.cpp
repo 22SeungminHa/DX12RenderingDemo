@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Texture.h"
 #include "Shader.h"
+#include "AssetManager.h"
 
 Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
 {
@@ -93,9 +94,10 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
 std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    AssetManager& assetManager,
     const aiScene* scene,
     const std::string& modelPath,
-    const std::shared_ptr<Shader>& shader)
+    const std::shared_ptr<Shader>& shader) 
 {
     std::vector<std::shared_ptr<Material>> materials;
 
@@ -119,6 +121,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
         auto baseColorTexture = LoadMaterialTexture(
             device,
             cmdList,
+            assetManager,
             modelPath,
             material->GetName(),
             ""
@@ -131,6 +134,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
             baseColorTexture = LoadMaterialTexture(
                 device,
                 cmdList,
+                assetManager,
                 modelPath,
                 "Default_BaseColor",
                 ""
@@ -143,6 +147,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
         auto normalTexture = LoadMaterialTexture(
             device,
             cmdList,
+            assetManager,
             modelPath,
             material->GetName(),
             "_Normal"
@@ -155,6 +160,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
             normalTexture = LoadMaterialTexture(
                 device,
                 cmdList,
+                assetManager,
                 modelPath,
                 "Default_Normal",
                 ""
@@ -175,6 +181,7 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
 std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    AssetManager& assetManager,
     const std::string& modelPath,
     const std::string& materialName,
     const std::string& suffix)
@@ -193,9 +200,7 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
         return nullptr;
     }
 
-    auto texture = std::make_shared<Texture>();
-
-    texture->LoadDDS(
+    auto texture = assetManager.LoadTexture(
         device,
         cmdList,
         texturePath.wstring()
@@ -209,9 +214,10 @@ std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
 std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    AssetManager& assetManager,
     const std::string& filePath,
     const std::shared_ptr<Shader>& shader,
-    UINT& objectCBIndex)
+    UINT& objectCBIndex) 
 {
     Assimp::Importer importer;
 
@@ -232,6 +238,7 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     auto materials = LoadMaterials(
         device,
         cmdList,
+        assetManager,
         scene,
         filePath,
         shader

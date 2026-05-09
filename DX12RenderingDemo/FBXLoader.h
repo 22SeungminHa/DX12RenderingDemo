@@ -6,6 +6,7 @@ class GameObject;
 class Material;
 class Shader;
 class Texture;
+class AssetManager;
 
 class FBXLoader
 {
@@ -20,6 +21,7 @@ public:
     static std::unique_ptr<GameObject> LoadLitModel(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
         const std::string& filePath,
         const std::shared_ptr<Shader>& shader,
         UINT& objectCBIndex);
@@ -37,6 +39,7 @@ public:
     static std::vector<std::shared_ptr<Material>> LoadMaterials(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
         const aiScene* scene,
         const std::string& modelPath,
         const std::shared_ptr<Shader>& shader
@@ -45,6 +48,7 @@ public:
     static std::shared_ptr<Texture> LoadMaterialTexture(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
         const std::string& modelPath,
         const std::string& materialName,
         const std::string& suffix
