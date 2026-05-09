@@ -91,13 +91,13 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
     );
 }
 
-std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
+std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterialsFromMatFiles(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    ID3D12RootSignature* rootSignature,
     AssetManager& assetManager,
     const aiScene* scene,
-    const std::string& modelPath,
-    const std::shared_ptr<Shader>& shader) 
+    const std::string& modelPath)
 {
     std::vector<std::shared_ptr<Material>> materials;
 
@@ -106,117 +106,48 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterials(
 
     materials.reserve(scene->mNumMaterials);
 
+    const std::filesystem::path modelDir =
+        std::filesystem::path(modelPath).parent_path();
+
+    const std::filesystem::path materialDir =
+        modelDir.parent_path() / "Materials";
+
     for (UINT i = 0; i < scene->mNumMaterials; ++i)
     {
         aiMaterial* aiMat = scene->mMaterials[i];
 
-        auto material = std::make_shared<Material>();
+        aiString aiMaterialName;
+        aiMat->Get(AI_MATKEY_NAME, aiMaterialName);
 
-        aiString materialName;
-        aiMat->Get(AI_MATKEY_NAME, materialName);
+        const std::string materialName = aiMaterialName.C_Str();
+        const std::filesystem::path matPath = materialDir / (materialName + ".mat");
 
-        material->SetName(materialName.C_Str());
-        material->SetShader(shader);
-
-        auto baseColorTexture = LoadMaterialTexture(
+        auto material = assetManager.LoadMaterialFromFile(
             device,
             cmdList,
-            assetManager,
-            modelPath,
-            material->GetName(),
-            ""
+            rootSignature,
+            matPath
         );
 
-        if (!baseColorTexture)
+        if (!material)
         {
-            LOG("BaseColor texture not found. Use Default_BaseColor.dds");
-
-            baseColorTexture = LoadMaterialTexture(
-                device,
-                cmdList,
-                assetManager,
-                modelPath,
-                "Default_BaseColor",
-                ""
-            );
+            LOG("Material load failed: " << matPath.string());
         }
-
-        if (baseColorTexture)
-            material->SetTexture(TextureType::BaseColor, baseColorTexture);
-
-        auto normalTexture = LoadMaterialTexture(
-            device,
-            cmdList,
-            assetManager,
-            modelPath,
-            material->GetName(),
-            "_Normal"
-        );
-
-        if (!normalTexture)
-        {
-            LOG("Normal map not found. Use Default_Normal.dds");
-
-            normalTexture = LoadMaterialTexture(
-                device,
-                cmdList,
-                assetManager,
-                modelPath,
-                "Default_Normal",
-                ""
-            );
-        }
-
-        if (normalTexture)
-            material->SetTexture(TextureType::Normal, normalTexture);
 
         materials.push_back(material);
 
-        LOG("Loaded Material[" << i << "]: " << material->GetName());
+        LOG("Loaded Material[" << i << "]: " << materialName);
     }
 
     return materials;
 }
 
-std::shared_ptr<Texture> FBXLoader::LoadMaterialTexture(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    AssetManager& assetManager,
-    const std::string& modelPath,
-    const std::string& materialName,
-    const std::string& suffix)
-{
-    std::string textureFileName = materialName + suffix + ".dds";
-
-    std::filesystem::path modelDir =
-        std::filesystem::path(modelPath).parent_path();
-
-    std::filesystem::path texturePath =
-        modelDir.parent_path() / "Textures" / textureFileName;
-
-    if (!std::filesystem::exists(texturePath))
-    {
-        LOG("Texture file not found: " << texturePath.string());
-        return nullptr;
-    }
-
-    auto texture = assetManager.LoadTexture(
-        device,
-        cmdList,
-        texturePath.wstring()
-    );
-
-    LOG("Texture Loaded: " << texturePath.string());
-
-    return texture;
-}
-
 std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    ID3D12RootSignature* rootSignature,
     AssetManager& assetManager,
     const std::string& filePath,
-    const std::shared_ptr<Shader>& shader,
     UINT& objectCBIndex) 
 {
     Assimp::Importer importer;
@@ -235,13 +166,13 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
         return nullptr;
     }
 
-    auto materials = LoadMaterials(
+    auto materials = LoadMaterialsFromMatFiles(
         device,
         cmdList,
+        rootSignature,
         assetManager,
         scene,
-        filePath,
-        shader
+        filePath
     );
 
     return ProcessNode(

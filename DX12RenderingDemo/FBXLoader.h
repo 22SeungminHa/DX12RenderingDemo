@@ -21,9 +21,9 @@ public:
     static std::unique_ptr<GameObject> LoadLitModel(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        ID3D12RootSignature* rootSignature,
         AssetManager& assetManager,
         const std::string& filePath,
-        const std::shared_ptr<Shader>& shader,
         UINT& objectCBIndex);
 
     static std::unique_ptr<GameObject> ProcessNode(
@@ -36,22 +36,12 @@ public:
         int depth = 0
     );
 
-    static std::vector<std::shared_ptr<Material>> LoadMaterials(
+    static std::vector<std::shared_ptr<Material>> LoadMaterialsFromMatFiles(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        ID3D12RootSignature* rootSignature,
         AssetManager& assetManager,
         const aiScene* scene,
-        const std::string& modelPath,
-        const std::shared_ptr<Shader>& shader
-    );
-
-    static std::shared_ptr<Texture> LoadMaterialTexture(
-        ID3D12Device* device,
-        ID3D12GraphicsCommandList* cmdList,
-        AssetManager& assetManager,
-        const std::string& modelPath,
-        const std::string& materialName,
-        const std::string& suffix
-    );
+        const std::string& modelPath);
 };
 

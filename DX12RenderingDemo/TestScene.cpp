@@ -13,16 +13,14 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
-    auto shader = assetManager.LoadLitShader(device, rootSignature);
-
     UINT objectCBIndex = 0;
 
     auto object = FBXLoader::LoadLitModel(
         device,
         cmdList,
+        rootSignature,
         assetManager,
         "../Assets/Meshes/MicroSub.fbx",
-        shader,
         objectCBIndex
     );
 
