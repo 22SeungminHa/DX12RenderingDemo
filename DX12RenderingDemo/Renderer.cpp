@@ -424,14 +424,14 @@ void Renderer::Resize(UINT width, UINT height)
     d3dCore_.Resize(width, height);
 }
 
-void Renderer::BeginSceneLoad()
+void Renderer::ResetUploadCmdList()
 {
-    d3dCore_.ResetUploadCommandList();
+    d3dCore_.ResetUploadCmdList();
 }
 
-UINT64 Renderer::EndSceneLoad()
+UINT64 Renderer::ExecuteUploadCmdList()
 {
-    return d3dCore_.ExecuteUploadCommandList();
+    return d3dCore_.ExecuteUploadCmdList();
 }
 
 bool Renderer::IsSceneLoadComplete(UINT64 fenceValue) const

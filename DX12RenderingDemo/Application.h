@@ -23,6 +23,7 @@ private:
 	void ProcessSceneChange();
 	void ProcessPendingUploadResourcesRelease(bool forceWait = false);
 	void HandleResize(UINT width, UINT height);
+	void InitializeDefaultTextures();
 
 private:
 	// Constants

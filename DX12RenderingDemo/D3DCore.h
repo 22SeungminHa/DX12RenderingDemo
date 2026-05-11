@@ -19,8 +19,8 @@ public:
 	void Resize(UINT width, UINT height);
 
 	// scene load / upload path
-	void ResetUploadCommandList();
-	UINT64 ExecuteUploadCommandList();
+	void ResetUploadCmdList();
+	UINT64 ExecuteUploadCmdList();
 	bool IsUploadFenceComplete(UINT64 fenceValue) const;
 	void WaitForUploadFence(UINT64 fenceValue);
 

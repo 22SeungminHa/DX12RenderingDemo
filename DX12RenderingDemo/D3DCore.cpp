@@ -344,7 +344,7 @@ void D3DCore::ExecuteCommandList()
 }
 
 
-UINT64 D3DCore::ExecuteUploadCommandList()
+UINT64 D3DCore::ExecuteUploadCmdList()
 {
     ThrowIfFailed(uploadCmdList_->Close());
 
@@ -366,7 +366,7 @@ void D3DCore::ResetCommandList(ID3D12CommandAllocator* allocator)
     ThrowIfFailed(renderCmdList_->Reset(allocator, nullptr));
 }
 
-void D3DCore::ResetUploadCommandList()
+void D3DCore::ResetUploadCmdList()
 {
     if (!uploadCmdAllocator_ || !uploadCmdList_)
         return;

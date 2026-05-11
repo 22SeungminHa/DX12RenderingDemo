@@ -59,8 +59,8 @@ public:
     void Render(Scene* scene);
 
     // load
-    void BeginSceneLoad();
-    UINT64 EndSceneLoad();
+    void ResetUploadCmdList();
+    UINT64 ExecuteUploadCmdList();
     bool IsSceneLoadComplete(UINT64 fenceValue) const;
     void WaitForSceneLoad(UINT64 fenceValue);
     

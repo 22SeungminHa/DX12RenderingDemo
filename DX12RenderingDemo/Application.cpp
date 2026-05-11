@@ -32,22 +32,24 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 	UINT height = rect.bottom - rect.top;
 
 	renderer_->Initialize(hwnd_, width, height);
-
 	inputSystem_->Initialize(hwnd_);
-
-	// default texture upload
-	renderer_->BeginSceneLoad();
-
-	assetManager_->InitializeDefaultTextures(renderer_->GetDevice(), renderer_->GetUploadCommandList());
-
-	UINT64 defaultTextureFenceValue = renderer_->EndSceneLoad();
-
-	renderer_->WaitForSceneLoad(defaultTextureFenceValue);
-	assetManager_->ReleaseUploadResources();
+	InitializeDefaultTextures();
 
 	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
 
 	timer_.Reset();
+}
+
+void Application::InitializeDefaultTextures()
+{
+	renderer_->ResetUploadCmdList();
+
+	assetManager_->InitializeDefaultTextures(renderer_->GetDevice(), renderer_->GetUploadCommandList());
+	
+	UINT64 defaultTextureFenceValue = renderer_->ExecuteUploadCmdList();
+	
+	renderer_->WaitForSceneLoad(defaultTextureFenceValue);
+	assetManager_->ReleaseUploadResources();
 }
 
 void Application::ApplyStartupDisplayMode()
@@ -207,7 +209,7 @@ void Application::ProcessSceneChange()
 	// 새 scene 전환 전에만 안전하게 정리
 	ProcessPendingUploadResourcesRelease(true);
 
-	renderer_->BeginSceneLoad();
+	renderer_->ResetUploadCmdList();
 
 	RECT rect;
 	::GetClientRect(hwnd_, &rect);
@@ -223,7 +225,7 @@ void Application::ProcessSceneChange()
 		width,
 		height
 	);
-	pendingSceneLoadFenceValue_ = renderer_->EndSceneLoad();
+	pendingSceneLoadFenceValue_ = renderer_->ExecuteUploadCmdList();
 	hasPendingUploadBufferRelease_ = true;
 }
 
