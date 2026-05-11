@@ -41,7 +41,8 @@ public:
 
 	ID3D12Device* GetDevice() const { return device_.Get(); }
 	IDXGISwapChain3* GetSwapChain() const { return swapChain_.Get(); }
-	ID3D12GraphicsCommandList* GetCommandList() const { return cmdList_.Get(); }
+	ID3D12GraphicsCommandList* GetRenderCommandList() const { return renderCmdList_.Get(); }
+	ID3D12GraphicsCommandList* GetUploadCommandList() const { return uploadCmdList_.Get(); }
 	ID3D12CommandQueue* GetCommandQueue() const { return cmdQueue_.Get(); }
 
 	ID3D12Resource* GetCurrentRenderTarget() const { return renderTargetBuffers_[currentBackBufferIndex_].Get(); }
@@ -79,7 +80,7 @@ private:
 	D3D12_RESOURCE_DESC CreateDepthStencilResourceDesc() const;
 	D3D12_CLEAR_VALUE CreateDepthStencilClearValue() const;
 
-	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+	void TransitionResource(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
 private:
 	// Device / DXGI core
@@ -89,8 +90,12 @@ private:
 
 	// Command system
 	ComPtr<ID3D12CommandQueue> cmdQueue_;
+
+	ComPtr<ID3D12CommandAllocator> renderCmdAllocator_;
+	ComPtr<ID3D12GraphicsCommandList> renderCmdList_;
+
 	ComPtr<ID3D12CommandAllocator> uploadCmdAllocator_;
-	ComPtr<ID3D12GraphicsCommandList> cmdList_;
+	ComPtr<ID3D12GraphicsCommandList> uploadCmdList_;
 
 	// Render targets
 	std::array<ComPtr<ID3D12Resource>, kSwapChainBufferCount> renderTargetBuffers_;

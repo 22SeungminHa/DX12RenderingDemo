@@ -269,7 +269,7 @@ void Renderer::BindMaterialTextures(Material* material)
     if (!binding.valid)
         return;
 
-    auto* cmdList = d3dCore_.GetCommandList();
+    auto* cmdList = d3dCore_.GetRenderCommandList();
 
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -365,7 +365,7 @@ void Renderer::UpdateCameraData(Camera* camera)
     if (!camera || !currentFrameResource_ || !currentFrameResource_->passCB_)
         return;
 
-    auto* cmdList = d3dCore_.GetCommandList();
+    auto* cmdList = d3dCore_.GetRenderCommandList();
 
     const auto& viewport = camera->GetViewport();
     const auto& scissor = camera->GetScissorRect();
@@ -403,12 +403,12 @@ void Renderer::UpdateObjectData(const GameObject* object)
         currentFrameResource_->objectCB_->GetResource()->GetGPUVirtualAddress()
         + (static_cast<UINT64>(objectIndex) * objCBByteSize);
 
-    d3dCore_.GetCommandList()->SetGraphicsRootConstantBufferView(0, objCBAddress);
+    d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(0, objCBAddress);
 }
 
 void Renderer::SetViewportsAndScissorRects(Camera* camera)
 {
-    auto* cmdList = d3dCore_.GetCommandList();
+    auto* cmdList = d3dCore_.GetRenderCommandList();
     const auto& viewport = camera->GetViewport();
     const auto& scissor = camera->GetScissorRect();
 
@@ -457,7 +457,7 @@ void Renderer::Render(Scene* scene)
     d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
     d3dCore_.BeginRender();
 
-    auto* cmdList = d3dCore_.GetCommandList();
+    auto* cmdList = d3dCore_.GetRenderCommandList();
     cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 
     UpdateCameraData(camera);
@@ -511,7 +511,7 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
     if (!meshRenderer || !meshRenderer->IsRenderable())
         return;
 
-    auto* cmdList = d3dCore_.GetCommandList();
+    auto* cmdList = d3dCore_.GetRenderCommandList();
 
     Material* material = meshRenderer->GetMaterial();
     Mesh* mesh = meshRenderer->GetMesh();

@@ -79,7 +79,8 @@ public:
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
-    ID3D12GraphicsCommandList* GetCommandList() const { return d3dCore_.GetCommandList(); }
+    ID3D12GraphicsCommandList* GetRenderCommandList() const { return d3dCore_.GetRenderCommandList(); }
+    ID3D12GraphicsCommandList* GetUploadCommandList() const { return d3dCore_.GetUploadCommandList(); }
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
 private:

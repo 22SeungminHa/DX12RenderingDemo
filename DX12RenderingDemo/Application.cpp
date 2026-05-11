@@ -33,9 +33,19 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 
 	renderer_->Initialize(hwnd_, width, height);
 
-	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
 	inputSystem_->Initialize(hwnd_);
-	assetManager_->InitializeDefaultTextures(renderer_->GetDevice(), renderer_->GetCommandList());
+
+	// default texture upload
+	renderer_->BeginSceneLoad();
+
+	assetManager_->InitializeDefaultTextures(renderer_->GetDevice(), renderer_->GetUploadCommandList());
+
+	UINT64 defaultTextureFenceValue = renderer_->EndSceneLoad();
+
+	renderer_->WaitForSceneLoad(defaultTextureFenceValue);
+	assetManager_->ReleaseUploadResources();
+
+	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
 
 	timer_.Reset();
 }
@@ -91,6 +101,7 @@ void Application::ProcessPendingUploadResourcesRelease(bool forceWait)
 
 	renderer_->WaitForSceneLoad(pendingSceneLoadFenceValue_);
 	sceneManager_->ReleaseCurrentSceneUploadResources();
+	assetManager_->ReleaseUploadResources();
 
 	pendingSceneLoadFenceValue_ = 0;
 	hasPendingUploadBufferRelease_ = false;
@@ -206,7 +217,7 @@ void Application::ProcessSceneChange()
 
 	sceneManager_->ProcessSceneChange(
 		renderer_->GetDevice(),
-		renderer_->GetCommandList(),
+		renderer_->GetUploadCommandList(),
 		renderer_->GetRootSignature(),
 		*assetManager_,
 		width,

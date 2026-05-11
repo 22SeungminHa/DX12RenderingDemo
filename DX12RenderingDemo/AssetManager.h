@@ -34,6 +34,7 @@ public:
         const std::filesystem::path& matPath);
 
     void Clear();
+    void ReleaseUploadResources();
 
     std::shared_ptr<Texture> GetDefaultTexture(TextureType type) const { return defaultTextures_[static_cast<size_t>(type)]; }
 

@@ -182,3 +182,18 @@ void AssetManager::Clear()
     shaders_.clear();
     materials_.clear();
 }
+
+void AssetManager::ReleaseUploadResources()
+{
+    for (auto& [key, texture] : textures_)
+    {
+        if (texture)
+            texture->ReleaseUploadBuffer();
+    }
+
+    for (auto& texture : defaultTextures_)
+    {
+        if (texture)
+            texture->ReleaseUploadBuffer();
+    }
+}

@@ -23,7 +23,9 @@ void D3DCore::Shutdown()
     rtvDescriptorHeap_.Reset();
     dsvDescriptorHeap_.Reset();
 
-    cmdList_.Reset();
+    renderCmdList_.Reset();
+    uploadCmdList_.Reset();
+    renderCmdAllocator_.Reset();
     uploadCmdAllocator_.Reset();
     cmdQueue_.Reset();
 
@@ -57,9 +59,6 @@ void D3DCore::Resize(UINT width, UINT height)
 
     WaitForGpuComplete();
 
-    ThrowIfFailed(uploadCmdAllocator_->Reset());
-    ThrowIfFailed(cmdList_->Reset(uploadCmdAllocator_.Get(), nullptr));
-
     clientWidth_ = width;
     clientHeight_ = height;
 
@@ -85,8 +84,6 @@ void D3DCore::Resize(UINT width, UINT height)
 
     CreateRenderTargetViews();
     CreateDepthStencilObjects();
-
-    ThrowIfFailed(cmdList_->Close());
 }
 
 void D3DCore::CreateDirect3DDevice()
@@ -173,6 +170,19 @@ void D3DCore::CreateCommandObjects()
 
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
 
+    // render
+    ThrowIfFailed(device_->CreateCommandAllocator(
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        IID_PPV_ARGS(renderCmdAllocator_.GetAddressOf())));
+
+    ThrowIfFailed(device_->CreateCommandList(
+        0,
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        renderCmdAllocator_.Get(),
+        nullptr,
+        IID_PPV_ARGS(renderCmdList_.GetAddressOf())));
+
+    // upload
     ThrowIfFailed(device_->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS(uploadCmdAllocator_.GetAddressOf())));
@@ -182,9 +192,10 @@ void D3DCore::CreateCommandObjects()
         D3D12_COMMAND_LIST_TYPE_DIRECT,
         uploadCmdAllocator_.Get(),
         nullptr,
-        IID_PPV_ARGS(cmdList_.GetAddressOf())));
+        IID_PPV_ARGS(uploadCmdList_.GetAddressOf())));
 
-    ThrowIfFailed(cmdList_->Close());
+    ThrowIfFailed(renderCmdList_->Close());
+    ThrowIfFailed(uploadCmdList_->Close());
 }
 
 void D3DCore::CreateDescriptorHeaps()
@@ -323,39 +334,48 @@ void D3DCore::MoveToNextFrame()
     currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 }
 
-void D3DCore::ResetCommandList(ID3D12CommandAllocator* allocator)
-{
-    if (!allocator || !cmdList_)
-        return;
-
-    ThrowIfFailed(allocator->Reset());
-    ThrowIfFailed(cmdList_->Reset(allocator, nullptr));
-}
 
 void D3DCore::ExecuteCommandList()
 {
-    ThrowIfFailed(cmdList_->Close());
+    ThrowIfFailed(renderCmdList_->Close());
 
-    ID3D12CommandList* commandLists[] = { cmdList_.Get() };
+    ID3D12CommandList* commandLists[] = { renderCmdList_.Get() };
     cmdQueue_->ExecuteCommandLists(_countof(commandLists), commandLists);
 }
 
-void D3DCore::ResetUploadCommandList()
-{
-    ThrowIfFailed(uploadCmdAllocator_->Reset());
-    ThrowIfFailed(cmdList_->Reset(uploadCmdAllocator_.Get(), nullptr));
-}
 
 UINT64 D3DCore::ExecuteUploadCommandList()
 {
-    ThrowIfFailed(cmdList_->Close());
+    ThrowIfFailed(uploadCmdList_->Close());
 
-    ID3D12CommandList* commandLists[] = { cmdList_.Get() };
+    ID3D12CommandList* commandLists[] = { uploadCmdList_.Get() };
     cmdQueue_->ExecuteCommandLists(_countof(commandLists), commandLists);
 
     const UINT64 fenceValue = ++uploadFenceValue_;
     ThrowIfFailed(cmdQueue_->Signal(uploadFence_.Get(), fenceValue));
+    
     return fenceValue;
+}
+
+void D3DCore::ResetCommandList(ID3D12CommandAllocator* allocator)
+{
+    if (!allocator || !renderCmdList_)
+        return;
+
+    ThrowIfFailed(allocator->Reset());
+    ThrowIfFailed(renderCmdList_->Reset(allocator, nullptr));
+}
+
+void D3DCore::ResetUploadCommandList()
+{
+    if (!uploadCmdAllocator_ || !uploadCmdList_)
+        return;
+
+    if (uploadFenceValue_ != 0)
+        WaitForUploadFence(uploadFenceValue_);
+
+    ThrowIfFailed(uploadCmdAllocator_->Reset());
+    ThrowIfFailed(uploadCmdList_->Reset(uploadCmdAllocator_.Get(), nullptr));
 }
 
 bool D3DCore::IsUploadFenceComplete(UINT64 fenceValue) const
@@ -375,7 +395,7 @@ void D3DCore::WaitForUploadFence(UINT64 fenceValue)
     ::WaitForSingleObject(uploadFenceEvent_.get(), INFINITE);
 }
 
-void D3DCore::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+void D3DCore::TransitionResource(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
 {
     if (before == after) return;
 
@@ -387,7 +407,7 @@ void D3DCore::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES
     barrier.Transition.StateAfter = after;
     barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
-    cmdList_->ResourceBarrier(1, &barrier);
+    cmdList->ResourceBarrier(1, &barrier);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetCurrentRtvHandle() const
@@ -410,6 +430,7 @@ void D3DCore::BeginRender()
     UINT currentIndex = currentBackBufferIndex_;
 
     TransitionResource(
+        renderCmdList_.Get(),
         currentRenderTarget,
         renderTargetStates_[currentIndex],
         D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -419,9 +440,9 @@ void D3DCore::BeginRender()
     const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetCurrentRtvHandle();
     const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetDsvHandle();
 
-    cmdList_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-    cmdList_->ClearRenderTargetView(rtvHandle, defaultColor, 0, nullptr);
-    cmdList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    renderCmdList_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    renderCmdList_->ClearRenderTargetView(rtvHandle, defaultColor, 0, nullptr);
+    renderCmdList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 void D3DCore::EndRender()
@@ -430,6 +451,7 @@ void D3DCore::EndRender()
     UINT currentIndex = currentBackBufferIndex_;
 
     TransitionResource(
+        renderCmdList_.Get(),
         currentRenderTarget,
         renderTargetStates_[currentIndex],
         D3D12_RESOURCE_STATE_PRESENT);
