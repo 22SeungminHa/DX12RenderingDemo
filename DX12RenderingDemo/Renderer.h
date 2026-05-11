@@ -1,18 +1,25 @@
 #pragma once
 #include "D3DCore.h"
 #include "FrameResource.h"
+#include "Material.h"
 
 class Scene;
 class GameObject;
 class Camera;
 class MeshRenderer;
 class Texture;
-class Material;
 
-struct MaterialSrvInfo
+struct TextureSrvInfo
 {
-    UINT startIndex = UINT_MAX;
+    UINT descriptorIndex = UINT_MAX;
     D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
+};
+
+struct MaterialGpuBinding
+{
+    UINT startDescriptorIndex = UINT_MAX;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
+    bool valid = false;
 };
 
 class Renderer
@@ -35,7 +42,8 @@ private:
     UINT srvDescriptorSize_ = 0;
     UINT nextSrvDescriptorIndex_ = 0;
 
-    std::unordered_map<std::string, MaterialSrvInfo> materialSrvTable_;
+    std::unordered_map<std::string, TextureSrvInfo> textureSrvTable_;
+    std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
 public:
     Renderer() = default;
@@ -64,9 +72,10 @@ public:
     void CreateSrvDescriptorHeap();
     void ReleaseSrvDescriptorHeap();
 
-    void CreateMaterialSrv(Material* material);
-    void CreateSrvForTexture(Texture* texture, UINT descriptorIndex);
+    MaterialGpuBinding CreateMaterialGpuBinding(Material* material);
+    TextureSrvInfo CreateTextureSrv(Texture* texture);
     void BindMaterialTextures(Material* material);
+    bool CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex);
 
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }

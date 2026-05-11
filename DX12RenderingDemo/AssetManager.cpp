@@ -66,7 +66,7 @@ std::shared_ptr<Texture> AssetManager::LoadTexture(
 
     auto texture = std::make_shared<Texture>();
     texture->LoadDDS(device, cmdList, key);
-    texture->SetName(normalizedPath.filename().string());
+    texture->SetName(normalizedPath.string());
 
     textures_[key] = texture;
     return texture;
@@ -150,8 +150,8 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
 
     loadTextureSlot(TextureType::BaseColor, values["BaseColor"]);
     loadTextureSlot(TextureType::Normal, values["Normal"]);
-    loadTextureSlot(TextureType::MetallicRoughness, values["MetallicRoughness"]);
-    loadTextureSlot(TextureType::Emissive, values["Emissive"]);
+    //loadTextureSlot(TextureType::MetallicRoughness, values["MetallicRoughness"]);
+    //loadTextureSlot(TextureType::Emissive, values["Emissive"]);
 
     if (!textures[static_cast<size_t>(TextureType::BaseColor)])
         textures[static_cast<size_t>(TextureType::BaseColor)] = GetDefaultTexture(TextureType::BaseColor);
