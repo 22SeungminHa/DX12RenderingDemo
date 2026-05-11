@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "Material.h"
 
 class Texture;
 class Shader;
@@ -11,6 +11,11 @@ class AssetManager
 public:
     AssetManager() = default;
     ~AssetManager() = default;
+
+    // Ãß°¡
+    void InitializeDefaultTextures(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList);
 
     std::shared_ptr<Texture> LoadTexture(
         ID3D12Device* device,
@@ -30,6 +35,8 @@ public:
 
     void Clear();
 
+    std::shared_ptr<Texture> GetDefaultTexture(TextureType type) const { return defaultTextures_[static_cast<size_t>(type)]; }
+
 private:
     std::shared_ptr<Shader> LoadShaderByName(
         ID3D12Device* device,
@@ -39,4 +46,5 @@ private:
     std::unordered_map<std::wstring, std::shared_ptr<Texture>> textures_;
     std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_;
     std::unordered_map<std::wstring, std::shared_ptr<Material>> materials_;
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> defaultTextures_{};
 };

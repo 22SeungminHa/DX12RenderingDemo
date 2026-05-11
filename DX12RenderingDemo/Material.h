@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "Asset.h"
 
 class Shader;
 class Texture;
@@ -13,14 +13,11 @@ enum class TextureType
     end
 };
 
-class Material
+class Material : public Asset
 {
 public:
     Material() = default;
     virtual ~Material() = default;
-
-    void SetName(std::string name) { name_ = std::move(name); }
-    const std::string& GetName() const { return name_; }
 
     void SetShader(std::shared_ptr<Shader> shader) { shader_ = std::move(shader); }
     Shader* GetShader() const { return shader_.get(); }
@@ -31,8 +28,6 @@ public:
     Texture* GetNormalTexture() const { return GetTexture(TextureType::Normal); }
 
 private:
-    std::string name_;
-
     std::shared_ptr<Shader> shader_;
     std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures_;
 };

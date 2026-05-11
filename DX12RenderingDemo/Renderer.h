@@ -35,7 +35,7 @@ private:
     UINT srvDescriptorSize_ = 0;
     UINT nextSrvDescriptorIndex_ = 0;
 
-    std::unordered_map<const Material*, MaterialSrvInfo> materialSrvTable_;
+    std::unordered_map<std::string, MaterialSrvInfo> materialSrvTable_;
 
 public:
     Renderer() = default;

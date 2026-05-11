@@ -16,6 +16,29 @@ namespace
     }
 }
 
+void AssetManager::InitializeDefaultTextures(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList)
+{
+    auto loadDefaultTexture =
+        [&](TextureType type, const std::wstring& fileName)
+        {
+            const std::filesystem::path& defaultTextureDir = L"../Assets/Textures/";
+            const auto path = defaultTextureDir / fileName;
+
+            if (!std::filesystem::exists(path))
+            {
+                LOG("Default texture not found: " << path.string());
+                return;
+            }
+
+            defaultTextures_[static_cast<size_t>(type)] = LoadTexture(device, cmdList, path.wstring());
+        };
+
+    loadDefaultTexture(TextureType::BaseColor, L"Default_BaseColor.dds");
+    loadDefaultTexture(TextureType::Normal, L"Default_Normal.dds");
+}
+
 std::shared_ptr<Shader> AssetManager::LoadShaderByName(
     ID3D12Device* device,
     ID3D12RootSignature* rootSignature,
@@ -90,8 +113,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     while (std::getline(file, line))
     {
         const auto pos = line.find('=');
-        if (pos == std::string::npos)
-            continue;
+        if (pos == std::string::npos) continue;
 
         const std::string key = Trim(line.substr(0, pos));
         const std::string value = Trim(line.substr(pos + 1));
@@ -99,15 +121,8 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
         values[key] = value;
     }
 
-    const std::string materialName =
-        values["Name"].empty()
-        ? normalizedPath.stem().string()
-        : values["Name"];
-
-    const std::string shaderName =
-        values["Shader"].empty()
-        ? "LitShader"
-        : values["Shader"];
+    const std::string materialName = values["Name"].empty() ? normalizedPath.stem().string() : values["Name"];
+    const std::string shaderName = values["Shader"].empty() ? "LitShader" : values["Shader"];
 
     auto shader = LoadShaderByName(device, rootSignature, shaderName);
 
@@ -126,15 +141,11 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
 
             if (!std::filesystem::exists(texturePath))
             {
-                LOG("Texture file not found. Material: "
-                    << normalizedPath.filename().string()
-                    << ", Texture: "
-                    << texturePath.string());
+                LOG("Texture file not found. Material: " << normalizedPath.filename().string() << ", Texture: " << texturePath.string());
                 return;
             }
 
-            textures[static_cast<size_t>(type)] =
-                LoadTexture(device, cmdList, texturePath.wstring());
+            textures[static_cast<size_t>(type)] = LoadTexture(device, cmdList, texturePath.wstring());
         };
 
     loadTextureSlot(TextureType::BaseColor, values["BaseColor"]);
@@ -143,16 +154,10 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     loadTextureSlot(TextureType::Emissive, values["Emissive"]);
 
     if (!textures[static_cast<size_t>(TextureType::BaseColor)])
-    {
-        textures[static_cast<size_t>(TextureType::BaseColor)] =
-            LoadTexture(device, cmdList, (textureDir / "Default_BaseColor.dds").wstring());
-    }
+        textures[static_cast<size_t>(TextureType::BaseColor)] = GetDefaultTexture(TextureType::BaseColor);
 
     if (!textures[static_cast<size_t>(TextureType::Normal)])
-    {
-        textures[static_cast<size_t>(TextureType::Normal)] =
-            LoadTexture(device, cmdList, (textureDir / "Default_Normal.dds").wstring());
-    }
+        textures[static_cast<size_t>(TextureType::Normal)] = GetDefaultTexture(TextureType::Normal);
 
     auto material = std::make_shared<Material>();
     material->SetName(materialName);

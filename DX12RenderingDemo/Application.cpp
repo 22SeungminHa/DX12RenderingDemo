@@ -35,6 +35,7 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 
 	sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
 	inputSystem_->Initialize(hwnd_);
+	assetManager_->InitializeDefaultTextures(renderer_->GetDevice(), renderer_->GetCommandList());
 
 	timer_.Reset();
 }

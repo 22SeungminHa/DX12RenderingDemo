@@ -167,7 +167,9 @@ void Renderer::BindMaterialTextures(Material* material)
 
     CreateMaterialSrv(material);
 
-    auto iter = materialSrvTable_.find(material);
+    const std::string& materialKey = material->GetName();
+
+    auto iter = materialSrvTable_.find(materialKey);
     if (iter == materialSrvTable_.end())
         return;
 
@@ -187,7 +189,15 @@ void Renderer::CreateMaterialSrv(Material* material)
     if (!material || !srvDescriptorHeap_)
         return;
 
-    if (materialSrvTable_.contains(material))
+    const std::string& materialKey = material->GetName();
+
+    if (materialKey.empty())
+    {
+        LOG("Material name is empty");
+        return;
+    }
+
+    if (materialSrvTable_.contains(materialKey))
         return;
 
     Texture* baseColorTexture = material->GetBaseColorTexture();
@@ -225,7 +235,7 @@ void Renderer::CreateMaterialSrv(Material* material)
         static_cast<SIZE_T>(startIndex) *
         srvDescriptorSize_;
 
-    materialSrvTable_[material] = srvInfo;
+    materialSrvTable_[materialKey] = srvInfo;
 
     nextSrvDescriptorIndex_ += kMaterialTextureCount;
 }
