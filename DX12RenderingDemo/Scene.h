@@ -1,24 +1,16 @@
 #pragma once
-#include "Camera.h"
-#include "GameObject.h"
+#include "EngineTypes.h"
 
 class Renderer;
 class InputSystem;
 class AssetManager;
-
-enum class SCENE_TYPE
-{
-	NONE,
-	TITLE,
-	GAME,
-	LOADING,
-	TEST
-};
+class GameObject;
+class Camera;
 
 class Scene {
 public:
 	Scene(UINT width, UINT height);
-	virtual ~Scene() = default;
+	virtual ~Scene();
 
 	virtual SCENE_TYPE GetSceneType() const = 0;
 

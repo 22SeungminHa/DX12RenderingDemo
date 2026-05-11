@@ -2,12 +2,16 @@
 #include "Renderer.h"
 #include "InputSystem.h"
 #include "AssetManager.h"
+#include "Camera.h"
+#include "GameObject.h"
 
 Scene::Scene(UINT width, UINT height)
 {
 	clientWidth_ = width;
 	clientHeight_ = height;
 };
+
+Scene::~Scene() {}
 
 void Scene::Load(
 	ID3D12Device* device,

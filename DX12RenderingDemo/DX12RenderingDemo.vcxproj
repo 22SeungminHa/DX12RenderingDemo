@@ -161,7 +161,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />
-    <ClInclude Include="ShaderTypes.h" />
+    <ClInclude Include="EngineTypes.h" />
     <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />

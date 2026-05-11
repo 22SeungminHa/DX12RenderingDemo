@@ -1,6 +1,6 @@
 #pragma once
 #include "UploadBuffer.h"
-#include "ShaderTypes.h"
+#include "EngineTypes.h"
 
 class FrameResource
 {

@@ -1,17 +1,6 @@
 #pragma once
 #include "UploadBuffer.h"
-#include "ShaderTypes.h"
-
-struct CameraDesc
-{
-    Vector3 eye = { 0.0f, 0.0f, -10.0f };
-    Vector3 target = { 0.0f, 0.0f, 0.0f };
-    Vector3 up = Vector3::Up;
-
-    float nearZ = 1.0f;
-    float farZ = 1000.0f;
-    float fovY = 90.0f;
-};
+#include "EngineTypes.h"
 
 class Camera
 {

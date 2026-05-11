@@ -1,17 +1,9 @@
 #pragma once
 #include "Asset.h"
+#include "EngineTypes.h"
 
 class Shader;
 class Texture;
-
-enum class TextureType
-{
-    BaseColor,
-    Normal,
-    //MetallicRoughness,
-    //Emissive,
-    end
-};
 
 class Material : public Asset
 {

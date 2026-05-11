@@ -84,7 +84,7 @@
     <ClInclude Include="Vertex.h">
       <Filter>소스 파일\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderTypes.h">
+    <ClInclude Include="EngineTypes.h">
       <Filter>소스 파일\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Asset.h">
