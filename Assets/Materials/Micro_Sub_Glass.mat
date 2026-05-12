@@ -1,5 +1,5 @@
 Name=Micro_Sub_Glass
-Shader=LitShader
+Shader=GlassShader
 RenderMode=Transparent
 BaseColor=MicroSub_Glass_BaseColor.dds
 Normal=

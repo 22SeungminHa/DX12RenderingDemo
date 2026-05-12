@@ -45,3 +45,14 @@ public:
     virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
     virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
 };
+
+class GlassShader : public LitShader
+{
+public:
+    GlassShader();
+    virtual ~GlassShader();
+
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
+    virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
+    virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature) override;
+};

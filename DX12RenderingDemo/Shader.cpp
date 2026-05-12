@@ -226,3 +226,39 @@ void LitShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3d
 	pipelineStates_.reserve(2);
 	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }
+
+GlassShader::GlassShader()
+{
+}
+
+GlassShader::~GlassShader()
+{
+}
+
+D3D12_SHADER_BYTECODE GlassShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+{
+	return Shader::CompileShaderFromFile(
+		L"Shaders.hlsl",
+		"PSGlass",
+		"ps_5_1",
+		pd3dShaderBlob
+	);
+}
+
+D3D12_RASTERIZER_DESC GlassShader::CreateRasterizerState()
+{
+	D3D12_RASTERIZER_DESC desc = LitShader::CreateRasterizerState();
+
+	// 얇은 유리판은 뒷면도 보여야 자연스러움
+	//desc.CullMode = D3D12_CULL_MODE_NONE;
+
+	return desc;
+}
+
+void GlassShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+{
+	pipelineStates_.clear();
+	pipelineStates_.reserve(2);
+
+	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+}

@@ -46,6 +46,8 @@ std::shared_ptr<Shader> AssetManager::LoadShaderByName(
 {
     if (shaderName == "LitShader")
         return LoadLitShader(device, rootSignature, shaderName);
+    if (shaderName == "GlassShader")
+        return LoadGlassShader(device, rootSignature, shaderName);
 
     LOG("Unknown shader name: " << shaderName << ". Use LitShader.");
     return LoadLitShader(device, rootSignature, "LitShader");
@@ -81,6 +83,22 @@ std::shared_ptr<Shader> AssetManager::LoadLitShader(
         return iter->second;
 
     auto shader = std::make_shared<LitShader>();
+    shader->CreateShader(device, rootSignature);
+    shader->SetKey(key);
+
+    shaders_[key] = shader;
+    return shader;
+}
+
+std::shared_ptr<Shader> AssetManager::LoadGlassShader(
+    ID3D12Device* device,
+    ID3D12RootSignature* rootSignature,
+    const std::string& key)
+{
+    if (auto iter = shaders_.find(key); iter != shaders_.end())
+        return iter->second;
+
+    auto shader = std::make_shared<GlassShader>();
     shader->CreateShader(device, rootSignature);
     shader->SetKey(key);
 
@@ -163,9 +181,8 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     if (renderModeName == "Transparent")
     {
         material->SetRenderMode(RenderMode::Transparent);
-        material->SetAlpha(0.35f);
         material->SetFresnelPower(4.0f);
-        material->SetSpecularStrength(2.0f);
+        material->SetSpecularStrength(3.0f);
     }
     else
         material->SetRenderMode(RenderMode::Opaque);

@@ -112,10 +112,65 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
     float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
     float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
 
-    float fresnel = pow(1.0f - saturate(dot(normalW, viewDir)), gFresnelPower);
-    float3 fresnelColor = gLightColor.rgb * fresnel;
+    float3 finalColor = ambient + diffuse + specular;
+    
+    return float4(finalColor, baseColor.a * gAlpha);
+}
 
-    float3 finalColor = ambient + diffuse + specular + fresnelColor;
+float4 PSGlass(VS_OUTPUT input) : SV_TARGET
+{
+    float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
+    float4 baseColor = texColor * input.color * gBaseColor;
+
+    float3 normalW = normalize(input.normalW);
+    float3 tangentW = normalize(input.tangentW);
+
+    tangentW = normalize(tangentW - dot(tangentW, normalW) * normalW);
+
+    float3 bitangentW = normalize(cross(normalW, tangentW));
+
+    float2 normalXY = gNormalMap.Sample(gSampler, input.texCoord).rg;
+    normalXY = normalXY * 2.0f - 1.0f;
+
+    float normalZ = sqrt(saturate(1.0f - dot(normalXY, normalXY)));
+    float3 normalT = normalize(float3(normalXY.x, -normalXY.y, normalZ));
+
+    float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
+    normalW = normalize(mul(normalT, TBN));
+
+    float3 lightDir = normalize(-gLightDir);
+    float3 viewDir = normalize(gEyePosW - input.positionW);
+
+    float ndotl = saturate(dot(normalW, lightDir));
+
+    // 유리는 diffuse를 약하게
+    float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.08f;
+    float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.05f;
+
+    // 날카로운 specular
+    float3 halfDir = normalize(lightDir + viewDir);
+    float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
+    specFactor = pow(specFactor, 1.5f);
+    specFactor = pow(specFactor, 1.5f);
+    specFactor = pow(specFactor, 1.5f);
+    specFactor = pow(specFactor, 1.5f);
+    specFactor = pow(specFactor, 1.5f);
+
+    float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
+
+    // Fresnel edge highlight
+    float fresnel = pow(1.0f - saturate(dot(normalW, viewDir)), gFresnelPower);
+    float3 fresnelColor = lerp(
+        float3(0.02f, 0.04f, 0.06f),
+        float3(1.0f, 1.0f, 1.0f),
+        fresnel
+    );
+    
+    float3 finalColor =
+        ambient +
+        diffuse +
+        specular +
+        fresnelColor * 0.65f;
 
     return float4(finalColor, baseColor.a * gAlpha);
 }

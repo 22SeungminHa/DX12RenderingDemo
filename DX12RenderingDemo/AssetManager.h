@@ -33,6 +33,11 @@ public:
         ID3D12RootSignature* rootSignature,
         const std::filesystem::path& matPath);
 
+    std::shared_ptr<Shader> LoadGlassShader(
+        ID3D12Device* device,
+        ID3D12RootSignature* rootSignature,
+        const std::string& key = "GlassShader");
+
     void Clear();
     void ReleaseUploadResources();
 
