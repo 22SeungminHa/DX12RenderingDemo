@@ -19,7 +19,11 @@ public:
     Texture* GetBaseColorTexture() const { return GetTexture(TextureType::BaseColor); }
     Texture* GetNormalTexture() const { return GetTexture(TextureType::Normal); }
 
+    void SetRenderMode(RenderMode mode) { renderMode_ = mode; }
+    RenderMode GetRenderMode() const { return renderMode_; }
+
 private:
     std::shared_ptr<Shader> shader_;
-    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::END)> textures_;
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::End)> textures_;
+    RenderMode renderMode_ = RenderMode::Opaque;
 };

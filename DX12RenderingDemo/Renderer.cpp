@@ -7,6 +7,10 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "FrameResource.h"
+
+Renderer::Renderer() {}
+Renderer::~Renderer() {}
 
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
@@ -45,7 +49,7 @@ void Renderer::CreateRootSignature()
     // t0 ~ TextureType::end - 1 : Material textures
     D3D12_DESCRIPTOR_RANGE materialTextureSrvRange{};
     materialTextureSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    materialTextureSrvRange.NumDescriptors = static_cast<UINT>(TextureType::END);
+    materialTextureSrvRange.NumDescriptors = static_cast<UINT>(TextureType::End);
     materialTextureSrvRange.BaseShaderRegister = 0;
     materialTextureSrvRange.RegisterSpace = 0;
     materialTextureSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -181,7 +185,7 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
         return iter->second;
     }
 
-    constexpr UINT materialTextureCount = static_cast<UINT>(TextureType::END);
+    constexpr UINT materialTextureCount = static_cast<UINT>(TextureType::End);
 
     std::array<Texture*, materialTextureCount> materialTextures{};
 
@@ -400,7 +404,10 @@ void Renderer::Render(Scene* scene)
 
     UpdateCameraData(camera);
 
-    RenderObjects(scene, camera);
+    BuildRenderQueue(scene, camera);
+
+    RenderQueue(opaqueQueue_, camera);
+    RenderTransparentQueue(camera);
 
     d3dCore_.EndRender();
     d3dCore_.ExecuteCommandList();
@@ -413,35 +420,6 @@ void Renderer::Render(Scene* scene)
 void Renderer::WaitForGpuComplete()
 {
     d3dCore_.WaitForGpuComplete();
-}
-
-void Renderer::RenderObjects(Scene* scene, Camera* camera)
-{
-    if (!scene || !camera) return;
-
-    const auto& objects = scene->GetObjects();
-
-    for (const auto& object : objects)
-    {
-        if (!object) continue;
-        RenderObject(object.get(), camera);
-    }
-}
-
-void Renderer::RenderObject(GameObject* object, Camera* camera)
-{
-    if (!object) return;
-
-    object->OnPrepareRender();
-
-    UpdateObjectData(object);
-
-    DrawMeshRenderer(object->GetMeshRenderer(), camera);
-
-    for (const auto& child : object->GetChildren())
-    {
-        RenderObject(child.get(), camera);
-    }
 }
 
 void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera)
@@ -464,4 +442,73 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
 
     if (mesh)
         mesh->Render(cmdList);
+}
+
+void Renderer::BuildRenderQueue(Scene* scene, Camera* camera)
+{
+    opaqueQueue_.clear();
+    transparentQueue_.clear();
+
+    if (!scene || !camera)
+        return;
+
+    const auto& objects = scene->GetObjects();
+
+    for (const auto& object : objects)
+    {
+        if (!object)
+            continue;
+
+        CollectRenderItems(object.get(), camera);
+    }
+}
+
+void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
+{
+    if (!object)
+        return;
+
+    object->OnPrepareRender();
+
+    MeshRenderer* meshRenderer = object->GetMeshRenderer();
+
+    if (meshRenderer && meshRenderer->IsRenderable())
+    {
+        Material* material = meshRenderer->GetMaterial();
+
+        RenderItem item{};
+        item.object = object;
+        item.meshRenderer = meshRenderer;
+
+        // 일단 정렬은 나중에 정확히 계산
+        item.distanceToCamera = 0.0f;
+
+        if (material && material->GetRenderMode() == RenderMode::Transparent)
+            transparentQueue_.push_back(item);
+        else
+            opaqueQueue_.push_back(item);
+    }
+
+    for (const auto& child : object->GetChildren())
+    {
+        CollectRenderItems(child.get(), camera);
+    }
+}
+
+void Renderer::RenderQueue(const std::vector<RenderItem>& queue, Camera* camera)
+{
+    for (const RenderItem& item : queue)
+    {
+        if (!item.object || !item.meshRenderer)
+            continue;
+
+        UpdateObjectData(item.object);
+        DrawMeshRenderer(item.meshRenderer, camera);
+    }
+}
+
+void Renderer::RenderTransparentQueue(Camera* camera)
+{
+    // 나중에 카메라 거리 기준 far → near 정렬 추가
+    RenderQueue(transparentQueue_, camera);
 }

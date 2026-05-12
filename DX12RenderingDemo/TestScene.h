@@ -8,7 +8,7 @@ public:
     TestScene(UINT width, UINT height) : Scene(width, height) {};
     virtual ~TestScene() = default;
 
-    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::TEST; }
+    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::Test; }
     virtual void OnLoad(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,

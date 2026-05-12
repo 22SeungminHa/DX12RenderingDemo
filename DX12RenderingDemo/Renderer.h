@@ -1,13 +1,14 @@
 #pragma once
+#include "EngineTypes.h"
 #include "D3DCore.h"
-#include "FrameResource.h"
-#include "Material.h"
 
 class Scene;
 class GameObject;
 class Camera;
 class MeshRenderer;
 class Texture;
+class Material;
+class FrameResource;
 
 struct TextureSrvInfo
 {
@@ -20,6 +21,13 @@ struct MaterialGpuBinding
     UINT startDescriptorIndex = UINT_MAX;
     D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
     bool valid = false;
+};
+
+struct RenderItem
+{
+    GameObject* object = nullptr;
+    MeshRenderer* meshRenderer = nullptr;
+    float distanceToCamera = 0.0f;
 };
 
 class Renderer
@@ -42,11 +50,14 @@ private:
     UINT srvDescriptorSize_ = 0;
     UINT nextSrvDescriptorIndex_ = 0;
 
+    std::vector<RenderItem> opaqueQueue_;
+    std::vector<RenderItem> transparentQueue_;
+
     std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
 public:
-    Renderer() = default;
-    ~Renderer() = default;
+    Renderer();
+    ~Renderer();
 
 public:
     // lifecycle
@@ -75,6 +86,11 @@ public:
     void BindMaterialTextures(Material* material);
     bool CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex);
 
+    void BuildRenderQueue(Scene* scene, Camera* camera);
+    void CollectRenderItems(GameObject* object, Camera* camera);
+    void RenderQueue(const std::vector<RenderItem>& queue, Camera* camera);
+    void RenderTransparentQueue(Camera* camera);
+
     // getters
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
     ID3D12GraphicsCommandList* GetRenderCommandList() const { return d3dCore_.GetRenderCommandList(); }
@@ -82,8 +98,6 @@ public:
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
 private:
-    void RenderObjects(Scene* scene, Camera* camera);
-    void RenderObject(GameObject* object, Camera* camera);
     void DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera);
 
     void CreateRootSignature();

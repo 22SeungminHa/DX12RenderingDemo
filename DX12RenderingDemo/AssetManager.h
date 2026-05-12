@@ -47,5 +47,5 @@ private:
     std::unordered_map<std::wstring, std::shared_ptr<Texture>> textures_;
     std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_;
     std::unordered_map<std::wstring, std::shared_ptr<Material>> materials_;
-    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::END)> defaultTextures_{};
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::End)> defaultTextures_{};
 };

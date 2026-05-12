@@ -11,7 +11,7 @@ public:
 
 public:
     Scene* GetCurrentScene() const { return currentScene_.get(); }
-    SCENE_TYPE GetCurrentSceneType() const { return currentScene_ ? currentScene_->GetSceneType() : SCENE_TYPE::NONE; }
+    SCENE_TYPE GetCurrentSceneType() const { return currentScene_ ? currentScene_->GetSceneType() : SCENE_TYPE::None; }
     bool HasSceneChange() const { return sceneChangeRequested_; }
 
     void RequestChangeScene(SCENE_TYPE nextScene);
@@ -40,8 +40,8 @@ private:
 
 private:
     std::unique_ptr<Scene> currentScene_;
-    SCENE_TYPE currentSceneType_ = SCENE_TYPE::NONE;
-    SCENE_TYPE nextSceneType_ = SCENE_TYPE::NONE;
+    SCENE_TYPE currentSceneType_ = SCENE_TYPE::None;
+    SCENE_TYPE nextSceneType_ = SCENE_TYPE::None;
 
     bool sceneChangeRequested_ = false;
 };

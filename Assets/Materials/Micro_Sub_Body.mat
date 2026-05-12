@@ -1,5 +1,6 @@
 Name=Micro_Sub_Body
 Shader=LitShader
+RenderMode=Opaque
 BaseColor=MicroSub_BaseColor.dds
 Normal=MicroSub_Normal.dds
 MetallicRoughness=MicroSub_MetallicSmoothness.dds

@@ -5,7 +5,7 @@
 std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)
 {
 	switch (sceneType) {
-	case SCENE_TYPE::TEST:
+	case SCENE_TYPE::Test:
 		return std::make_unique<TestScene>(width, height);
 	default:
 		return nullptr;
@@ -33,7 +33,7 @@ void SceneManager::CreateScene(
 		);
 	}
 	else {
-		currentSceneType_ = SCENE_TYPE::NONE;
+		currentSceneType_ = SCENE_TYPE::None;
 	}
 }
 
@@ -69,7 +69,7 @@ void SceneManager::ProcessSceneChange(
 	);
 
 	sceneChangeRequested_ = false;
-	nextSceneType_ = SCENE_TYPE::NONE;
+	nextSceneType_ = SCENE_TYPE::None;
 }
 
 void SceneManager::ReleaseCurrentScene()
@@ -79,7 +79,7 @@ void SceneManager::ReleaseCurrentScene()
 		currentScene_.reset();
 	}
 
-	currentSceneType_ = SCENE_TYPE::NONE;
+	currentSceneType_ = SCENE_TYPE::None;
 }
 
 void SceneManager::ReleaseCurrentSceneUploadResources()

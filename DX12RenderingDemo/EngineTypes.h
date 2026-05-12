@@ -2,31 +2,38 @@
 #include "pch.h"
 
 // enums
+
 enum class TextureType
 {
     BaseColor,
     Normal,
     //MetallicRoughness,
     //Emissive,
-    END
+
+    End
 };
 
 enum class RenderMode
 {
     Opaque,
-    Transparent
+    Transparent,
+
+    End
 };
 
 enum class SCENE_TYPE
 {
-    NONE,
-    TITLE,
-    GAME,
-    LOADING,
-    TEST
+    None,
+    Title,
+    Game,
+    Loading,
+    Test,
+
+    End
 };
 
 // render structs
+
 struct CameraDesc
 {
     Vector3 eye = { 0.0f, 0.0f, -10.0f };

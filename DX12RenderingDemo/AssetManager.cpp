@@ -122,9 +122,11 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     }
 
     const std::string shaderName = values["Shader"].empty() ? "LitShader" : values["Shader"];
-    auto shader = LoadShaderByName(device, rootSignature, shaderName);
+    const std::string renderModeName = values["RenderMode"];
 
-    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::END)> textures{};
+    auto shader = LoadShaderByName(device, rootSignature, shaderName);
+    
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::End)> textures{};
     const std::filesystem::path textureDir = normalizedPath.parent_path().parent_path() / "Textures";
 
     auto loadTextureSlot =
@@ -158,8 +160,12 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     auto material = std::make_shared<Material>();
     material->SetKey(normalizedPath.string());
     material->SetShader(shader);
+    if (renderModeName == "Transparent")
+        material->SetRenderMode(RenderMode::Transparent);
+    else
+        material->SetRenderMode(RenderMode::Opaque);
 
-    for (size_t i = 0; i < static_cast<size_t>(TextureType::END); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
     {
         if (textures[i])
             material->SetTexture(static_cast<TextureType>(i), textures[i]);
