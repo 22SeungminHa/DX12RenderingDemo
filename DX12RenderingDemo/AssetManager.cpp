@@ -161,7 +161,12 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     material->SetKey(normalizedPath.string());
     material->SetShader(shader);
     if (renderModeName == "Transparent")
+    {
         material->SetRenderMode(RenderMode::Transparent);
+        material->SetAlpha(0.35f);
+        material->SetFresnelPower(4.0f);
+        material->SetSpecularStrength(2.0f);
+    }
     else
         material->SetRenderMode(RenderMode::Opaque);
 

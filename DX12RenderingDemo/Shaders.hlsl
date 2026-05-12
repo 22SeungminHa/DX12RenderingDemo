@@ -19,8 +19,17 @@ cbuffer cbCameraInfo : register(b1)
     float4 gAmbientColor;
 
     float gSpecularPower;
-    float gSpecularStrength;
     float2 gPad2;
+};
+
+cbuffer cbMaterialInfo : register(b2)
+{
+    float4 gBaseColor;
+
+    float gAlpha;
+    float gFresnelPower;
+    float gSpecularStrength;
+    float gMaterialPad0;
 };
 
 Texture2D gDiffuseMap : register(t0);
@@ -70,8 +79,8 @@ VS_OUTPUT VSLit(VS_INPUT input)
 float4 PSLit(VS_OUTPUT input) : SV_TARGET
 {
     float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
-    float4 baseColor = texColor * input.color;
-
+    float4 baseColor = texColor * input.color * gBaseColor;
+    
     float3 normalW = normalize(input.normalW);
     float3 tangentW = normalize(input.tangentW);
 
@@ -103,7 +112,10 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
     float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
     float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
 
-    float3 finalColor = ambient + diffuse + specular;
+    float fresnel = pow(1.0f - saturate(dot(normalW, viewDir)), gFresnelPower);
+    float3 fresnelColor = gLightColor.rgb * fresnel;
 
-    return float4(finalColor, baseColor.a);
+    float3 finalColor = ambient + diffuse + specular + fresnelColor;
+
+    return float4(finalColor, baseColor.a * gAlpha);
 }

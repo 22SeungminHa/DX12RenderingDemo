@@ -427,7 +427,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3DCore::GetDsvHandle() const
 
 void D3DCore::BeginRender()
 {
-    float defaultColor[4] = { 1.f,1.f,1.f,1.f };
+    float defaultColor[4] = { 0.f,0.f,0.f,1.f };
 
     ID3D12Resource* currentRenderTarget = GetCurrentRenderTarget();
     UINT currentIndex = currentBackBufferIndex_;

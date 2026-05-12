@@ -72,6 +72,15 @@ struct PassCB
     Vector4 ambientColor = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
 
     float specularPower = 128.0f;
-    float specularStrength = 0.5f;
     Vector2 pad1 = Vector2::Zero;
+};
+
+struct MaterialCB
+{
+    Vector4 baseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    float alpha = 1.0f;
+    float fresnelPower = 5.0f;
+    float specularStrength = 0.5f;
+    float padding0 = 0.0f;
 };

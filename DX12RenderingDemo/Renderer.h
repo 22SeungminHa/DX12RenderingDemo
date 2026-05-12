@@ -77,8 +77,11 @@ public:
     // sync
     void WaitForGpuComplete();
 
+    // update
     void UpdateObjectData(const GameObject* object);
+    void UpdateMaterialData(const Material* material, UINT materialIndex);
 
+    // 
     void CreateSrvDescriptorHeap();
     void ReleaseSrvDescriptorHeap();
 
@@ -86,6 +89,7 @@ public:
     void BindMaterialTextures(Material* material);
     bool CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex);
 
+    // render queue
     void BuildRenderQueue(Scene* scene, Camera* camera);
     void CollectRenderItems(GameObject* object, Camera* camera);
     void RenderQueue(const std::vector<RenderItem>& queue, Camera* camera);
@@ -98,7 +102,7 @@ public:
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
 private:
-    void DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera);
+    void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
 
     void CreateRootSignature();
     void ReleaseRootSignature();

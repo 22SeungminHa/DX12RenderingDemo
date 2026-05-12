@@ -32,7 +32,7 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[3]{};
+    D3D12_ROOT_PARAMETER rootParameters[4]{};
 
     // b0 : ObjectCB
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -46,6 +46,12 @@ void Renderer::CreateRootSignature()
     rootParameters[1].Descriptor.RegisterSpace = 0;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    // b2 : MaterialCB
+    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[2].Descriptor.ShaderRegister = 2;
+    rootParameters[2].Descriptor.RegisterSpace = 0;
+    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     // t0 ~ TextureType::end - 1 : Material textures
     D3D12_DESCRIPTOR_RANGE materialTextureSrvRange{};
     materialTextureSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -54,10 +60,10 @@ void Renderer::CreateRootSignature()
     materialTextureSrvRange.RegisterSpace = 0;
     materialTextureSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[2].DescriptorTable.pDescriptorRanges = &materialTextureSrvRange;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[3].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[3].DescriptorTable.pDescriptorRanges = &materialTextureSrvRange;
+    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_STATIC_SAMPLER_DESC sampler{};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -282,7 +288,7 @@ void Renderer::BindMaterialTextures(Material* material)
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     cmdList->SetGraphicsRootDescriptorTable(
-        2,
+        3,
         binding.gpuHandle
     );
 }
@@ -422,7 +428,7 @@ void Renderer::WaitForGpuComplete()
     d3dCore_.WaitForGpuComplete();
 }
 
-void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera)
+void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera)
 {
     if (!meshRenderer || !meshRenderer->IsRenderable())
         return;
@@ -435,13 +441,10 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
     if (material)
     {
         BindMaterialTextures(material);
+        UpdateMaterialData(material, object->GetObjectCBIndex());
 
         if (material->GetShader())
-            material->GetShader()->Render(
-                cmdList,
-                camera,
-                material->GetRenderMode()
-            );
+            material->GetShader()->Render(cmdList, camera, material->GetRenderMode());
     }
 
     if (mesh)
@@ -509,7 +512,7 @@ void Renderer::RenderQueue(const std::vector<RenderItem>& queue, Camera* camera)
             continue;
 
         UpdateObjectData(item.object);
-        DrawMeshRenderer(item.meshRenderer, camera);
+        DrawMeshRenderer(item.object, item.meshRenderer, camera);
     }
 }
 
@@ -522,4 +525,30 @@ void Renderer::RenderTransparentQueue(Camera* camera)
     );
 
     RenderQueue(transparentQueue_, camera);
+}
+
+void Renderer::UpdateMaterialData(const Material* material, UINT materialIndex)
+{
+    if (!material || !currentFrameResource_ || !currentFrameResource_->materialCB_)
+        return;
+
+    MaterialCB materialCB{};
+    materialCB.baseColor = material->GetBaseColor();
+    materialCB.alpha = material->GetAlpha();
+    materialCB.fresnelPower = material->GetFresnelPower();
+    materialCB.specularStrength = material->GetSpecularStrength();
+
+    currentFrameResource_->materialCB_->CopyData(materialIndex, materialCB);
+
+    const UINT matCBByteSize =
+        d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
+
+    D3D12_GPU_VIRTUAL_ADDRESS matCBAddress =
+        currentFrameResource_->materialCB_->GetResource()->GetGPUVirtualAddress()
+        + static_cast<UINT64>(materialIndex) * matCBByteSize;
+
+    d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(
+        2,
+        matCBAddress
+    );
 }
