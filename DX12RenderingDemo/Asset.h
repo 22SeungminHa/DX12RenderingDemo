@@ -7,9 +7,9 @@ public:
     Asset() = default;
     virtual ~Asset() = default;
 
-    const std::string& GetName() const { return name_; }
-    void SetName(const std::string& name) { name_ = name; }
+    const std::string& GetKey() const { return key_; }
+    void SetKey(const std::string& key) { key_ = key; }
 
 private:
-    std::string name_;
+    std::string key_;
 };

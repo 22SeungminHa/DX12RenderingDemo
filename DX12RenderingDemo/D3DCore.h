@@ -91,7 +91,6 @@ private:
 	// Command system
 	ComPtr<ID3D12CommandQueue> cmdQueue_;
 
-	ComPtr<ID3D12CommandAllocator> renderCmdAllocator_;
 	ComPtr<ID3D12GraphicsCommandList> renderCmdList_;
 
 	ComPtr<ID3D12CommandAllocator> uploadCmdAllocator_;

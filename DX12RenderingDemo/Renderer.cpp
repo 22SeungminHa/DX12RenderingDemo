@@ -168,11 +168,11 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
     if (!material || !srvDescriptorHeap_)
         return empty;
 
-    const std::string& materialKey = material->GetName();
+    const std::string& materialKey = material->GetKey();
 
     if (materialKey.empty())
     {
-        LOG("Material name is empty");
+        LOG("Material key is empty");
         return empty;
     }
 
@@ -184,13 +184,7 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
 
     constexpr UINT materialTextureCount = static_cast<UINT>(TextureType::end);
 
-    if (nextSrvDescriptorIndex_ + materialTextureCount > kMaxSrvDescriptorCount)
-    {
-        LOG("SRV descriptor heap is full");
-        return empty;
-    }
-
-    const UINT startIndex = nextSrvDescriptorIndex_;
+    std::array<Texture*, materialTextureCount> materialTextures{};
 
     for (UINT i = 0; i < materialTextureCount; ++i)
     {
@@ -203,7 +197,31 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
             return empty;
         }
 
-        if (!CopyTextureSrvToDescriptor(texture, startIndex + i))
+        materialTextures[i] = texture;
+    }
+
+    for (UINT i = 0; i < materialTextureCount; ++i)
+    {
+        TextureSrvInfo textureSrv = CreateTextureSrv(materialTextures[i]);
+
+        if (textureSrv.descriptorIndex == UINT_MAX)
+        {
+            LOG("Failed to create texture SRV. Material: " << materialKey << ", Slot: " << i);
+            return empty;
+        }
+    }
+
+    if (nextSrvDescriptorIndex_ + materialTextureCount > kMaxSrvDescriptorCount)
+    {
+        LOG("SRV descriptor heap is full");
+        return empty;
+    }
+
+    const UINT startIndex = nextSrvDescriptorIndex_;
+
+    for (UINT i = 0; i < materialTextureCount; ++i)
+    {
+        if (!CopyTextureSrvToDescriptor(materialTextures[i], startIndex + i))
         {
             LOG("Failed to copy texture SRV. Material: " << materialKey << ", Slot: " << i);
             return empty;
@@ -213,9 +231,7 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
     MaterialGpuBinding binding{};
     binding.startDescriptorIndex = startIndex;
     binding.gpuHandle = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-    binding.gpuHandle.ptr +=
-        static_cast<SIZE_T>(startIndex) *
-        srvDescriptorSize_;
+    binding.gpuHandle.ptr = static_cast<SIZE_T>(startIndex) * srvDescriptorSize_;
     binding.valid = true;
 
     materialGpuBindingTable_[materialKey] = binding;
@@ -287,7 +303,7 @@ TextureSrvInfo Renderer::CreateTextureSrv(Texture* texture)
     if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
         return empty;
 
-    const std::string& textureKey = texture->GetName();
+    const std::string& textureKey = texture->GetKey();
 
     if (textureKey.empty())
     {

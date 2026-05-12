@@ -25,7 +25,6 @@ void D3DCore::Shutdown()
 
     renderCmdList_.Reset();
     uploadCmdList_.Reset();
-    renderCmdAllocator_.Reset();
     uploadCmdAllocator_.Reset();
     cmdQueue_.Reset();
 
@@ -171,14 +170,18 @@ void D3DCore::CreateCommandObjects()
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
 
     // render
+    // renderCmdList_ 생성용 임시 allocator.
+    // 실제 렌더링에서는 FrameResource의 cmdAllocator_로 Reset해서 사용한다.
+    ComPtr<ID3D12CommandAllocator> tempRenderCmdAllocator;
+
     ThrowIfFailed(device_->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-        IID_PPV_ARGS(renderCmdAllocator_.GetAddressOf())));
+        IID_PPV_ARGS(tempRenderCmdAllocator.GetAddressOf())));
 
     ThrowIfFailed(device_->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-        renderCmdAllocator_.Get(),
+        tempRenderCmdAllocator.Get(),
         nullptr,
         IID_PPV_ARGS(renderCmdList_.GetAddressOf())));
 

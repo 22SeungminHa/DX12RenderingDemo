@@ -27,7 +27,7 @@ class Renderer
 private:
     static constexpr UINT kNumFrameResources = 3;
     static constexpr UINT kMaxObjectCount = 1000;
-    static constexpr UINT kMaxSrvDescriptorCount = 128;
+    static constexpr UINT kMaxSrvDescriptorCount = 1024;
 
 private:
     D3DCore d3dCore_;

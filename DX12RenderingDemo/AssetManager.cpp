@@ -66,7 +66,7 @@ std::shared_ptr<Texture> AssetManager::LoadTexture(
 
     auto texture = std::make_shared<Texture>();
     texture->LoadDDS(device, cmdList, key);
-    texture->SetName(normalizedPath.string());
+    texture->SetKey(normalizedPath.string());
 
     textures_[key] = texture;
     return texture;
@@ -82,7 +82,7 @@ std::shared_ptr<Shader> AssetManager::LoadLitShader(
 
     auto shader = std::make_shared<LitShader>();
     shader->CreateShader(device, rootSignature);
-    shader->SetName(key);
+    shader->SetKey(key);
 
     shaders_[key] = shader;
     return shader;
@@ -121,15 +121,11 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
         values[key] = value;
     }
 
-    const std::string materialName = values["Name"].empty() ? normalizedPath.stem().string() : values["Name"];
     const std::string shaderName = values["Shader"].empty() ? "LitShader" : values["Shader"];
-
     auto shader = LoadShaderByName(device, rootSignature, shaderName);
 
     std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures{};
-
-    const std::filesystem::path textureDir =
-        normalizedPath.parent_path().parent_path() / "Textures";
+    const std::filesystem::path textureDir = normalizedPath.parent_path().parent_path() / "Textures";
 
     auto loadTextureSlot =
         [&](TextureType type, const std::string& textureName)
@@ -160,7 +156,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
         textures[static_cast<size_t>(TextureType::Normal)] = GetDefaultTexture(TextureType::Normal);
 
     auto material = std::make_shared<Material>();
-    material->SetName(materialName);
+    material->SetKey(normalizedPath.string());
     material->SetShader(shader);
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::end); ++i)
@@ -170,8 +166,6 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     }
 
     materials_[materialKey] = material;
-
-    LOG("Material loaded from .mat: " << materialName);
 
     return material;
 }
