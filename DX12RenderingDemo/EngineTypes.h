@@ -8,7 +8,13 @@ enum class TextureType
     Normal,
     //MetallicRoughness,
     //Emissive,
-    end
+    END
+};
+
+enum class RenderMode
+{
+    Opaque,
+    Transparent
 };
 
 enum class SCENE_TYPE

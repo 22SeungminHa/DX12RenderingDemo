@@ -42,7 +42,6 @@ private:
     UINT srvDescriptorSize_ = 0;
     UINT nextSrvDescriptorIndex_ = 0;
 
-    std::unordered_map<std::string, TextureSrvInfo> textureSrvTable_;
     std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
 public:
@@ -73,7 +72,6 @@ public:
     void ReleaseSrvDescriptorHeap();
 
     MaterialGpuBinding CreateMaterialGpuBinding(Material* material);
-    TextureSrvInfo CreateTextureSrv(Texture* texture);
     void BindMaterialTextures(Material* material);
     bool CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex);
 

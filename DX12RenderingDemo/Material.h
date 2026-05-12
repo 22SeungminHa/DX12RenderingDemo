@@ -21,5 +21,5 @@ public:
 
 private:
     std::shared_ptr<Shader> shader_;
-    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures_;
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::END)> textures_;
 };

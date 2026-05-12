@@ -124,7 +124,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     const std::string shaderName = values["Shader"].empty() ? "LitShader" : values["Shader"];
     auto shader = LoadShaderByName(device, rootSignature, shaderName);
 
-    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::end)> textures{};
+    std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::END)> textures{};
     const std::filesystem::path textureDir = normalizedPath.parent_path().parent_path() / "Textures";
 
     auto loadTextureSlot =
@@ -159,7 +159,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     material->SetKey(normalizedPath.string());
     material->SetShader(shader);
 
-    for (size_t i = 0; i < static_cast<size_t>(TextureType::end); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(TextureType::END); ++i)
     {
         if (textures[i])
             material->SetTexture(static_cast<TextureType>(i), textures[i]);
