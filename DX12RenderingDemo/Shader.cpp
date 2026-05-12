@@ -18,42 +18,58 @@ D3D12_RASTERIZER_DESC Shader::CreateRasterizerState()
 	return d3dRasterizerDesc;
 }
 
-D3D12_DEPTH_STENCIL_DESC Shader::CreateDepthStencilState()
+D3D12_DEPTH_STENCIL_DESC Shader::CreateDepthStencilState(RenderMode renderMode)
 {
-	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc{};
-	d3dDepthStencilDesc.DepthEnable = TRUE;
-	d3dDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	d3dDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-	d3dDepthStencilDesc.StencilEnable = FALSE;
-	d3dDepthStencilDesc.StencilReadMask = 0x00;
-	d3dDepthStencilDesc.StencilWriteMask = 0x00;
-	d3dDepthStencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
-	d3dDepthStencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-	d3dDepthStencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_NEVER;
-	return d3dDepthStencilDesc;
+	D3D12_DEPTH_STENCIL_DESC desc{};
+	desc.DepthEnable = TRUE;
+	desc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	desc.StencilEnable = FALSE;
+
+	if (renderMode == RenderMode::Transparent)
+		desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	else
+		desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+
+	return desc;
 }
 
-D3D12_BLEND_DESC Shader::CreateBlendState()
+D3D12_BLEND_DESC Shader::CreateBlendState(RenderMode renderMode)
 {
-	D3D12_BLEND_DESC d3dBlendDesc{};
-	d3dBlendDesc.AlphaToCoverageEnable = FALSE;
-	d3dBlendDesc.IndependentBlendEnable = FALSE;
-	d3dBlendDesc.RenderTarget[0].BlendEnable = FALSE;
-	d3dBlendDesc.RenderTarget[0].LogicOpEnable = FALSE;
-	d3dBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-	d3dBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
-	d3dBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	d3dBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	d3dBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	d3dBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	d3dBlendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-	d3dBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	return d3dBlendDesc;
+	D3D12_BLEND_DESC desc{};
+	desc.AlphaToCoverageEnable = FALSE;
+	desc.IndependentBlendEnable = FALSE;
+
+	auto& rt = desc.RenderTarget[0];
+	rt.LogicOpEnable = FALSE;
+	rt.LogicOp = D3D12_LOGIC_OP_NOOP;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	if (renderMode == RenderMode::Transparent)
+	{
+		rt.BlendEnable = TRUE;
+
+		rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		rt.BlendOp = D3D12_BLEND_OP_ADD;
+
+		rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+		rt.DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+		rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	}
+	else
+	{
+		rt.BlendEnable = FALSE;
+
+		rt.SrcBlend = D3D12_BLEND_ONE;
+		rt.DestBlend = D3D12_BLEND_ZERO;
+		rt.BlendOp = D3D12_BLEND_OP_ADD;
+
+		rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+		rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+		rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	}
+
+	return desc;
 }
 
 //입력 조립기에게 정점 버퍼의 구조를 알려주기 위한 구조체를 반환한다. 
@@ -126,8 +142,6 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 	d3dPipelineStateDesc.VS = CreateVertexShader(pd3dVertexShaderBlob);
 	d3dPipelineStateDesc.PS = CreatePixelShader(pd3dPixelShaderBlob);
 	d3dPipelineStateDesc.RasterizerState = CreateRasterizerState();
-	d3dPipelineStateDesc.BlendState = CreateBlendState();
-	d3dPipelineStateDesc.DepthStencilState = CreateDepthStencilState();
 	d3dPipelineStateDesc.InputLayout = CreateInputLayout();
 	d3dPipelineStateDesc.SampleMask = UINT_MAX;
 	d3dPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -136,24 +150,39 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 	d3dPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	d3dPipelineStateDesc.SampleDesc.Count = 1;
 	d3dPipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	
+	d3dPipelineStateDesc.BlendState = CreateBlendState(RenderMode::Opaque);
+	d3dPipelineStateDesc.DepthStencilState = CreateDepthStencilState(RenderMode::Opaque);
 
-	ComPtr<ID3D12PipelineState> pso;
+	ComPtr<ID3D12PipelineState> opaquePso;
 	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
 		&d3dPipelineStateDesc,
-		IID_PPV_ARGS(pso.GetAddressOf())));
+		IID_PPV_ARGS(opaquePso.GetAddressOf())));
 
-	pipelineStates_.push_back(std::move(pso));
+	pipelineStates_.push_back(std::move(opaquePso));
+
+	d3dPipelineStateDesc.BlendState = CreateBlendState(RenderMode::Transparent);
+	d3dPipelineStateDesc.DepthStencilState = CreateDepthStencilState(RenderMode::Transparent);
+
+	ComPtr<ID3D12PipelineState> transparentPso;
+	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
+		&d3dPipelineStateDesc,
+		IID_PPV_ARGS(transparentPso.GetAddressOf())));
+
+	pipelineStates_.push_back(std::move(transparentPso));
 }
 
-void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
+void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderMode renderMode)
 {
-	//파이프라인에 그래픽스 상태 객체를 설정한다. 
-	pd3dCommandList->SetPipelineState(pipelineStates_[0].Get());
+	const UINT psoIndex =
+		(renderMode == RenderMode::Transparent) ? 1 : 0;
+
+	pd3dCommandList->SetPipelineState(pipelineStates_[psoIndex].Get());
 }
 
-void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera)
+void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera, RenderMode renderMode)
 {
-	OnPrepareRender(pd3dCommandList);
+	OnPrepareRender(pd3dCommandList, renderMode);
 }
 
 LitShader::LitShader()
@@ -194,6 +223,6 @@ D3D12_SHADER_BYTECODE LitShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderB
 void LitShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
 	pipelineStates_.clear();
-	pipelineStates_.reserve(1);
+	pipelineStates_.reserve(2);
 	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }

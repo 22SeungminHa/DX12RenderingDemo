@@ -437,7 +437,11 @@ void Renderer::DrawMeshRenderer(const MeshRenderer* meshRenderer, Camera* camera
         BindMaterialTextures(material);
 
         if (material->GetShader())
-            material->GetShader()->Render(cmdList, camera);
+            material->GetShader()->Render(
+                cmdList,
+                camera,
+                material->GetRenderMode()
+            );
     }
 
     if (mesh)
@@ -480,8 +484,10 @@ void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
         item.object = object;
         item.meshRenderer = meshRenderer;
 
-        // 일단 정렬은 나중에 정확히 계산
-        item.distanceToCamera = 0.0f;
+        Vector3 objectPos = object->GetWorldMatrix().Translation();
+        Vector3 cameraPos = camera->GetPosition();
+
+        item.distanceToCamera = Vector3::DistanceSquared(objectPos, cameraPos);
 
         if (material && material->GetRenderMode() == RenderMode::Transparent)
             transparentQueue_.push_back(item);
@@ -509,6 +515,11 @@ void Renderer::RenderQueue(const std::vector<RenderItem>& queue, Camera* camera)
 
 void Renderer::RenderTransparentQueue(Camera* camera)
 {
-    // 나중에 카메라 거리 기준 far → near 정렬 추가
+    std::sort(transparentQueue_.begin(), transparentQueue_.end(),
+        [](const RenderItem& a, const RenderItem& b) {
+            return a.distanceToCamera > b.distanceToCamera;
+        }
+    );
+
     RenderQueue(transparentQueue_, camera);
 }
