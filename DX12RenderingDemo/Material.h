@@ -11,6 +11,9 @@ public:
     Material() = default;
     virtual ~Material() = default;
 
+    void SetMaterialCBIndex(UINT index) { materialCBIndex_ = index; }
+    UINT GetMaterialCBIndex() const { return materialCBIndex_; }
+
     void SetShader(std::shared_ptr<Shader> shader) { shader_ = std::move(shader); }
     Shader* GetShader() const { return shader_.get(); }
 
@@ -35,6 +38,8 @@ public:
     float GetSpecularStrength() const { return specularStrength_; }
 
 private:
+    UINT materialCBIndex_ = UINT_MAX;
+
     std::shared_ptr<Shader> shader_;
     std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::End)> textures_;
     

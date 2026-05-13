@@ -10,12 +10,6 @@ class Texture;
 class Material;
 class FrameResource;
 
-struct TextureSrvInfo
-{
-    UINT descriptorIndex = UINT_MAX;
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
-};
-
 struct MaterialGpuBinding
 {
     UINT startDescriptorIndex = UINT_MAX;
@@ -53,6 +47,8 @@ private:
     std::vector<RenderItem> opaqueQueue_;
     std::vector<RenderItem> transparentQueue_;
 
+    UINT nextMaterialCBIndex_ = 0;
+    std::unordered_map<std::string, UINT> materialCBIndexTable_;
     std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
 public:
@@ -60,59 +56,60 @@ public:
     ~Renderer();
 
 public:
-    // lifecycle
+    // Lifecycle
     void Initialize(HWND hwnd, UINT width, UINT height);
     void Shutdown();
     void Resize(UINT width, UINT height);
 
-    // render
+    // Frame Rendering
     void Render(Scene* scene);
 
-    // load
+    // Scene Loading / Upload
     void ResetUploadCmdList();
     UINT64 ExecuteUploadCmdList();
     bool IsSceneLoadComplete(UINT64 fenceValue) const;
     void WaitForSceneLoad(UINT64 fenceValue);
     
-    // sync
+    // GPU Synchronization
     void WaitForGpuComplete();
 
-    // update
-    void UpdateObjectData(const GameObject* object);
-    void UpdateMaterialData(const Material* material, UINT materialIndex);
-
-    // 
-    void CreateSrvDescriptorHeap();
-    void ReleaseSrvDescriptorHeap();
-
-    MaterialGpuBinding CreateMaterialGpuBinding(Material* material);
-    void BindMaterialTextures(Material* material);
-    bool CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex);
-
-    // render queue
-    void BuildRenderQueue(Scene* scene, Camera* camera);
-    void CollectRenderItems(GameObject* object, Camera* camera);
-    void RenderQueue(const std::vector<RenderItem>& queue, Camera* camera);
-    void RenderTransparentQueue(Camera* camera);
-
-    // getters
+    // Accessors
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
     ID3D12GraphicsCommandList* GetRenderCommandList() const { return d3dCore_.GetRenderCommandList(); }
     ID3D12GraphicsCommandList* GetUploadCommandList() const { return d3dCore_.GetUploadCommandList(); }
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
 
 private:
-    void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
-
+    // Core Resources
     void CreateRootSignature();
     void ReleaseRootSignature();
+    void CreateSrvDescriptorHeap();
+    void ReleaseSrvDescriptorHeap();
 
+    // Frame Resources
     void CreateFrameResources();
     void ReleaseFrameResources();
-
     void AdvanceFrameResource();
     void WaitForCurrentFrameResource();
 
-    void UpdateCameraData(Camera* camera);
-    void SetViewportsAndScissorRects(Camera* camera);
+    // Render Queue
+    void BuildRenderQueues(Scene* scene, Camera* camera);
+    void CollectRenderItems(GameObject* object, Camera* camera);
+    void RenderItems(const std::vector<RenderItem>& queue, Camera* camera);
+    void RenderTransparentQueue(Camera* camera);
+
+    // GPU Binding
+    void BindCameraData(Camera* camera);
+    void BindObjectData(const GameObject* object);
+    bool BindMaterial(Material* material, Camera* camera);
+    void BindMaterialData(const Material* material, UINT materialIndex);
+    void BindMaterialTextures(Material* material);
+    
+    // Material GPU Resources
+    UINT GetOrCreateMaterialCBIndex(Material* material);
+    MaterialGpuBinding GetOrCreateMaterialGpuBinding(Material* material);
+    bool CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex);
+
+    // Draw
+    void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
 };

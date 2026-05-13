@@ -25,6 +25,7 @@ public:
         ComPtr<ID3DBlob>& pd3dShaderBlob);
 
     virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+    virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
     
     virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderMode renderMode);
     virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera, RenderMode renderMode);
@@ -54,5 +55,7 @@ public:
 
     virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
+
     virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature) override;
+    virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
 };

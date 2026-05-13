@@ -140,6 +140,9 @@ void Renderer::ReleaseFrameResources()
 {
     currentFrameResource_ = nullptr;
     frameResources_.clear();
+
+    materialCBIndexTable_.clear();
+    nextMaterialCBIndex_ = 0;
 }
 
 void Renderer::CreateSrvDescriptorHeap()
@@ -170,7 +173,7 @@ void Renderer::ReleaseSrvDescriptorHeap()
     nextSrvDescriptorIndex_ = 0;
 }
 
-MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
+MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
 {
     MaterialGpuBinding empty{};
 
@@ -219,7 +222,7 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
 
     for (UINT i = 0; i < materialTextureCount; ++i)
     {
-        if (!CopyTextureSrvToDescriptor(materialTextures[i], startIndex + i))
+        if (!CreateTextureSrvDescriptor(materialTextures[i], startIndex + i))
         {
             LOG("Failed to copy texture SRV. Material: " << materialKey << ", Slot: " << i);
             return empty;
@@ -240,7 +243,7 @@ MaterialGpuBinding Renderer::CreateMaterialGpuBinding(Material* material)
     return binding;
 }
 
-bool Renderer::CopyTextureSrvToDescriptor(Texture* texture, UINT descriptorIndex)
+bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex)
 {
     if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
         return false;
@@ -277,7 +280,7 @@ void Renderer::BindMaterialTextures(Material* material)
     if (!material || !srvDescriptorHeap_)
         return;
 
-    MaterialGpuBinding binding = CreateMaterialGpuBinding(material);
+    MaterialGpuBinding binding = GetOrCreateMaterialGpuBinding(material);
 
     if (!binding.valid)
         return;
@@ -308,7 +311,7 @@ void Renderer::WaitForCurrentFrameResource()
     d3dCore_.WaitForFenceValue(currentFrameResource_->fenceValue_);
 }
 
-void Renderer::UpdateCameraData(Camera* camera)
+void Renderer::BindCameraData(Camera* camera)
 {
     if (!camera || !currentFrameResource_ || !currentFrameResource_->passCB_)
         return;
@@ -327,7 +330,7 @@ void Renderer::UpdateCameraData(Camera* camera)
     cmdList->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->GetResource()->GetGPUVirtualAddress());
 }
 
-void Renderer::UpdateObjectData(const GameObject* object)
+void Renderer::BindObjectData(const GameObject* object)
 {
     if (!object || !currentFrameResource_ || !currentFrameResource_->objectCB_)
         return;
@@ -352,16 +355,6 @@ void Renderer::UpdateObjectData(const GameObject* object)
         + (static_cast<UINT64>(objectIndex) * objCBByteSize);
 
     d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(0, objCBAddress);
-}
-
-void Renderer::SetViewportsAndScissorRects(Camera* camera)
-{
-    auto* cmdList = d3dCore_.GetRenderCommandList();
-    const auto& viewport = camera->GetViewport();
-    const auto& scissor = camera->GetScissorRect();
-
-    cmdList->RSSetViewports(1, &viewport);
-    cmdList->RSSetScissorRects(1, &scissor);
 }
 
 void Renderer::Resize(UINT width, UINT height)
@@ -408,11 +401,11 @@ void Renderer::Render(Scene* scene)
     auto* cmdList = d3dCore_.GetRenderCommandList();
     cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 
-    UpdateCameraData(camera);
+    BindCameraData(camera);
 
-    BuildRenderQueue(scene, camera);
+    BuildRenderQueues(scene, camera);
 
-    RenderQueue(opaqueQueue_, camera);
+    RenderItems(opaqueQueue_, camera);
     RenderTransparentQueue(camera);
 
     d3dCore_.EndRender();
@@ -428,30 +421,27 @@ void Renderer::WaitForGpuComplete()
     d3dCore_.WaitForGpuComplete();
 }
 
-void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera)
+void Renderer::DrawMeshRenderer(
+    const GameObject* object,
+    const MeshRenderer* meshRenderer,
+    Camera* camera)
 {
-    if (!meshRenderer || !meshRenderer->IsRenderable())
+    if (!object || !meshRenderer || !meshRenderer->IsRenderable())
         return;
 
-    auto* cmdList = d3dCore_.GetRenderCommandList();
-
-    Material* material = meshRenderer->GetMaterial();
     Mesh* mesh = meshRenderer->GetMesh();
+    Material* material = meshRenderer->GetMaterial();
 
-    if (material)
-    {
-        BindMaterialTextures(material);
-        UpdateMaterialData(material, object->GetObjectCBIndex());
+    if (!mesh || !material)
+        return;
 
-        if (material->GetShader())
-            material->GetShader()->Render(cmdList, camera, material->GetRenderMode());
-    }
+    if (!BindMaterial(material, camera))
+        return;
 
-    if (mesh)
-        mesh->Render(cmdList);
+    mesh->Render(d3dCore_.GetRenderCommandList());
 }
 
-void Renderer::BuildRenderQueue(Scene* scene, Camera* camera)
+void Renderer::BuildRenderQueues(Scene* scene, Camera* camera)
 {
     opaqueQueue_.clear();
     transparentQueue_.clear();
@@ -504,14 +494,14 @@ void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
     }
 }
 
-void Renderer::RenderQueue(const std::vector<RenderItem>& queue, Camera* camera)
+void Renderer::RenderItems(const std::vector<RenderItem>& queue, Camera* camera)
 {
     for (const RenderItem& item : queue)
     {
         if (!item.object || !item.meshRenderer)
             continue;
 
-        UpdateObjectData(item.object);
+        BindObjectData(item.object);
         DrawMeshRenderer(item.object, item.meshRenderer, camera);
     }
 }
@@ -524,10 +514,10 @@ void Renderer::RenderTransparentQueue(Camera* camera)
         }
     );
 
-    RenderQueue(transparentQueue_, camera);
+    RenderItems(transparentQueue_, camera);
 }
 
-void Renderer::UpdateMaterialData(const Material* material, UINT materialIndex)
+void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
 {
     if (!material || !currentFrameResource_ || !currentFrameResource_->materialCB_)
         return;
@@ -551,4 +541,56 @@ void Renderer::UpdateMaterialData(const Material* material, UINT materialIndex)
         2,
         matCBAddress
     );
+}
+
+UINT Renderer::GetOrCreateMaterialCBIndex(Material* material)
+{
+    if (!material)
+        return UINT_MAX;
+
+    const std::string& materialKey = material->GetKey();
+    if (materialKey.empty())
+        return UINT_MAX;
+
+    if (material->GetMaterialCBIndex() != UINT_MAX)
+        return material->GetMaterialCBIndex();
+
+    if (auto iter = materialCBIndexTable_.find(materialKey);
+        iter != materialCBIndexTable_.end())
+    {
+        material->SetMaterialCBIndex(iter->second);
+        return iter->second;
+    }
+
+    const UINT index = nextMaterialCBIndex_++;
+    materialCBIndexTable_[materialKey] = index;
+    material->SetMaterialCBIndex(index);
+
+    return index;
+}
+
+bool Renderer::BindMaterial(Material* material, Camera* camera)
+{
+    if (!material)
+        return false;
+
+    Shader* shader = material->GetShader();
+    if (!shader)
+        return false;
+
+    BindMaterialTextures(material);
+
+    const UINT materialCBIndex = GetOrCreateMaterialCBIndex(material);
+    if (materialCBIndex == UINT_MAX)
+        return false;
+
+    BindMaterialData(material, materialCBIndex);
+
+    shader->Render(
+        d3dCore_.GetRenderCommandList(),
+        camera,
+        material->GetRenderMode()
+    );
+
+    return true;
 }

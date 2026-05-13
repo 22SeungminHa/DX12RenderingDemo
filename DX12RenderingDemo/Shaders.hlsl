@@ -143,7 +143,6 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
 
     float ndotl = saturate(dot(normalW, lightDir));
 
-    // 유리는 diffuse를 약하게
     float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.08f;
     float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.05f;
 
@@ -158,7 +157,6 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
 
     float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
 
-    // Fresnel edge highlight
     float fresnel = pow(1.0f - saturate(dot(normalW, viewDir)), gFresnelPower);
     float3 fresnelColor = lerp(
         float3(0.02f, 0.04f, 0.06f),

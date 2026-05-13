@@ -151,22 +151,29 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 	d3dPipelineStateDesc.SampleDesc.Count = 1;
 	d3dPipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	
-	d3dPipelineStateDesc.BlendState = CreateBlendState(RenderMode::Opaque);
-	d3dPipelineStateDesc.DepthStencilState = CreateDepthStencilState(RenderMode::Opaque);
+	CreatePipelineStates(pd3dDevice, d3dPipelineStateDesc);
+}
+
+void Shader::CreatePipelineStates(
+	ID3D12Device* device,
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
+{
+	desc.BlendState = CreateBlendState(RenderMode::Opaque);
+	desc.DepthStencilState = CreateDepthStencilState(RenderMode::Opaque);
 
 	ComPtr<ID3D12PipelineState> opaquePso;
-	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
-		&d3dPipelineStateDesc,
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&desc,
 		IID_PPV_ARGS(opaquePso.GetAddressOf())));
 
 	pipelineStates_.push_back(std::move(opaquePso));
 
-	d3dPipelineStateDesc.BlendState = CreateBlendState(RenderMode::Transparent);
-	d3dPipelineStateDesc.DepthStencilState = CreateDepthStencilState(RenderMode::Transparent);
+	desc.BlendState = CreateBlendState(RenderMode::Transparent);
+	desc.DepthStencilState = CreateDepthStencilState(RenderMode::Transparent);
 
 	ComPtr<ID3D12PipelineState> transparentPso;
-	ThrowIfFailed(pd3dDevice->CreateGraphicsPipelineState(
-		&d3dPipelineStateDesc,
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&desc,
 		IID_PPV_ARGS(transparentPso.GetAddressOf())));
 
 	pipelineStates_.push_back(std::move(transparentPso));
@@ -174,8 +181,13 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 
 void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderMode renderMode)
 {
-	const UINT psoIndex =
-		(renderMode == RenderMode::Transparent) ? 1 : 0;
+	if (!pd3dCommandList || pipelineStates_.empty())
+		return;
+
+	UINT psoIndex = 0;
+
+	if (pipelineStates_.size() >= 2)
+		psoIndex = (renderMode == RenderMode::Transparent) ? 1 : 0;
 
 	pd3dCommandList->SetPipelineState(pipelineStates_[psoIndex].Get());
 }
@@ -258,7 +270,22 @@ D3D12_RASTERIZER_DESC GlassShader::CreateRasterizerState()
 void GlassShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
 {
 	pipelineStates_.clear();
-	pipelineStates_.reserve(2);
+	pipelineStates_.reserve(1);
 
 	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+}
+
+void GlassShader::CreatePipelineStates(
+	ID3D12Device* device,
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
+{
+	desc.BlendState = CreateBlendState(RenderMode::Transparent);
+	desc.DepthStencilState = CreateDepthStencilState(RenderMode::Transparent);
+
+	ComPtr<ID3D12PipelineState> transparentPso;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&desc,
+		IID_PPV_ARGS(transparentPso.GetAddressOf())));
+
+	pipelineStates_.push_back(std::move(transparentPso));
 }
