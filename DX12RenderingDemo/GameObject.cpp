@@ -14,12 +14,11 @@ GameObject::~GameObject()
 
 void GameObject::ReleaseUploadResources()
 {
-    meshRenderer_.ReleaseUploadResources();
+    if (MeshRenderer* meshRenderer = GetComponent<MeshRenderer>())
+        meshRenderer->ReleaseUploadResources();
 
     for (auto& child : children_)
-    {
         if (child) child->ReleaseUploadResources();
-    }
 }
 
 void GameObject::Animate(float deltaTime)
@@ -28,6 +27,8 @@ void GameObject::Animate(float deltaTime)
 
 void GameObject::OnPrepareRender()
 {
+    for (auto& component : components_)
+        if (component) component->OnPrepareRender();
 }
 
 void GameObject::AddChild(std::unique_ptr<GameObject> child)
@@ -54,19 +55,4 @@ void GameObject::RemoveChild(GameObject* child)
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
     transform_.rotation += axis * XMConvertToRadians(angle);
-}
-
-RotatingObject::RotatingObject()
-{
-    rotationAxis_ = Vector3::Up;
-    rotationSpeed_ = 90.0f;
-}
-
-RotatingObject::~RotatingObject()
-{
-}
-
-void RotatingObject::Animate(float deltaTime)
-{
-    GameObject::Rotate(rotationAxis_, rotationSpeed_ * deltaTime);
 }

@@ -24,39 +24,50 @@ public:
     virtual void OnPrepareRender();
 
     void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
-    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
-    virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }
 
     UINT GetObjectCBIndex() const { return objectCBIndex_; }
     Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
     Transform* GetTransform() { return &transform_; }
-    MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
     const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
     const Transform* GetTransform() const { return &transform_; }
-    const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
 
 protected:
     Transform transform_;
-    MeshRenderer meshRenderer_;
+    std::vector<std::unique_ptr<Component>> components_;
+    std::vector<std::unique_ptr<GameObject>> children_;
 
     UINT objectCBIndex_ = 0;
 
-    std::vector<std::unique_ptr<GameObject>> children_;
-};
-
-class RotatingObject : public GameObject
-{
 public:
-    RotatingObject();
-    virtual ~RotatingObject();
+    template<typename T, typename... Args>
+    T* AddComponent(Args&&... args)
+    {
+        auto component = std::make_unique<T>(std::forward<Args>(args)...);
+        T* ptr = component.get();
+        ptr->SetOwner(this);
+        components_.push_back(std::move(component));
 
-private:
-    Vector3 rotationAxis_;
-    float rotationSpeed_;
+        return ptr;
+    }
 
-public:
-    void SetRotationSpeed(float rotationSpeed) { rotationSpeed_ = rotationSpeed; }
-    void SetRotationAxis(const Vector3& rotationAxis) { rotationAxis_ = rotationAxis; }
+    template<typename T>
+    T* GetComponent()
+    {
+        for (auto& component : components_)
+            if (auto casted = dynamic_cast<T*>(component.get()))
+                return casted;
 
-    virtual void Animate(float deltaTime);
+        return nullptr;
+    }
+
+    template<typename T>
+    const T* GetComponent() const
+    {
+        for (const auto& component : components_)
+            if (auto casted = dynamic_cast<const T*>(component.get()))
+                return casted;
+
+        return nullptr;
+    }
+
 };

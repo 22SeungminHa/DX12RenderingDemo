@@ -1,10 +1,10 @@
 #pragma once
-#include "pch.h"
+#include "Component.h"
 
 class Mesh;
 class Material;
 
-class MeshRenderer
+class MeshRenderer : public Component
 {
 public:
     MeshRenderer() = default;

@@ -467,7 +467,7 @@ void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
 
     object->OnPrepareRender();
 
-    MeshRenderer* meshRenderer = object->GetMeshRenderer();
+    MeshRenderer* meshRenderer = object->GetComponent<MeshRenderer>();
 
     if (meshRenderer && meshRenderer->IsRenderable())
     {

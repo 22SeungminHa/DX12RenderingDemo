@@ -230,8 +230,10 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
 
         auto meshObject = std::make_unique<GameObject>();
         meshObject->SetObjectCBIndex(objectCBIndex++);
-        meshObject->SetMesh(mesh);
-        meshObject->SetMaterial(meshMaterial);
+
+        auto* meshRenderer = meshObject->AddComponent<MeshRenderer>();
+        meshRenderer->SetMesh(mesh);
+        meshRenderer->SetMaterial(meshMaterial);
 
         object->AddChild(std::move(meshObject));
     }
