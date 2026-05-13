@@ -306,9 +306,9 @@ void Renderer::WaitForCurrentFrameResource()
 {
     if (!currentFrameResource_) return;
     if (currentFrameResource_->fenceValue_ == 0) return;
-    if (d3dCore_.GetCompletedFenceValue() >= currentFrameResource_->fenceValue_) return;
+    if (d3dCore_.GetCompletedFrameFenceValue() >= currentFrameResource_->fenceValue_) return;
 
-    d3dCore_.WaitForFenceValue(currentFrameResource_->fenceValue_);
+    d3dCore_.WaitForFrameFence(currentFrameResource_->fenceValue_);
 }
 
 void Renderer::BindCameraData(Camera* camera)
@@ -412,7 +412,7 @@ void Renderer::Render(Scene* scene)
     d3dCore_.ExecuteCommandList();
     d3dCore_.Present(0, 0);
 
-    currentFrameResource_->fenceValue_ = d3dCore_.Signal();
+    currentFrameResource_->fenceValue_ = d3dCore_.SignalFrameFence();
     d3dCore_.MoveToNextFrame();
 }
 

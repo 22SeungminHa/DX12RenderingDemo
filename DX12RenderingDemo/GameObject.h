@@ -16,28 +16,24 @@ public:
     void AddChild(std::unique_ptr<GameObject> child);
     void RemoveChild(GameObject* child);
 
-    void Rotate(const Vector3& axis, float angle);
-
-    void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
-    UINT GetObjectCBIndex() const { return objectCBIndex_; }
-
-    const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
-
-    Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
-    
-    Transform* GetTransform() { return &transform_; }
-    const Transform* GetTransform() const { return &transform_; }
-
-    MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
-    const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
-
     void ReleaseUploadResources();
 
-    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
-    virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }
+    void Rotate(const Vector3& axis, float angle);
 
     virtual void Animate(float deltaTime);
     virtual void OnPrepareRender();
+
+    void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
+    virtual void SetMesh(const std::shared_ptr<Mesh>& mesh) { meshRenderer_.SetMesh(mesh); }
+    virtual void SetMaterial(const std::shared_ptr<Material>& material) { meshRenderer_.SetMaterial(material); }
+
+    UINT GetObjectCBIndex() const { return objectCBIndex_; }
+    Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
+    Transform* GetTransform() { return &transform_; }
+    MeshRenderer* GetMeshRenderer() { return &meshRenderer_; }
+    const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
+    const Transform* GetTransform() const { return &transform_; }
+    const MeshRenderer* GetMeshRenderer() const { return &meshRenderer_; }
 
 protected:
     Transform transform_;

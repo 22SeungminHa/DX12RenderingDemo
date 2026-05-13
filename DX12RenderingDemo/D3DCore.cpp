@@ -5,9 +5,9 @@ void D3DCore::Initialize(HWND hwnd, int width, int height)
     clientWidth_ = width;
     clientHeight_ = height;
 
-    CreateDirect3DDevice();
+    CreateDeviceAndFences();
     CreateCommandObjects();
-    CreateDescriptorHeaps();
+    CreateRtvDsvDescriptorHeaps();
     CreateSwapChain(hwnd, width, height);
     CreateRenderTargetViews();
     CreateDepthStencilObjects();
@@ -17,7 +17,7 @@ void D3DCore::Shutdown()
 {
     if (!device_ && !swapChain_ && !cmdQueue_ && !fence_) return;
 
-    ReleaseBackBuffers();
+    ReleaseRenderTargetBuffers();
 
     depthStencilBuffer_.Reset();
     rtvDescriptorHeap_.Reset();
@@ -85,7 +85,7 @@ void D3DCore::Resize(UINT width, UINT height)
     CreateDepthStencilObjects();
 }
 
-void D3DCore::CreateDirect3DDevice()
+void D3DCore::CreateDeviceAndFences()
 {
     UINT factoryFlags = 0;
 
@@ -201,7 +201,7 @@ void D3DCore::CreateCommandObjects()
     ThrowIfFailed(uploadCmdList_->Close());
 }
 
-void D3DCore::CreateDescriptorHeaps()
+void D3DCore::CreateRtvDsvDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
     rtvHeapDesc.NumDescriptors = kSwapChainBufferCount;
@@ -264,7 +264,7 @@ void D3DCore::CreateSwapChain(HWND hwnd, int width, int height)
     ThrowIfFailed(factory_->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
-void D3DCore::ReleaseBackBuffers()
+void D3DCore::ReleaseRenderTargetBuffers()
 {
     for (auto& buffer : renderTargetBuffers_)
         buffer.Reset();
@@ -329,7 +329,7 @@ void D3DCore::CreateDepthStencilObjects()
 
 void D3DCore::WaitForGpuComplete()
 {
-    WaitForFenceValue(Signal());
+    WaitForFrameFence(SignalFrameFence());
 }
 
 void D3DCore::MoveToNextFrame()
@@ -467,19 +467,19 @@ void D3DCore::Present(UINT syncInterval, UINT flags)
     ThrowIfFailed(swapChain_->Present(syncInterval, flags));
 }
 
-UINT64 D3DCore::Signal()
+UINT64 D3DCore::SignalFrameFence()
 {
     const UINT64 fenceValue = nextFenceValue_++;
     ThrowIfFailed(cmdQueue_->Signal(fence_.Get(), fenceValue));
     return fenceValue;
 }
 
-UINT64 D3DCore::GetCompletedFenceValue() const
+UINT64 D3DCore::GetCompletedFrameFenceValue() const
 {
     return fence_ ? fence_->GetCompletedValue() : 0;
 }
 
-void D3DCore::WaitForFenceValue(UINT64 fenceValue)
+void D3DCore::WaitForFrameFence(UINT64 fenceValue)
 {
     if (!fence_ || !fenceEvent_)
         return;
