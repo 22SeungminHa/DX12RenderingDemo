@@ -14,26 +14,10 @@ Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
 
     m.Decompose(scaling, rotation, translation);
 
-    Matrix S = Matrix::CreateScale(
-        scaling.x,
-        scaling.y,
-        scaling.z
-    );
-
-    Quaternion Q(
-        rotation.x,
-        rotation.y,
-        rotation.z,
-        rotation.w
-    );
-
+    Matrix S = Matrix::CreateScale(scaling.x, scaling.y, scaling.z);
+    Quaternion Q(rotation.x, rotation.y, rotation.z, rotation.w);
     Matrix R = Matrix::CreateFromQuaternion(Q);
-
-    Matrix T = Matrix::CreateTranslation(
-        translation.x,
-        translation.y,
-        translation.z
-    );
+    Matrix T = Matrix::CreateTranslation(translation.x, translation.y, translation.z);
 
     return S * R * T;
 }
@@ -52,17 +36,9 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
     {
         const aiVector3D& pos = mesh->mVertices[i];
 
-        aiVector3D normal = mesh->HasNormals()
-            ? mesh->mNormals[i]
-            : aiVector3D(0, 1, 0);
-
-        aiVector3D texCoord = mesh->HasTextureCoords(0)
-            ? mesh->mTextureCoords[0][i]
-            : aiVector3D(0.0f, 0.0f, 0.0f);
-
-        aiVector3D tangent = mesh->HasTangentsAndBitangents()
-            ? mesh->mTangents[i]
-            : aiVector3D(1.0f, 0.0f, 0.0f);
+        aiVector3D normal = mesh->HasNormals() ? mesh->mNormals[i] : aiVector3D(0, 1, 0);
+        aiVector3D texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
+        aiVector3D tangent = mesh->HasTangentsAndBitangents() ? mesh->mTangents[i] : aiVector3D(1.0f, 0.0f, 0.0f);
 
         vertices.emplace_back(
             Vector3(pos.x, pos.y, pos.z),
@@ -122,17 +98,10 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterialsFromMatFiles(
         const std::string materialName = aiMaterialName.C_Str();
         const std::filesystem::path matPath = materialDir / (materialName + ".mat");
 
-        auto material = assetManager.LoadMaterialFromFile(
-            device,
-            cmdList,
-            rootSignature,
-            matPath
-        );
+        auto material = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, matPath);
 
         if (!material)
-        {
             LOG("Material load failed: " << matPath.string());
-        }
 
         materials.push_back(material);
 
@@ -218,13 +187,9 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
         std::shared_ptr<Material> meshMaterial = nullptr;
 
         if (materialIndex < materials.size())
-        {
             meshMaterial = materials[materialIndex];
-        }
         else if (!materials.empty())
-        {
             meshMaterial = materials[0];
-        }
 
         LOG(indent << "  MaterialIndex: " << materialIndex);
 

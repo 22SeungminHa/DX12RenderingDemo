@@ -188,11 +188,8 @@ MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
         return empty;
     }
 
-    if (auto iter = materialGpuBindingTable_.find(materialKey);
-        iter != materialGpuBindingTable_.end())
-    {
+    if (auto iter = materialGpuBindingTable_.find(materialKey); iter != materialGpuBindingTable_.end())
         return iter->second;
-    }
 
     constexpr UINT materialTextureCount = static_cast<UINT>(TextureType::End);
 
@@ -232,8 +229,7 @@ MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
     MaterialGpuBinding binding{};
     binding.startDescriptorIndex = startIndex;
     binding.gpuHandle = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-    binding.gpuHandle.ptr +=
-        static_cast<SIZE_T>(startIndex) * srvDescriptorSize_;
+    binding.gpuHandle.ptr += static_cast<SIZE_T>(startIndex) * srvDescriptorSize_;
     binding.valid = true;
 
     materialGpuBindingTable_[materialKey] = binding;
@@ -251,12 +247,9 @@ bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex
     if (descriptorIndex >= kMaxSrvDescriptorCount)
         return false;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle =
-        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 
-    dstHandle.ptr +=
-        static_cast<SIZE_T>(descriptorIndex) *
-        srvDescriptorSize_;
+    dstHandle.ptr += static_cast<SIZE_T>(descriptorIndex) * srvDescriptorSize_;
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -266,11 +259,7 @@ bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex
     srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    d3dCore_.GetDevice()->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        dstHandle
-    );
+    d3dCore_.GetDevice()->CreateShaderResourceView(texture->GetResource(), &srvDesc, dstHandle);
 
     return true;
 }
@@ -453,9 +442,7 @@ void Renderer::BuildRenderQueues(Scene* scene, Camera* camera)
 
     for (const auto& object : objects)
     {
-        if (!object)
-            continue;
-
+        if (!object) continue;
         CollectRenderItems(object.get(), camera);
     }
 }
@@ -489,9 +476,7 @@ void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
     }
 
     for (const auto& child : object->GetChildren())
-    {
         CollectRenderItems(child.get(), camera);
-    }
 }
 
 void Renderer::RenderItems(const std::vector<RenderItem>& queue, Camera* camera)
