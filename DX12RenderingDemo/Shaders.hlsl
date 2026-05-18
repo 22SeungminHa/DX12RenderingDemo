@@ -34,6 +34,8 @@ cbuffer cbMaterialInfo : register(b2)
 
 Texture2D gDiffuseMap : register(t0);
 Texture2D gNormalMap : register(t1);
+//Texture2D gMetallicRoughnessMap : register(t2);
+
 SamplerState gSampler : register(s0);
 
 struct VS_INPUT
@@ -80,40 +82,44 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
 {
     float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
     float4 baseColor = texColor * input.color * gBaseColor;
-    
+
     float3 normalW = normalize(input.normalW);
     float3 tangentW = normalize(input.tangentW);
 
-    // tangent가 normal과 완전히 직교하지 않을 수 있어서 보정
     tangentW = normalize(tangentW - dot(tangentW, normalW) * normalW);
-
     float3 bitangentW = normalize(cross(normalW, tangentW));
 
     float2 normalXY = gNormalMap.Sample(gSampler, input.texCoord).rg;
     normalXY = normalXY * 2.0f - 1.0f;
 
-    // BC5 Normal Map은 보통 XY만 저장하므로 Z는 복원
     float normalZ = sqrt(saturate(1.0f - dot(normalXY, normalXY)));
-
     float3 normalT = normalize(float3(normalXY.x, -normalXY.y, normalZ));
-    
+
     float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
     normalW = normalize(mul(normalT, TBN));
-    
+
     float3 lightDir = normalize(-gLightDir);
     float3 viewDir = normalize(gEyePosW - input.positionW);
-
-    float ndotl = saturate(dot(normalW, lightDir));
-
-    float3 ambient = baseColor.rgb * gAmbientColor.rgb;
-    float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl;
-
     float3 halfDir = normalize(lightDir + viewDir);
+
+    float ndotlRaw = dot(normalW, lightDir);
+    float wrappedNdotL = saturate(ndotlRaw * 0.5f + 0.5f);
+    float diffuseFactor = lerp(0.2f, 1.0f, wrappedNdotL);
+
+    float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.45f;
+    float3 diffuse = baseColor.rgb * gLightColor.rgb * diffuseFactor * 0.85f;
+
     float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
-    float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
+
+    float3 specular =
+        float3(1.0f, 1.0f, 1.0f) *
+        gLightColor.rgb *
+        specFactor *
+        gSpecularStrength *
+        0.35f;
 
     float3 finalColor = ambient + diffuse + specular;
-    
+
     return float4(finalColor, baseColor.a * gAlpha);
 }
 
@@ -126,7 +132,6 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
     float3 tangentW = normalize(input.tangentW);
 
     tangentW = normalize(tangentW - dot(tangentW, normalW) * normalW);
-
     float3 bitangentW = normalize(cross(normalW, tangentW));
 
     float2 normalXY = gNormalMap.Sample(gSampler, input.texCoord).rg;
@@ -140,35 +145,36 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
 
     float3 lightDir = normalize(-gLightDir);
     float3 viewDir = normalize(gEyePosW - input.positionW);
+    float3 halfDir = normalize(lightDir + viewDir);
 
     float ndotl = saturate(dot(normalW, lightDir));
+    float ndoth = saturate(dot(normalW, halfDir));
+    float ndotv = saturate(dot(normalW, viewDir));
 
-    float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.08f;
-    float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.05f;
+    float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.12f;
+    float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.06f;
 
-    // 날카로운 specular
-    float3 halfDir = normalize(lightDir + viewDir);
-    float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
-    specFactor = pow(specFactor, 1.5f);
-    specFactor = pow(specFactor, 1.5f);
-    specFactor = pow(specFactor, 1.5f);
-    specFactor = pow(specFactor, 1.5f);
-    specFactor = pow(specFactor, 1.5f);
+    float broadSpec = pow(ndoth, 32.0f) * 0.18f;
+    float sharpSpec = pow(ndoth, 180.0f) * 1.15f;
 
-    float3 specular = gLightColor.rgb * specFactor * gSpecularStrength;
+    float3 specular =
+        float3(1.0f, 1.0f, 1.0f) *
+        (broadSpec + sharpSpec) *
+        gSpecularStrength;
 
-    float fresnel = pow(1.0f - saturate(dot(normalW, viewDir)), gFresnelPower);
-    float3 fresnelColor = lerp(
-        float3(0.02f, 0.04f, 0.06f),
-        float3(1.0f, 1.0f, 1.0f),
-        fresnel
-    );
-    
+    float fresnel = pow(1.0f - ndotv, max(gFresnelPower, 1.0f));
+    fresnel = smoothstep(0.0f, 1.0f, fresnel);
+
+    float3 fresnelColor = float3(0.65f, 0.85f, 1.0f) * fresnel * 0.45f;
+
+    float glassAlpha = saturate(baseColor.a * gAlpha);
+
+    float3 transparentBody = ambient + diffuse;
+
     float3 finalColor =
-        ambient +
-        diffuse +
+        transparentBody * lerp(0.3f, 0.75f, glassAlpha) +
         specular +
-        fresnelColor * 0.65f;
+        fresnelColor;
 
-    return float4(finalColor, baseColor.a * gAlpha);
+    return float4(finalColor, glassAlpha);
 }

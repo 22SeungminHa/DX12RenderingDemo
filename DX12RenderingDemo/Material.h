@@ -21,6 +21,7 @@ public:
     Texture* GetTexture(TextureType type) const { return textures_[static_cast<size_t>(type)].get(); }
     Texture* GetBaseColorTexture() const { return GetTexture(TextureType::BaseColor); }
     Texture* GetNormalTexture() const { return GetTexture(TextureType::Normal); }
+    //Texture* GetMetallicRoughnessTexture() const { return GetTexture(TextureType::MetallicRoughness); }
 
     void SetRenderMode(RenderMode mode) { renderMode_ = mode; }
     RenderMode GetRenderMode() const { return renderMode_; }

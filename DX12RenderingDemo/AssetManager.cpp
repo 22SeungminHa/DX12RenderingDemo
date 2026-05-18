@@ -37,6 +37,7 @@ void AssetManager::InitializeDefaultTextures(
 
     loadDefaultTexture(TextureType::BaseColor, L"Default_BaseColor.dds");
     loadDefaultTexture(TextureType::Normal, L"Default_Normal.dds");
+    //loadDefaultTexture(TextureType::MetallicRoughness, L"Default_MetallicRoughness.dds");
 }
 
 std::shared_ptr<Shader> AssetManager::LoadShaderByName(
@@ -175,23 +176,25 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     if (!textures[static_cast<size_t>(TextureType::Normal)])
         textures[static_cast<size_t>(TextureType::Normal)] = GetDefaultTexture(TextureType::Normal);
 
+    //if (!textures[static_cast<size_t>(TextureType::MetallicRoughness)])
+    //    textures[static_cast<size_t>(TextureType::MetallicRoughness)] = GetDefaultTexture(TextureType::MetallicRoughness);
+
     auto material = std::make_shared<Material>();
     material->SetKey(normalizedPath.string());
     material->SetShader(shader);
     if (renderModeName == "Transparent")
     {
         material->SetRenderMode(RenderMode::Transparent);
-        material->SetFresnelPower(4.0f);
-        material->SetSpecularStrength(3.0f);
+        material->SetAlpha(0.25f);
+        material->SetSpecularStrength(1.5f);
+        material->SetFresnelPower(3.0f);
     }
     else
         material->SetRenderMode(RenderMode::Opaque);
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
-    {
         if (textures[i])
             material->SetTexture(static_cast<TextureType>(i), textures[i]);
-    }
 
     materials_[materialKey] = material;
 

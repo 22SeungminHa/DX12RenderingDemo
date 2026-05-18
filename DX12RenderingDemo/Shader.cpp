@@ -48,7 +48,7 @@ D3D12_BLEND_DESC Shader::CreateBlendState(RenderMode renderMode)
 	{
 		rt.BlendEnable = TRUE;
 
-		rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		rt.SrcBlend = D3D12_BLEND_ONE;
 		rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		rt.BlendOp = D3D12_BLEND_OP_ADD;
 
