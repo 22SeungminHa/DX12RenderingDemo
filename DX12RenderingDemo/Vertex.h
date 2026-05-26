@@ -45,3 +45,10 @@ public:
 
     ~LitVertex() {}
 };
+
+class SkyboxVertex : public Vertex
+{
+public:
+    SkyboxVertex() = default;
+    SkyboxVertex(const Vector3& position) : Vertex(position) {}
+};

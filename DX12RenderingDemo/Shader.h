@@ -59,3 +59,17 @@ public:
     virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature) override;
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
 };
+
+class SkyboxShader : public Shader
+{
+public:
+    SkyboxShader() = default;
+    virtual ~SkyboxShader() = default;
+
+    virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout() override;
+    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
+    virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
+    virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState(RenderMode renderMode) override;
+    virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) override;
+};

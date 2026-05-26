@@ -9,6 +9,8 @@ class MeshRenderer;
 class Texture;
 class Material;
 class FrameResource;
+class SkyboxShader;
+class SkyboxMesh;
 
 struct MaterialGpuBinding
 {
@@ -51,6 +53,14 @@ private:
     std::unordered_map<std::string, UINT> materialCBIndexTable_;
     std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
+    std::unique_ptr<SkyboxShader> skyboxShader_;
+    std::unique_ptr<SkyboxMesh> skyboxMesh_;
+
+    std::shared_ptr<Texture> skyboxTexture_;
+    D3D12_GPU_DESCRIPTOR_HANDLE skyboxGpuHandle_{};
+    UINT skyboxDescriptorIndex_ = UINT_MAX;
+    std::wstring loadedSkyboxPath_;
+
 public:
     Renderer();
     ~Renderer();
@@ -72,6 +82,10 @@ public:
     
     // GPU Synchronization
     void WaitForGpuComplete();
+
+    void RenderSkybox(Scene* scene, Camera* camera);
+    bool PrepareSkybox(const SkyboxDesc& skybox);
+    void ReleaseSkyboxUploadResources();
 
     // Accessors
     ID3D12Device* GetDevice() const { return d3dCore_.GetDevice(); }
@@ -112,4 +126,7 @@ private:
 
     // Draw
     void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
+
+    bool PrepareSkyboxResources(const SkyboxDesc& skybox);
+    bool CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex);
 };

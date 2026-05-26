@@ -31,6 +31,9 @@ public:
 	virtual void Animate(float deltaTime);
 	virtual void AnimateObject(GameObject* object, float deltaTime);
 
+	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
+	const SkyboxDesc& GetSkybox() const { return skybox_; }
+
 protected:
 	virtual void OnLoad(
 		ID3D12Device* device,
@@ -51,6 +54,8 @@ protected:
 
 	std::vector<std::unique_ptr<Camera>> cameras_;
 	Camera* activeCamera_ = nullptr;
+
+	SkyboxDesc skybox_;
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;

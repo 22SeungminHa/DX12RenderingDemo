@@ -28,6 +28,12 @@ void TestScene::OnLoad(
 
     if (object)
         objects_.push_back(std::move(object));
+
+    SkyboxDesc skybox{};
+    skybox.enabled = true;
+    skybox.cubemapPath = L"../Assets/Textures/Skybox.dds";
+
+    SetSkybox(skybox);
 }
 
 CameraDesc TestScene::SetupCameraDesc() const

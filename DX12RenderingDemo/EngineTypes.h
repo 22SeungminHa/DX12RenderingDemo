@@ -34,6 +34,12 @@ enum class SCENE_TYPE
 
 // render structs
 
+struct SkyboxDesc
+{
+    bool enabled = false;
+    std::wstring cubemapPath;
+};
+
 struct CameraDesc
 {
     Vector3 eye = { 0.0f, 0.0f, -10.0f };

@@ -102,8 +102,10 @@ void Application::ProcessPendingUploadResourcesRelease(bool forceWait)
 		return;
 
 	renderer_->WaitForSceneLoad(pendingSceneLoadFenceValue_);
+
 	sceneManager_->ReleaseCurrentSceneUploadResources();
 	assetManager_->ReleaseUploadResources();
+	renderer_->ReleaseSkyboxUploadResources();
 
 	pendingSceneLoadFenceValue_ = 0;
 	hasPendingUploadBufferRelease_ = false;
@@ -225,6 +227,11 @@ void Application::ProcessSceneChange()
 		width,
 		height
 	);
+
+	Scene* currentScene = sceneManager_->GetCurrentScene();
+	if (currentScene)
+		renderer_->PrepareSkybox(currentScene->GetSkybox());
+
 	pendingSceneLoadFenceValue_ = renderer_->ExecuteUploadCmdList();
 	hasPendingUploadBufferRelease_ = true;
 }

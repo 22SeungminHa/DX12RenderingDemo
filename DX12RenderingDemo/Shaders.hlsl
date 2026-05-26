@@ -34,7 +34,7 @@ cbuffer cbMaterialInfo : register(b2)
 
 Texture2D gDiffuseMap : register(t0);
 Texture2D gNormalMap : register(t1);
-//Texture2D gMetallicRoughnessMap : register(t2);
+TextureCube gSkyboxMap : register(t2);
 
 SamplerState gSampler : register(s0);
 
@@ -55,6 +55,17 @@ struct VS_OUTPUT
     float3 normalW : NORMAL;
     float3 tangentW : TANGENT;
     float2 texCoord : TEXCOORD;
+};
+
+struct VS_SKYBOX_INPUT
+{
+    float3 position : POSITION;
+};
+
+struct VS_SKYBOX_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float3 direction : TEXCOORD;
 };
 
 VS_OUTPUT VSLit(VS_INPUT input)
@@ -177,4 +188,29 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
         fresnelColor;
 
     return float4(finalColor, glassAlpha);
+}
+
+VS_SKYBOX_OUTPUT VSSkybox(VS_SKYBOX_INPUT input)
+{
+    VS_SKYBOX_OUTPUT output;
+
+    float4 posW = float4(input.position, 1.0f);
+
+    float4x4 viewNoTranslation = gmtxView;
+    viewNoTranslation._41 = 0.0f;
+    viewNoTranslation._42 = 0.0f;
+    viewNoTranslation._43 = 0.0f;
+
+    float4 posV = mul(posW, viewNoTranslation);
+    float4 posH = mul(posV, gmtxProjection);
+
+    output.position = posH.xyww;
+    output.direction = input.position;
+
+    return output;
+}
+
+float4 PSSkybox(VS_SKYBOX_OUTPUT input) : SV_TARGET
+{
+    return gSkyboxMap.Sample(gSampler, normalize(input.direction));
 }
