@@ -652,15 +652,19 @@ bool Renderer::PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& as
 
     skyboxTexture_ = assetManager.LoadTexture(device, uploadCmdList, skybox.cubemapPath);
 
-    skyboxMesh_ = std::make_unique<SkyboxMesh>(device, uploadCmdList);
+    if (!skyboxMesh_)
+        skyboxMesh_ = std::make_unique<SkyboxMesh>(device, uploadCmdList);
 
-    if (nextSrvDescriptorIndex_ + 1 > kMaxSrvDescriptorCount)
+    if (skyboxDescriptorIndex_ == UINT_MAX)
     {
-        LOG("SRV descriptor heap is full. Skybox SRV failed.");
-        return false;
-    }
+        if (nextSrvDescriptorIndex_ + 1 > kMaxSrvDescriptorCount)
+        {
+            LOG("SRV descriptor heap is full. Skybox SRV failed.");
+            return false;
+        }
 
-    skyboxDescriptorIndex_ = nextSrvDescriptorIndex_++;
+        skyboxDescriptorIndex_ = nextSrvDescriptorIndex_++;
+    }
 
     if (!CreateSkyboxSrvDescriptor(skyboxTexture_.get(), skyboxDescriptorIndex_))
         return false;

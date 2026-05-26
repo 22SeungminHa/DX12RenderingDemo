@@ -2,6 +2,6 @@ Name=Micro_Sub_Glass
 Shader=GlassShader
 RenderMode=Transparent
 BaseColor=Default_Glass_BaseColor.dds
-Normal=
+Normal=T_YFSM_05_n.dds
 MetallicRoughness=MicroSub_Glass_MetallicSmoothness.dds
 Emissive=
