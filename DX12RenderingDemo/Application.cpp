@@ -230,7 +230,7 @@ void Application::ProcessSceneChange()
 
 	Scene* currentScene = sceneManager_->GetCurrentScene();
 	if (currentScene)
-		renderer_->PrepareSkybox(currentScene->GetSkybox());
+		renderer_->PrepareSkybox(currentScene->GetSkybox(), *assetManager_);
 
 	pendingSceneLoadFenceValue_ = renderer_->ExecuteUploadCmdList();
 	hasPendingUploadBufferRelease_ = true;

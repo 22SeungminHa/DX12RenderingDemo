@@ -8,6 +8,7 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "FrameResource.h"
+#include "AssetManager.h"
 
 Renderer::Renderer() {}
 Renderer::~Renderer() {}
@@ -635,7 +636,7 @@ void Renderer::RenderSkybox(Scene* scene, Camera* camera)
     skyboxMesh_->Render(cmdList);
 }
 
-bool Renderer::PrepareSkyboxResources(const SkyboxDesc& skybox) 
+bool Renderer::PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager) 
 {
     if (!skybox.enabled || skybox.cubemapPath.empty())
         return false;
@@ -649,9 +650,7 @@ bool Renderer::PrepareSkyboxResources(const SkyboxDesc& skybox)
     if (!device || !uploadCmdList)
         return false;
 
-    skyboxTexture_ = std::make_shared<Texture>();
-    skyboxTexture_->LoadDDS(device, uploadCmdList, skybox.cubemapPath);
-    skyboxTexture_->SetKey(std::filesystem::path(skybox.cubemapPath).string());
+    skyboxTexture_ = assetManager.LoadTexture(device, uploadCmdList, skybox.cubemapPath);
 
     skyboxMesh_ = std::make_unique<SkyboxMesh>(device, uploadCmdList);
 
@@ -706,16 +705,13 @@ bool Renderer::CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex)
     return true;
 }
 
-bool Renderer::PrepareSkybox(const SkyboxDesc& skybox)
+bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)
 {
-    return PrepareSkyboxResources(skybox);
+    return PrepareSkyboxResources(skybox, assetManager);
 }
 
 void Renderer::ReleaseSkyboxUploadResources()
 {
     if (skyboxMesh_)
         skyboxMesh_->ReleaseUploadResources();
-
-    if (skyboxTexture_)
-        skyboxTexture_->ReleaseUploadBuffer();
 }

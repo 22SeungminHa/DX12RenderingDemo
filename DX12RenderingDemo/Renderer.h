@@ -11,6 +11,7 @@ class Material;
 class FrameResource;
 class SkyboxShader;
 class SkyboxMesh;
+class AssetManager;
 
 struct MaterialGpuBinding
 {
@@ -84,7 +85,7 @@ public:
     void WaitForGpuComplete();
 
     void RenderSkybox(Scene* scene, Camera* camera);
-    bool PrepareSkybox(const SkyboxDesc& skybox);
+    bool PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager);
     void ReleaseSkyboxUploadResources();
 
     // Accessors
@@ -127,6 +128,6 @@ private:
     // Draw
     void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
 
-    bool PrepareSkyboxResources(const SkyboxDesc& skybox);
+    bool PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager);
     bool CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex);
 };
