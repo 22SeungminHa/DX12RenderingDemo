@@ -25,7 +25,10 @@ Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
 std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
-    aiMesh* mesh)
+    AssetManager& assetManager,
+    const std::string& modelPath,
+    UINT meshIndex,
+    aiMesh* mesh) 
 {
     std::vector<LitVertex> vertices;
     std::vector<UINT> indices;
@@ -59,9 +62,14 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
         }
     }
 
-    return std::make_shared<LoadedMeshLit>(
+    const std::string meshKey =
+        std::filesystem::weakly_canonical(modelPath).string()
+        + "#" + std::to_string(meshIndex);
+
+    return assetManager.LoadLitMesh(
         device,
         cmdList,
+        meshKey,
         vertices,
         indices
     );
@@ -147,6 +155,8 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     return ProcessNode(
         device,
         cmdList,
+        assetManager,
+        filePath,
         scene,
         scene->mRootNode,
         materials,
@@ -158,6 +168,8 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
 std::unique_ptr<GameObject> FBXLoader::ProcessNode(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
+    AssetManager& assetManager,
+    const std::string& modelPath,
     const aiScene* scene,
     aiNode* node,
     const std::vector<std::shared_ptr<Material>>& materials,
@@ -180,7 +192,14 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
 
         LOG(indent << "  Mesh[" << i << "] Index: " << meshIndex);
 
-        auto mesh = CreateLitMesh(device, cmdList, aiMesh);
+        auto mesh = CreateLitMesh(
+            device,
+            cmdList,
+            assetManager,
+            modelPath,
+            meshIndex,
+            aiMesh
+        );
 
         UINT materialIndex = aiMesh->mMaterialIndex;
 
@@ -208,6 +227,8 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
         auto child = ProcessNode(
             device,
             cmdList,
+            assetManager,
+            modelPath,
             scene,
             node->mChildren[i],
             materials,

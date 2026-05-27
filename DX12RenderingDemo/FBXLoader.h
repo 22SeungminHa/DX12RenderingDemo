@@ -16,6 +16,9 @@ public:
     static std::shared_ptr<Mesh> CreateLitMesh(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
+        const std::string& modelPath,
+        UINT meshIndex,
         aiMesh* mesh);
 
     static std::unique_ptr<GameObject> LoadLitModel(
@@ -29,6 +32,8 @@ public:
     static std::unique_ptr<GameObject> ProcessNode(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
+        const std::string& modelPath,
         const aiScene* scene,
         aiNode* node,
         const std::vector<std::shared_ptr<Material>>& materials,

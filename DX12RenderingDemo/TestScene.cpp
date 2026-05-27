@@ -13,8 +13,9 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
-    UINT objectCBIndex = 0;
+    objects_.clear();
 
+    UINT objectCBIndex = 0;
     auto object = FBXLoader::LoadLitModel(
         device,
         cmdList,
@@ -23,8 +24,6 @@ void TestScene::OnLoad(
         "../Assets/Meshes/MicroSub.fbx",
         objectCBIndex
     );
-
-    objects_.clear();
 
     if (object)
         objects_.push_back(std::move(object));
@@ -43,6 +42,6 @@ CameraDesc TestScene::SetupCameraDesc() const
     desc.target = { 0.0f, 0.0f, 0.0f };
     desc.nearZ = 1.0f;
     desc.farZ = 500.0f;
-    desc.fovY = 90.0f;
+    desc.fovY = 60.0f;
     return desc;
 }

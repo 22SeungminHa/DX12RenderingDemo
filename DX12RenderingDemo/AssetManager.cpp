@@ -2,6 +2,7 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "Material.h"
+#include "Mesh.h"
 
 namespace
 {
@@ -206,19 +207,43 @@ void AssetManager::Clear()
     textures_.clear();
     shaders_.clear();
     materials_.clear();
+    meshes_.clear();
 }
 
 void AssetManager::ReleaseUploadResources()
 {
     for (auto& [key, texture] : textures_)
-    {
         if (texture)
             texture->ReleaseUploadBuffer();
-    }
 
     for (auto& texture : defaultTextures_)
-    {
         if (texture)
             texture->ReleaseUploadBuffer();
-    }
+
+    for (auto& [key, mesh] : meshes_)
+        if (mesh)
+            mesh->ReleaseUploadResources();
+}
+
+std::shared_ptr<Mesh> AssetManager::LoadLitMesh(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    const std::string& key,
+    const std::vector<LitVertex>& vertices,
+    const std::vector<UINT>& indices)
+{
+    if (auto iter = meshes_.find(key); iter != meshes_.end())
+        return iter->second;
+
+    auto mesh = std::make_shared<LoadedMeshLit>(
+        device,
+        cmdList,
+        vertices,
+        indices
+    );
+
+    mesh->SetKey(key);
+    meshes_[key] = mesh;
+
+    return mesh;
 }

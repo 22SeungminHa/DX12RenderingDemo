@@ -50,3 +50,10 @@ public:
 	SkyboxMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	virtual ~SkyboxMesh() {}
 };
+
+class CubeMesh : public Mesh
+{
+public:
+	CubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
+	virtual ~CubeMesh() {}
+};
