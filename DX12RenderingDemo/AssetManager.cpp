@@ -219,10 +219,13 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
 
 void AssetManager::Clear()
 {
-    textures_.clear();
-    shaders_.clear();
     materials_.clear();
     meshes_.clear();
+    shaders_.clear();
+    textures_.clear();
+
+    for (auto& texture : defaultTextures_)
+        texture.reset();
 }
 
 void AssetManager::ReleaseUploadResources()

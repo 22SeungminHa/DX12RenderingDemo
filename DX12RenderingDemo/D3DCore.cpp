@@ -20,16 +20,20 @@ void D3DCore::Shutdown()
     ReleaseRenderTargetBuffers();
 
     depthStencilBuffer_.Reset();
+
     rtvDescriptorHeap_.Reset();
     dsvDescriptorHeap_.Reset();
 
     renderCmdList_.Reset();
     uploadCmdList_.Reset();
+
+    renderCmdAllocator_.Reset();
     uploadCmdAllocator_.Reset();
+
     cmdQueue_.Reset();
 
-    uploadFence_.Reset();
     fence_.Reset();
+    uploadFence_.Reset();
 
     swapChain_.Reset();
     device_.Reset();
@@ -170,18 +174,14 @@ void D3DCore::CreateCommandObjects()
     ThrowIfFailed(device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(cmdQueue_.GetAddressOf())));
 
     // render
-    // renderCmdList_ 생성용 임시 allocator.
-    // 실제 렌더링에서는 FrameResource의 cmdAllocator_로 Reset해서 사용한다.
-    ComPtr<ID3D12CommandAllocator> tempRenderCmdAllocator;
-
     ThrowIfFailed(device_->CreateCommandAllocator(
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-        IID_PPV_ARGS(tempRenderCmdAllocator.GetAddressOf())));
+        IID_PPV_ARGS(renderCmdAllocator_.GetAddressOf())));
 
     ThrowIfFailed(device_->CreateCommandList(
         0,
         D3D12_COMMAND_LIST_TYPE_DIRECT,
-        tempRenderCmdAllocator.Get(),
+        renderCmdAllocator_.Get(),
         nullptr,
         IID_PPV_ARGS(renderCmdList_.GetAddressOf())));
 
