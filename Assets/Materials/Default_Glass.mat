@@ -5,7 +5,7 @@ RenderMode=Transparent
 BaseColorMap=Default_Glass_BaseColor.dds
 NormalMap=Metal_11_N.dds
 
-baseColorTint=1.0,1.0,1.0,1.0
+BaseColorTint=1.0,1.0,1.0,1.0
 Alpha=0.25
 FresnelPower=3.0
 SpecularStrength=1.5

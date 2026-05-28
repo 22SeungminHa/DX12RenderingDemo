@@ -155,8 +155,6 @@ std::optional<FBXNodeData> FBXLoader::LoadLitModel(
         modelPath
     );
 
-    UINT unusedObjectCBIndex = 0;
-
     return ProcessNode(
         device,
         cmdList,

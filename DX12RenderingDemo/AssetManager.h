@@ -43,4 +43,5 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Mesh>> meshes_;
 
     std::array<std::shared_ptr<Texture>, static_cast<size_t>(TextureType::End)> defaultTextures_{};
+    std::shared_ptr<Material> defaultMaterial_;
 };

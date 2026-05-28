@@ -5,5 +5,5 @@ RenderMode=Opaque
 BaseColorMap=Metal_2.dds
 NormalMap=Metal_2_N.dds
 
-baseColorTint=1.0,1.0,1.0,1.0
+BaseColorTint=1.0,1.0,1.0,1.0
 SpecularStrength=1.5

@@ -125,7 +125,27 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     if (!file.is_open())
     {
         LOG("Material file open failed: " << normalizedPath.string());
-        return nullptr;
+
+        const auto defaultMatPath = AssetPath::Material(L"Default");
+        const auto defaultMatKey = AssetPath::Key(std::filesystem::weakly_canonical(defaultMatPath));
+
+        if (materialKey == defaultMatKey)
+        {
+            LOG("Default material load failed");
+            return nullptr;
+        }
+
+        if (!defaultMaterial_)
+        {
+            defaultMaterial_ = LoadMaterialFromFile(
+                device,
+                cmdList,
+                rootSignature,
+                defaultMatPath
+            );
+        }
+
+        return defaultMaterial_;
     }
 
     std::unordered_map<std::string, std::string> values;
@@ -220,6 +240,8 @@ void AssetManager::Clear()
     shaders_.clear();
     textures_.clear();
 
+    defaultMaterial_.reset();
+
     for (auto& texture : defaultTextures_)
         texture.reset();
 }
@@ -285,7 +307,9 @@ std::shared_ptr<Mesh> AssetManager::LoadSphereMesh(
     UINT sliceCount,
     UINT stackCount)
 {
-    if (auto iter = meshes_.find(key); iter != meshes_.end())
+    const std::string sphereKey = key + "/" + std::to_string(sliceCount) + "x" + std::to_string(stackCount);
+    
+    if (auto iter = meshes_.find(sphereKey); iter != meshes_.end())
         return iter->second;
 
     auto mesh = std::make_shared<SphereMesh>(
@@ -295,7 +319,6 @@ std::shared_ptr<Mesh> AssetManager::LoadSphereMesh(
         stackCount
     );
 
-    const std::string sphereKey = key + "/" + std::to_string(sliceCount) + "x" + std::to_string(stackCount);
     mesh->SetKey(sphereKey);
     meshes_[sphereKey] = mesh;
 
