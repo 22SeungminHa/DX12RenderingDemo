@@ -363,7 +363,7 @@ void Renderer::BindObjectData(const GameObject* object)
     const UINT objectIndex = object->GetObjectCBIndex();
     currentFrameResource_->objectCB_->CopyData(objectIndex, objectCB);
 
-    const UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectCB));
+    const UINT objCBByteSize = D3DUtil::CalcConstantBufferByteSize(sizeof(ObjectCB));
     D3D12_GPU_VIRTUAL_ADDRESS objCBAddress =
         currentFrameResource_->objectCB_->GetResource()->GetGPUVirtualAddress()
         + (static_cast<UINT64>(objectIndex) * objCBByteSize);
@@ -543,7 +543,7 @@ void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
     currentFrameResource_->materialCB_->CopyData(materialIndex, materialCB);
 
     const UINT matCBByteSize =
-        d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
+        D3DUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
 
     D3D12_GPU_VIRTUAL_ADDRESS matCBAddress =
         currentFrameResource_->materialCB_->GetResource()->GetGPUVirtualAddress()

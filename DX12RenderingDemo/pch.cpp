@@ -2,7 +2,23 @@
 #include <comdef.h>
 #include <fstream>
 
-ComPtr<ID3D12Resource> CreateBufferResource(
+DxException::DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber) :
+    ErrorCode(hr),
+    FunctionName(functionName),
+    Filename(filename),
+    LineNumber(lineNumber)
+{
+}
+
+std::wstring DxException::ToString() const
+{
+    _com_error err(ErrorCode);
+    std::wstring msg = err.ErrorMessage();
+
+    return FunctionName + L" failed in " + Filename + L"; line " + std::to_wstring(LineNumber) + L"; error: " + msg;
+}
+
+ComPtr<ID3D12Resource> D3DUtil::CreateBufferResource(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const void* data,
@@ -52,7 +68,6 @@ ComPtr<ID3D12Resource> CreateBufferResource(
     if (data) {
         switch (heapType) {
         case D3D12_HEAP_TYPE_DEFAULT: {
-            // 업로드 버퍼 생성
             heapDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
 
             ThrowIfFailed(device->CreateCommittedResource(
@@ -63,7 +78,6 @@ ComPtr<ID3D12Resource> CreateBufferResource(
                 nullptr,
                 IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
 
-            // 업로드 버퍼에 데이터 복사
             D3D12_RANGE range{ 0, 0 };
             UINT8* bufferDataBegin = nullptr;
             ThrowIfFailed(uploadBuffer->Map(0, &range, reinterpret_cast<void**>(&bufferDataBegin)));
@@ -79,7 +93,6 @@ ComPtr<ID3D12Resource> CreateBufferResource(
 
             cmdList->ResourceBarrier(1, &copyDestBarrier);
 
-            // 업로드 버퍼 -> 디폴트 버퍼 복사
             cmdList->CopyResource(buffer.Get(), uploadBuffer.Get());
 
             D3D12_RESOURCE_BARRIER resourceBarrier{};
@@ -109,18 +122,8 @@ ComPtr<ID3D12Resource> CreateBufferResource(
     return buffer;
 }
 
-DxException::DxException(HRESULT hr, const std::wstring& functionName, const std::wstring& filename, int lineNumber) :
-    ErrorCode(hr),
-    FunctionName(functionName),
-    Filename(filename),
-    LineNumber(lineNumber)
+ComPtr<ID3DBlob> D3DUtil::CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target)
 {
-}
-
-// 실행 시점에서 셰이더 프로그램을 좀 더 손쉽게 컴파일하기 위한 보조 함수
-ComPtr<ID3DBlob> d3dUtil::CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target)
-{
-    // 디버그 모드에서는 디버깅 관련 플래그들을 사용한다.
 	UINT compileFlags = 0;
 
 #if defined(DEBUG) || defined(_DEBUG)  
@@ -133,20 +136,10 @@ ComPtr<ID3DBlob> d3dUtil::CompileShader(const std::wstring& filename, const D3D_
 	ComPtr<ID3DBlob> errors;
 	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE, entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
 
-    // 오류 메시지를 디버그 창에 출력한다.
 	if (errors != nullptr)
 		OutputDebugStringA((char*)errors->GetBufferPointer());
 
 	ThrowIfFailed(hr);
 
 	return byteCode;
-}
-
-std::wstring DxException::ToString() const
-{
-    // Get the string description of the error code.
-    _com_error err(ErrorCode);
-    std::wstring msg = err.ErrorMessage();
-
-    return FunctionName + L" failed in " + Filename + L"; line " + std::to_wstring(LineNumber) + L"; error: " + msg;
 }

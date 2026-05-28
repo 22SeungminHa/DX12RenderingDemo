@@ -26,7 +26,7 @@ void AssetManager::InitializeDefaultTextures(
     auto loadDefaultTexture =
         [&](TextureType type, const std::wstring& fileName)
         {
-            const auto path = TexturePath(fileName);
+            const auto path = AssetPath::Texture(fileName);
 
             if (!std::filesystem::exists(path))
             {
@@ -64,7 +64,7 @@ std::shared_ptr<Texture> AssetManager::LoadTexture(
     std::filesystem::path normalizedPath =
         std::filesystem::weakly_canonical(filePath);
 
-    const std::string key = AssetKey(normalizedPath);
+    const std::string key = AssetPath::Key(normalizedPath);
 
     if (auto iter = textures_.find(key); iter != textures_.end())
         return iter->second;
@@ -116,7 +116,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     const std::filesystem::path& matPath)
 {
     const auto normalizedPath = std::filesystem::weakly_canonical(matPath);
-    const std::string materialKey = AssetKey(normalizedPath);
+    const std::string materialKey = AssetPath::Key(normalizedPath);
 
     if (auto iter = materials_.find(materialKey); iter != materials_.end())
         return iter->second;

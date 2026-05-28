@@ -30,11 +30,6 @@
 #include <cstdio>
 #include <iostream>
 
-//#include <cassert>
-//#include <shellapi.h>
-//#include <Mmsystem.h>
-//#pragma comment(lib, "winmm.lib")
-
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <D3Dcompiler.h>
@@ -57,15 +52,6 @@ using Microsoft::WRL::ComPtr;
 inline constexpr UINT kFrameBufferWidth = 800;
 inline constexpr UINT kFrameBufferHeight = 600;
 
-extern ComPtr<ID3D12Resource> CreateBufferResource(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    const void* data,
-    UINT64 byteSize,
-    D3D12_HEAP_TYPE heapType,
-    D3D12_RESOURCE_STATES finalState,
-    ComPtr<ID3D12Resource>& uploadBuffer);
-
 inline std::wstring AnsiToWString(const std::string& str)
 {
     WCHAR buffer[512];
@@ -73,25 +59,17 @@ inline std::wstring AnsiToWString(const std::string& str)
     return std::wstring(buffer);
 }
 
-inline std::filesystem::path TexturePath(const std::wstring& name)
-{
-    return std::filesystem::path(L"../Assets/Textures") / (name + L".dds");
-}
-
-inline std::filesystem::path MaterialPath(const std::wstring& name)
-{
-    return std::filesystem::path(L"../Assets/Materials") / (name + L".mat");
-}
-
-inline std::string AssetKey(const std::filesystem::path& path)
-{
-    return std::filesystem::weakly_canonical(path).generic_string();
-}
-
-class d3dUtil
+class AssetPath
 {
 public:
-    // 상수 버퍼의 크기는 반드시 최소 하드웨어 할당 크기(흔히 256바이트)의 배수여야 한다.
+    static std::filesystem::path Texture(const std::wstring& name) { return std::filesystem::path(L"../Assets/Textures") / (name + L".dds"); }
+    static std::filesystem::path Material(const std::wstring& name) { return std::filesystem::path(L"../Assets/Materials") / (name + L".mat"); }
+    static std::string Key(const std::filesystem::path& path) { return std::filesystem::weakly_canonical(path).generic_string(); }
+};
+
+class D3DUtil
+{
+public:
     static UINT CalcConstantBufferByteSize(UINT byteSize) { return (byteSize + 255) & ~255; }
 
     static ComPtr<ID3DBlob> CompileShader(
@@ -99,6 +77,15 @@ public:
         const D3D_SHADER_MACRO* defines,
         const std::string& entrypoint,
         const std::string& target);
+
+    static ComPtr<ID3D12Resource> CreateBufferResource(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        const void* data,
+        UINT64 byteSize,
+        D3D12_HEAP_TYPE heapType,
+        D3D12_RESOURCE_STATES finalState,
+        ComPtr<ID3D12Resource>& uploadBuffer);
 };
 
 class DxException

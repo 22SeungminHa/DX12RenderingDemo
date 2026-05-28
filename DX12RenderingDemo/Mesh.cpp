@@ -42,7 +42,7 @@ LoadedMeshLit::LoadedMeshLit(
 	stride_ = sizeof(LitVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	vertexBuffer_ = ::CreateBufferResource(
+	vertexBuffer_ = D3DUtil::CreateBufferResource(
 		device,
 		cmdList,
 		vertices.data(),
@@ -55,7 +55,7 @@ LoadedMeshLit::LoadedMeshLit(
 	vertexBufferView_.StrideInBytes = stride_;
 	vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 
-	indexBuffer_ = ::CreateBufferResource(
+	indexBuffer_ = D3DUtil::CreateBufferResource(
 		device,
 		cmdList,
 		indices.data(),
@@ -101,7 +101,7 @@ SkyboxMesh::SkyboxMesh(
     stride_ = sizeof(SkyboxVertex);
     primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-    vertexBuffer_ = ::CreateBufferResource(
+    vertexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         vertices.data(),
@@ -114,7 +114,7 @@ SkyboxMesh::SkyboxMesh(
     vertexBufferView_.StrideInBytes = stride_;
     vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 
-    indexBuffer_ = ::CreateBufferResource(
+    indexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         indices.data(),
@@ -189,7 +189,7 @@ CubeMesh::CubeMesh(
 
     primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-    vertexBuffer_ = ::CreateBufferResource(
+    vertexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         vertices.data(),
@@ -204,7 +204,7 @@ CubeMesh::CubeMesh(
     vertexBufferView_.StrideInBytes = stride_;
     vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
 
-    indexBuffer_ = ::CreateBufferResource(
+    indexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         indices.data(),

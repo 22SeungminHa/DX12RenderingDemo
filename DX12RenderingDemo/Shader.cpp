@@ -107,7 +107,7 @@ D3D12_SHADER_BYTECODE Shader::CompileShaderFromFile(
 	LPCSTR shaderProfile,
 	ComPtr<ID3DBlob>& shaderBlob)
 {
-	shaderBlob = d3dUtil::CompileShader(
+	shaderBlob = D3DUtil::CompileShader(
 		fileName,
 		nullptr,
 		shaderName,
