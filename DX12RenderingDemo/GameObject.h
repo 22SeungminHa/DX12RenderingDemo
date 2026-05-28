@@ -23,6 +23,9 @@ public:
     const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
     
     // Transform
+    Transform* GetTransform() { return &transform_; }
+    const Transform* GetTransform() const { return &transform_; }
+
     void SetPosition(const Vector3& position) { transform_.position = position; }
     void SetRotation(const Vector3& rotation) { transform_.rotation = rotation; }
     void SetScale(const Vector3& scale) { transform_.scale = scale; }

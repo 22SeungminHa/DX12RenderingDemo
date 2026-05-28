@@ -1,6 +1,5 @@
 #include "FBXLoader.h"
 #include "Mesh.h"
-#include "GameObject.h"
 #include "Material.h"
 #include "Texture.h"
 #include "Shader.h"
@@ -122,18 +121,19 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterialsFromMatFiles(
     return materials;
 }
 
-std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
+std::optional<FBXNodeData> FBXLoader::LoadLitModel(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager,
-    const std::string& filePath,
-    UINT& objectCBIndex) 
+    const std::filesystem::path& filePath)
 {
     Assimp::Importer importer;
 
+    const std::string modelPath = filePath.string();
+
     const aiScene* scene = importer.ReadFile(
-        filePath,
+        modelPath,
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
         aiProcess_FlipUVs |
@@ -143,7 +143,7 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
     if (!scene || !scene->mRootNode)
     {
         LOG("FBX Load Failed: " << importer.GetErrorString());
-        return nullptr;
+        return std::nullopt;
     }
 
     auto materials = LoadMaterialsFromMatFiles(
@@ -152,23 +152,24 @@ std::unique_ptr<GameObject> FBXLoader::LoadLitModel(
         rootSignature,
         assetManager,
         scene,
-        filePath
+        modelPath
     );
+
+    UINT unusedObjectCBIndex = 0;
 
     return ProcessNode(
         device,
         cmdList,
         assetManager,
-        filePath,
+        modelPath,
         scene,
         scene->mRootNode,
         materials,
-        objectCBIndex,
         0
     );
 }
 
-std::unique_ptr<GameObject> FBXLoader::ProcessNode(
+FBXNodeData FBXLoader::ProcessNode(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     AssetManager& assetManager,
@@ -176,21 +177,19 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
     const aiScene* scene,
     aiNode* node,
     const std::vector<std::shared_ptr<Material>>& materials,
-    UINT& objectCBIndex,
-    int depth) 
+    int depth)
 {
     std::string indent(depth * 2, ' ');
     LOG(indent << "Node: " << node->mName.C_Str());
     LOG(indent << "MeshCount: " << node->mNumMeshes);
 
-    auto object = std::make_unique<GameObject>();
-
-    object->SetObjectCBIndex(objectCBIndex++);
-    object->GetComponent<Transform>()->SetLocalMatrix(ToMatrix(node->mTransformation));
+    FBXNodeData nodeData{};
+    nodeData.name = node->mName.C_Str();
+    nodeData.localMatrix = ToMatrix(node->mTransformation);
 
     for (UINT i = 0; i < node->mNumMeshes; ++i)
     {
-        UINT meshIndex = node->mMeshes[i];
+        const UINT meshIndex = node->mMeshes[i];
         aiMesh* aiMesh = scene->mMeshes[meshIndex];
 
         LOG(indent << "  Mesh[" << i << "] Index: " << meshIndex);
@@ -204,7 +203,7 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
             aiMesh
         );
 
-        UINT materialIndex = aiMesh->mMaterialIndex;
+        const UINT materialIndex = aiMesh->mMaterialIndex;
 
         std::shared_ptr<Material> meshMaterial = nullptr;
 
@@ -215,33 +214,29 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
 
         LOG(indent << "  MaterialIndex: " << materialIndex);
 
-        auto meshObject = std::make_unique<GameObject>();
-        meshObject->SetObjectCBIndex(objectCBIndex++);
-
-        auto* meshRenderer = meshObject->AddComponent<MeshRenderer>();
-        meshRenderer->SetMesh(mesh);
-        meshRenderer->SetMaterial(meshMaterial);
-
-        object->AddChild(std::move(meshObject));
+        nodeData.meshes.push_back(
+            FBXMeshData{
+                mesh,
+                meshMaterial
+            }
+        );
     }
 
     for (UINT i = 0; i < node->mNumChildren; ++i)
     {
-        auto child = ProcessNode(
-            device,
-            cmdList,
-            assetManager,
-            modelPath,
-            scene,
-            node->mChildren[i],
-            materials,
-            objectCBIndex,
-            depth + 1
+        nodeData.children.push_back(
+            ProcessNode(
+                device,
+                cmdList,
+                assetManager,
+                modelPath,
+                scene,
+                node->mChildren[i],
+                materials,
+                depth + 1
+            )
         );
-
-        if (child)
-            object->AddChild(std::move(child));
     }
 
-    return object;
+    return nodeData;
 }

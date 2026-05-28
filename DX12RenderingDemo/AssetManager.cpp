@@ -295,8 +295,9 @@ std::shared_ptr<Mesh> AssetManager::LoadSphereMesh(
         stackCount
     );
 
-    mesh->SetKey(key);
-    meshes_[key] = mesh;
+    const std::string sphereKey = key + "/" + std::to_string(sliceCount) + "x" + std::to_string(stackCount);
+    mesh->SetKey(sphereKey);
+    meshes_[sphereKey] = mesh;
 
     return mesh;
 }

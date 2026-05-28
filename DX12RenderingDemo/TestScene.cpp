@@ -13,10 +13,6 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
-    objects_.clear();
-
-    UINT objectCBIndex = 0;
-
     //auto object = FBXLoader::LoadLitModel(
     //    device,
     //    cmdList,
@@ -54,6 +50,13 @@ void TestScene::OnLoad(
         glassMaterial,
         Vector3(15.0f, 3.0f, 0.0f),
         Vector3(5.0f, 5.0f, 5.0f)
+    );
+
+    CreateFBXObject(
+        device, cmdList, rootSignature, assetManager,
+        AssetPath::FBX(L"MicroSub"),
+        Vector3(0.0f, 0.0f, 0.0f),
+        Vector3(1.0f, 1.0f, 1.0f)
     );
 
     SetSkybox();

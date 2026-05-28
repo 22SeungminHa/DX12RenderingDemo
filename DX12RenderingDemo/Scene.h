@@ -2,6 +2,7 @@
 #include "EngineTypes.h"
 #include "Mesh.h"
 #include "Material.h"
+#include "FBXLoader.h"
 
 class Renderer;
 class InputSystem;
@@ -40,6 +41,15 @@ public:
 		const Vector3& position = Vector3::Zero,
 		const Vector3& scale = Vector3::One
 	);
+	GameObject* CreateFBXObject(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		ID3D12RootSignature* rootSignature,
+		AssetManager& assetManager,
+		const std::filesystem::path& filePath,
+		const Vector3& position,
+		const Vector3& scale);
+	void BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData);
 
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
 	void SetSkybox(const std::wstring& name = L"Skybox") { skybox_.SetCubemap(name); }

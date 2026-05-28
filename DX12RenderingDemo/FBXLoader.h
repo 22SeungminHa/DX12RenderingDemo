@@ -8,11 +8,25 @@ struct aiMesh;
 struct aiMaterial;
 
 class Mesh;
-class GameObject;
 class Material;
 class Shader;
 class Texture;
 class AssetManager;
+
+struct FBXMeshData
+{
+    std::shared_ptr<Mesh> mesh;
+    std::shared_ptr<Material> material;
+};
+
+struct FBXNodeData
+{
+    std::string name;
+    Matrix localMatrix = Matrix::Identity;
+
+    std::vector<FBXMeshData> meshes;
+    std::vector<FBXNodeData> children;
+};
 
 class FBXLoader
 {
@@ -27,15 +41,14 @@ public:
         UINT meshIndex,
         aiMesh* mesh);
 
-    static std::unique_ptr<GameObject> LoadLitModel(
+    static std::optional<FBXNodeData> LoadLitModel(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager,
-        const std::string& filePath,
-        UINT& objectCBIndex);
+        const std::filesystem::path& filePath);
 
-    static std::unique_ptr<GameObject> ProcessNode(
+    static FBXNodeData ProcessNode(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         AssetManager& assetManager,
@@ -43,9 +56,7 @@ public:
         const aiScene* scene,
         aiNode* node,
         const std::vector<std::shared_ptr<Material>>& materials,
-        UINT& objectCBIndex,
-        int depth = 0
-    );
+        int depth = 0);
 
     static std::vector<std::shared_ptr<Material>> LoadMaterialsFromMatFiles(
         ID3D12Device* device,

@@ -64,6 +64,8 @@ class AssetPath
 public:
     static std::filesystem::path Texture(const std::wstring& name) { return std::filesystem::path(L"../Assets/Textures") / (name + L".dds"); }
     static std::filesystem::path Material(const std::wstring& name) { return std::filesystem::path(L"../Assets/Materials") / (name + L".mat"); }
+    static std::filesystem::path FBX(const std::wstring& name) { return std::filesystem::path(L"../Assets/Meshes") / (name + L".fbx"); }
+
     static std::string Key(const std::filesystem::path& path) { return std::filesystem::weakly_canonical(path).generic_string(); }
 };
 

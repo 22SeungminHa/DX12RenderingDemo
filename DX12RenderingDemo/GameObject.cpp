@@ -26,7 +26,7 @@ void GameObject::AddChild(std::unique_ptr<GameObject> child)
 {
     if (!child) return;
 
-    child->GetComponent<Transform>()->SetParent(&transform_);
+    child->GetTransform()->SetParent(&transform_);
     children_.push_back(std::move(child));
 }
 
@@ -39,7 +39,7 @@ void GameObject::RemoveChild(GameObject* child)
 
     if (iter == children_.end()) return;
 
-    (*iter)->GetComponent<Transform>()->SetParent(nullptr);
+    (*iter)->GetTransform()->SetParent(nullptr);
     children_.erase(iter);
 }
 

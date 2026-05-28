@@ -149,3 +149,58 @@ GameObject* Scene::CreateObject(
 
 	return object;
 }
+
+GameObject* Scene::CreateFBXObject(
+	ID3D12Device* device,
+	ID3D12GraphicsCommandList* cmdList,
+	ID3D12RootSignature* rootSignature,
+	AssetManager& assetManager,
+	const std::filesystem::path& filePath,
+	const Vector3& position,
+	const Vector3& scale)
+{
+	auto modelData = FBXLoader::LoadLitModel(
+		device,
+		cmdList,
+		rootSignature,
+		assetManager,
+		filePath
+	);
+
+	if (!modelData)
+		return nullptr;
+
+	GameObject* root = CreateGameObject();
+	root->SetPosition(position);
+	root->SetScale(scale);
+
+	BuildFBXNode(root, *modelData);
+
+	return root;
+}
+
+void Scene::BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData)
+{
+	for (const auto& meshData : nodeData.meshes)
+	{
+		auto child = std::make_unique<GameObject>();
+		child->SetObjectCBIndex(nextObjectCBIndex_++);
+
+		child->SetMesh(meshData.mesh);
+		child->SetMaterial(meshData.material);
+
+		parent->AddChild(std::move(child));
+	}
+
+	for (const auto& childNode : nodeData.children)
+	{
+		auto child = std::make_unique<GameObject>();
+		child->SetObjectCBIndex(nextObjectCBIndex_++);
+		child->GetTransform()->SetLocalMatrix(childNode.localMatrix);
+
+		GameObject* childPtr = child.get();
+		parent->AddChild(std::move(child));
+
+		BuildFBXNode(childPtr, childNode);
+	}
+}
