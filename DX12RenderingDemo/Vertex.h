@@ -7,7 +7,7 @@ protected:
 	Vector3 position_;
 public:
 	Vertex() { position_ = Vector3::Zero; }
-	Vertex(const Vector3& xmf3Position) { position_ = xmf3Position; }
+	Vertex(const Vector3& position) { position_ = position; }
 	~Vertex() {}
 };
 

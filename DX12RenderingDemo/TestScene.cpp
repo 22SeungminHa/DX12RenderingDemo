@@ -30,6 +30,7 @@ void TestScene::OnLoad(
     //    objects_.push_back(std::move(object));
 
     auto cubeMesh = assetManager.LoadCubeMesh(device, cmdList);
+    auto sphereMesh = assetManager.LoadSphereMesh(device, cmdList);
 
     auto glassMaterial = assetManager.LoadMaterialFromFile(
         device,
@@ -38,7 +39,7 @@ void TestScene::OnLoad(
         AssetPath::Material(L"Default_Glass")
     );
 
-    if (!cubeMesh || !glassMaterial)
+    if (!cubeMesh || !sphereMesh || !glassMaterial)
         return;
 
     CreateObject(
@@ -48,7 +49,14 @@ void TestScene::OnLoad(
         Vector3(5.0f, 5.0f, 5.0f)
     );
 
-    SetSkybox(L"Skybox");
+    CreateObject(
+        sphereMesh,
+        glassMaterial,
+        Vector3(15.0f, 3.0f, 0.0f),
+        Vector3(5.0f, 5.0f, 5.0f)
+    );
+
+    SetSkybox();
 }
 
 CameraDesc TestScene::SetupCameraDesc() const

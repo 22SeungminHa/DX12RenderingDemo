@@ -57,3 +57,15 @@ public:
 	CubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	virtual ~CubeMesh() {}
 };
+
+class SphereMesh : public Mesh
+{
+public:
+	SphereMesh(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		UINT sliceCount = 32,
+		UINT stackCount = 16);
+
+	virtual ~SphereMesh() {}
+};

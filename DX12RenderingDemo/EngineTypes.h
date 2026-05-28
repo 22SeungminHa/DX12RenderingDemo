@@ -7,8 +7,6 @@ enum class TextureType
 {
     BaseColor,
     Normal,
-    //MetallicRoughness,
-    //Emissive,
 
     End
 };

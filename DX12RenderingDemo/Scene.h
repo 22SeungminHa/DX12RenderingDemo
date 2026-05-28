@@ -1,5 +1,7 @@
 #pragma once
 #include "EngineTypes.h"
+#include "Mesh.h"
+#include "Material.h"
 
 class Renderer;
 class InputSystem;
@@ -40,7 +42,7 @@ public:
 	);
 
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
-	void SetSkybox(const std::wstring& name) { skybox_.SetCubemap(name); }
+	void SetSkybox(const std::wstring& name = L"Skybox") { skybox_.SetCubemap(name); }
 	const SkyboxDesc& GetSkybox() const { return skybox_; }
 
 protected:

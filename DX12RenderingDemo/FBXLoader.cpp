@@ -186,7 +186,7 @@ std::unique_ptr<GameObject> FBXLoader::ProcessNode(
     auto object = std::make_unique<GameObject>();
 
     object->SetObjectCBIndex(objectCBIndex++);
-    object->GetTransform()->SetLocalMatrix(ToMatrix(node->mTransformation));
+    object->GetComponent<Transform>()->SetLocalMatrix(ToMatrix(node->mTransformation));
 
     for (UINT i = 0; i < node->mNumMeshes; ++i)
     {

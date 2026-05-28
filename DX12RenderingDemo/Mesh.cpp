@@ -219,3 +219,111 @@ CubeMesh::CubeMesh(
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
     indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
 }
+
+SphereMesh::SphereMesh(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    UINT sliceCount,
+    UINT stackCount)
+    : Mesh(device, cmdList)
+{
+    sliceCount = std::max<UINT>(sliceCount, 3);
+    stackCount = std::max<UINT>(stackCount, 2);
+
+    std::vector<LitVertex> vertices;
+    std::vector<UINT> indices;
+
+    vertices.reserve((stackCount + 1) * (sliceCount + 1));
+    indices.reserve(stackCount * sliceCount * 6);
+
+    for (UINT stack = 0; stack <= stackCount; ++stack)
+    {
+        const float phi = XM_PI * static_cast<float>(stack) / static_cast<float>(stackCount);
+
+        for (UINT slice = 0; slice <= sliceCount; ++slice)
+        {
+            const float theta = XM_2PI * static_cast<float>(slice) / static_cast<float>(sliceCount);
+
+            Vector3 position(
+                sinf(phi) * cosf(theta),
+                cosf(phi),
+                sinf(phi) * sinf(theta)
+            );
+
+            Vector3 normal = position;
+            normal.Normalize();
+
+            Vector3 tangent(
+                -sinf(theta),
+                0.0f,
+                cosf(theta)
+            );
+            tangent.Normalize();
+
+            Vector2 texCoord(
+                static_cast<float>(slice) / static_cast<float>(sliceCount),
+                static_cast<float>(stack) / static_cast<float>(stackCount)
+            );
+
+            vertices.emplace_back(
+                position,
+                Vector4::One,
+                normal,
+                tangent,
+                texCoord
+            );
+        }
+    }
+
+    const UINT ringVertexCount = sliceCount + 1;
+
+    for (UINT stack = 0; stack < stackCount; ++stack)
+    {
+        for (UINT slice = 0; slice < sliceCount; ++slice)
+        {
+            const UINT i0 = stack * ringVertexCount + slice;
+            const UINT i1 = i0 + 1;
+            const UINT i2 = i0 + ringVertexCount;
+            const UINT i3 = i2 + 1;
+
+            indices.push_back(i0);
+            indices.push_back(i1);
+            indices.push_back(i2);
+
+            indices.push_back(i1);
+            indices.push_back(i3);
+            indices.push_back(i2);
+        }
+    }
+
+    vertexCnt_ = static_cast<UINT>(vertices.size());
+    indexCnt_ = static_cast<UINT>(indices.size());
+    stride_ = sizeof(LitVertex);
+    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+    vertexBuffer_ = D3DUtil::CreateBufferResource(
+        device,
+        cmdList,
+        vertices.data(),
+        stride_ * vertexCnt_,
+        D3D12_HEAP_TYPE_DEFAULT,
+        D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+        vertexUploadBuffer_);
+
+    vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
+    vertexBufferView_.StrideInBytes = stride_;
+    vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
+
+    indexBuffer_ = D3DUtil::CreateBufferResource(
+        device,
+        cmdList,
+        indices.data(),
+        sizeof(UINT) * indexCnt_,
+        D3D12_HEAP_TYPE_DEFAULT,
+        D3D12_RESOURCE_STATE_INDEX_BUFFER,
+        indexUploadBuffer_);
+
+    indexBufferView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress();
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+    indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
+}
