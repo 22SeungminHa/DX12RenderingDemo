@@ -61,10 +61,8 @@ std::shared_ptr<Texture> AssetManager::LoadTexture(
     ID3D12GraphicsCommandList* cmdList,
     const std::filesystem::path& filePath)
 {
-    std::filesystem::path normalizedPath =
-        std::filesystem::weakly_canonical(filePath);
-
-    const std::string key = AssetPath::Key(normalizedPath);
+    const std::string key = AssetPath::Key(filePath);
+    std::filesystem::path normalizedPath = std::filesystem::weakly_canonical(filePath);
 
     if (auto iter = textures_.find(key); iter != textures_.end())
         return iter->second;
@@ -115,8 +113,8 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     ID3D12RootSignature* rootSignature,
     const std::filesystem::path& matPath)
 {
+    const std::string materialKey = AssetPath::Key(matPath);
     const auto normalizedPath = std::filesystem::weakly_canonical(matPath);
-    const std::string materialKey = AssetPath::Key(normalizedPath);
 
     if (auto iter = materials_.find(materialKey); iter != materials_.end())
         return iter->second;

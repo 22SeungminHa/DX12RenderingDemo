@@ -64,9 +64,7 @@ std::shared_ptr<Mesh> FBXLoader::CreateLitMesh(
         }
     }
 
-    const std::string meshKey =
-        std::filesystem::weakly_canonical(modelPath).string()
-        + "#" + std::to_string(meshIndex);
+    const std::string meshKey = AssetPath::Key(modelPath) + "#" + std::to_string(meshIndex);
 
     return assetManager.LoadLitMesh(
         device,

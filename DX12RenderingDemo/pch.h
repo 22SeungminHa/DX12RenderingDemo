@@ -66,7 +66,7 @@ public:
     static std::filesystem::path Material(const std::wstring& name) { return std::filesystem::path(L"../Assets/Materials") / (name + L".mat"); }
     static std::filesystem::path FBX(const std::wstring& name) { return std::filesystem::path(L"../Assets/Meshes") / (name + L".fbx"); }
 
-    static std::string Key(const std::filesystem::path& path) { return std::filesystem::weakly_canonical(path).generic_string(); }
+    static std::string Key(const std::filesystem::path& path) { return path.lexically_normal().generic_string(); }
 };
 
 class D3DUtil
