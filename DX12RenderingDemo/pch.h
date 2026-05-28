@@ -6,42 +6,37 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
-
 #pragma comment(lib, "dxguid.lib")
 
 #include "targetver.h"
-#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+
+#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <windowsx.h>
 #include <wrl.h>
 
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
 #include <tchar.h>
+
 #include <string>
-#include <algorithm>
 #include <vector>
 #include <array>
 #include <unordered_map>
+#include <filesystem>
+#include <memory>
+#include <algorithm>
 #include <cstdint>
-#include <fstream>
-#include <sstream>
-#include <cassert>
+
 #include <cstdio>
 #include <iostream>
-#include <cmath>
-#include <filesystem>
 
-#include <shellapi.h>
-
-#include <Mmsystem.h>
-#pragma comment(lib, "winmm.lib")
-
+//#include <cassert>
+//#include <shellapi.h>
+//#include <Mmsystem.h>
+//#pragma comment(lib, "winmm.lib")
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
-
 #include <D3Dcompiler.h>
 
 #include <DirectXMath.h>
@@ -49,16 +44,10 @@
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
 
-#include <DXGIDebug.h>
-
 #include "d3dx12.h"
 
 #include "SimpleMath.h"
 #include "SimpleMath.inl"
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;

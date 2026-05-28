@@ -25,7 +25,7 @@ private:
     bool hardwareHasPerformanceCounter_ = false;
     bool stopped_ = false;
 
-    float timeScale_ = 0.0f;
+    double timeScale_ = 0.0f;
     float timeElapsed_ = 0.0f;
 
     __int64 baseTime_ = 0;

@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "Material.h"
 #include "Mesh.h"
+#include <sstream>
+#include <fstream>
 
 namespace
 {

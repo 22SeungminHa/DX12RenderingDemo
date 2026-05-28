@@ -1,4 +1,5 @@
 ﻿#include "D3DCore.h"
+#include <DXGIDebug.h>
 
 void D3DCore::Initialize(HWND hwnd, int width, int height)
 {

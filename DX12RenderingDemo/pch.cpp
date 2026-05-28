@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <comdef.h>
+#include <fstream>
 
 ComPtr<ID3D12Resource> CreateBufferResource(
     ID3D12Device* device,

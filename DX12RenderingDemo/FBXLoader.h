@@ -1,5 +1,11 @@
 #pragma once
 #include "pch.h"
+#include <assimp/matrix4x4.h>
+
+struct aiScene;
+struct aiNode;
+struct aiMesh;
+struct aiMaterial;
 
 class Mesh;
 class GameObject;

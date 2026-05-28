@@ -5,6 +5,9 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "AssetManager.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 Matrix FBXLoader::ToMatrix(const aiMatrix4x4& m)
 {

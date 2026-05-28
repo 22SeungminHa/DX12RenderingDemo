@@ -1,17 +1,19 @@
 #include "Timer.h"
+#include <Mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 Timer::Timer()
 {
     if (::QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&performanceFrequency_)))
     {
         hardwareHasPerformanceCounter_ = true;
-        timeScale_ = 1.0f / static_cast<float>(performanceFrequency_);
+        timeScale_ = 1.0 / static_cast<double>(performanceFrequency_);
     }
     else
     {
         hardwareHasPerformanceCounter_ = false;
         performanceFrequency_ = 1000;
-        timeScale_ = 0.001f;
+        timeScale_ = 0.001;
     }
 
     Reset();
