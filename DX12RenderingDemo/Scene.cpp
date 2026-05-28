@@ -19,6 +19,9 @@ void Scene::Load(
 	ID3D12RootSignature* rootSignature,
 	AssetManager& assetManager)
 {
+	objects_.clear();
+	nextObjectCBIndex_ = 0;
+
 	CreateCamera();
 
 	OnLoad(device, cmdList, rootSignature, assetManager);
@@ -117,4 +120,32 @@ void Scene::ResizeCamera(UINT width, UINT height)
 	if (!activeCamera_) return;
 
 	activeCamera_->Resize(width, height);
+}
+
+GameObject* Scene::CreateGameObject()
+{
+	auto object = std::make_unique<GameObject>();
+
+	GameObject* ptr = object.get();
+	ptr->SetObjectCBIndex(nextObjectCBIndex_++);
+
+	objects_.push_back(std::move(object));
+
+	return ptr;
+}
+
+GameObject* Scene::CreateObject(
+	const std::shared_ptr<Mesh>& mesh,
+	const std::shared_ptr<Material>& material,
+	const Vector3& position,
+	const Vector3& scale)
+{
+	GameObject* object = CreateGameObject();
+
+	object->SetPosition(position);
+	object->SetScale(scale);
+	object->SetMesh(mesh);
+	object->SetMaterial(material);
+
+	return object;
 }

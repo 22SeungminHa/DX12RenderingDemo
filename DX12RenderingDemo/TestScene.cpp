@@ -25,19 +25,11 @@ void TestScene::OnLoad(
     //    "../Assets/Meshes/MicroSub.fbx",
     //    objectCBIndex
     //);
-
+    //
     //if (object)
     //    objects_.push_back(std::move(object));
 
-    auto glassCube = std::make_unique<GameObject>();
-    glassCube->SetObjectCBIndex(++objectCBIndex);
-
-    //glassCube->GetTransform()->SetPosition({ 0.0f, 3.0f, 0.0f });
-    //glassCube->GetTransform()->SetScale({ 5.0f, 5.0f, 5.0f });
-
-    auto cubeRenderer = glassCube->AddComponent<MeshRenderer>();
-
-    cubeRenderer->SetMesh(assetManager.LoadCubeMesh(device, cmdList));
+    auto cubeMesh = assetManager.LoadCubeMesh(device, cmdList);
 
     auto glassMaterial = assetManager.LoadMaterialFromFile(
         device,
@@ -46,18 +38,17 @@ void TestScene::OnLoad(
         AssetPath::Material(L"Default_Glass")
     );
 
-    if (!glassMaterial)
+    if (!cubeMesh || !glassMaterial)
         return;
 
-    cubeRenderer->SetMaterial(glassMaterial);
+    CreateObject(
+        cubeMesh,
+        glassMaterial,
+        Vector3(0.0f, 3.0f, 0.0f),
+        Vector3(5.0f, 5.0f, 5.0f)
+    );
 
-    objects_.push_back(std::move(glassCube));
-
-    SkyboxDesc skybox{};
-    skybox.enabled = true;
-    skybox.cubemapPath = AssetPath::Texture(L"Skybox");
-
-    SetSkybox(skybox);
+    SetSkybox(L"Skybox");
 }
 
 CameraDesc TestScene::SetupCameraDesc() const

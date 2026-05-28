@@ -12,22 +12,44 @@ public:
     GameObject();
     virtual ~GameObject();
 
-public:
-    void AddChild(std::unique_ptr<GameObject> child);
-    void RemoveChild(GameObject* child);
-
-    void Rotate(const Vector3& axis, float angle);
-
+    // Lifecycle
     virtual void Animate(float deltaTime);
     virtual void OnPrepareRender();
 
-    void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
+    // Hierarchy
+    void AddChild(std::unique_ptr<GameObject> child);
+    void RemoveChild(GameObject* child);
 
-    UINT GetObjectCBIndex() const { return objectCBIndex_; }
-    Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
-    Transform* GetTransform() { return &transform_; }
     const std::vector<std::unique_ptr<GameObject>>& GetChildren() const { return children_; }
-    const Transform* GetTransform() const { return &transform_; }
+    
+    // Transform
+    void SetPosition(const Vector3& position) { transform_.position = position; }
+    void SetRotation(const Vector3& rotation) { transform_.rotation = rotation; }
+    void SetScale(const Vector3& scale) { transform_.scale = scale; }
+
+    void SetPosition(float x, float y, float z) { SetPosition(Vector3(x, y, z)); }
+    void SetScale(float x, float y, float z) { SetScale(Vector3(x, y, z)); }
+
+    void SetRotationDegrees(float pitch, float yaw, float roll)
+    {
+        SetRotation(Vector3(XMConvertToRadians(pitch), XMConvertToRadians(yaw), XMConvertToRadians(roll)));
+    }
+
+    void Translate(const Vector3& offset) { transform_.position += offset; }
+    void Rotate(const Vector3& axis, float angle);
+
+    const Vector3& GetPosition() const { return transform_.position; }
+    const Vector3& GetRotation() const { return transform_.rotation; }
+    const Vector3& GetScale() const { return transform_.scale; }
+
+    Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
+
+    // Rendering
+    void SetObjectCBIndex(UINT index) { objectCBIndex_ = index; }
+    UINT GetObjectCBIndex() const { return objectCBIndex_; }
+
+    void SetMesh(const std::shared_ptr<Mesh>& mesh);
+    void SetMaterial(const std::shared_ptr<Material>& material);
 
 protected:
     Transform transform_;
@@ -37,6 +59,7 @@ protected:
     UINT objectCBIndex_ = 0;
 
 public:
+    // Components
     template<typename T, typename... Args>
     T* AddComponent(Args&&... args)
     {
@@ -67,5 +90,4 @@ public:
 
         return nullptr;
     }
-
 };

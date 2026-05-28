@@ -26,7 +26,7 @@ void GameObject::AddChild(std::unique_ptr<GameObject> child)
 {
     if (!child) return;
 
-    child->GetTransform()->SetParent(&transform_);
+    child->GetComponent<Transform>()->SetParent(&transform_);
     children_.push_back(std::move(child));
 }
 
@@ -39,11 +39,31 @@ void GameObject::RemoveChild(GameObject* child)
 
     if (iter == children_.end()) return;
 
-    (*iter)->GetTransform()->SetParent(nullptr);
+    (*iter)->GetComponent<Transform>()->SetParent(nullptr);
     children_.erase(iter);
 }
 
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
     transform_.rotation += axis * XMConvertToRadians(angle);
+}
+
+void GameObject::SetMesh(const std::shared_ptr<Mesh>& mesh)
+{
+    auto* renderer = GetComponent<MeshRenderer>();
+
+    if (!renderer)
+        renderer = AddComponent<MeshRenderer>();
+
+    renderer->SetMesh(mesh);
+}
+
+void GameObject::SetMaterial(const std::shared_ptr<Material>& material)
+{
+    auto* renderer = GetComponent<MeshRenderer>();
+
+    if (!renderer)
+        renderer = AddComponent<MeshRenderer>();
+
+    renderer->SetMaterial(material);
 }

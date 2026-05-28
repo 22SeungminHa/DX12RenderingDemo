@@ -7,7 +7,8 @@ class AssetManager;
 class GameObject;
 class Camera;
 
-class Scene {
+class Scene
+{
 public:
 	Scene(UINT width, UINT height);
 	virtual ~Scene();
@@ -26,12 +27,20 @@ public:
 	void Resize(UINT width, UINT height);
 	void ReleaseUploadResources();
 
-	//씬에서 마우스와 키보드 메시지를 처리한다.
 	virtual void ProcessInput(const InputSystem& input, float deltaTime);
 	virtual void Animate(float deltaTime);
 	virtual void AnimateObject(GameObject* object, float deltaTime);
 
+	GameObject* CreateGameObject();
+	GameObject* CreateObject(
+		const std::shared_ptr<Mesh>& mesh,
+		const std::shared_ptr<Material>& material,
+		const Vector3& position = Vector3::Zero,
+		const Vector3& scale = Vector3::One
+	);
+
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
+	void SetSkybox(const std::wstring& name) { skybox_.SetCubemap(name); }
 	const SkyboxDesc& GetSkybox() const { return skybox_; }
 
 protected:
@@ -51,6 +60,7 @@ protected:
 
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;
+	UINT nextObjectCBIndex_ = 0;
 
 	std::vector<std::unique_ptr<Camera>> cameras_;
 	Camera* activeCamera_ = nullptr;
