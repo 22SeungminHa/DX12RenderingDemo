@@ -9,11 +9,8 @@
 
 #pragma comment(lib, "dxguid.lib")
 
-#define FRAME_BUFFER_WIDTH 800
-#define FRAME_BUFFER_HEIGHT 600
-
-// 정점 색상 랜덤값.
-#define RANDOM_COLOR Vector4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
+inline constexpr UINT kFrameBufferWidth = 800;
+inline constexpr UINT kFrameBufferHeight = 600;
 
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
@@ -82,12 +79,17 @@ inline std::wstring AnsiToWString(const std::string& str)
 
 inline std::filesystem::path TexturePath(const std::wstring& name)
 {
-    return std::filesystem::path(L"../Assets/Textures") / name;
+    return std::filesystem::path(L"../Assets/Textures") / (name + L".dds");
 }
 
 inline std::filesystem::path MaterialPath(const std::wstring& name)
 {
-    return std::filesystem::path(L"../Assets/Materials") / name;
+    return std::filesystem::path(L"../Assets/Materials") / (name + L".mat");
+}
+
+inline std::string AssetKey(const std::filesystem::path& path)
+{
+    return std::filesystem::weakly_canonical(path).generic_string();
 }
 
 class d3dUtil
@@ -125,10 +127,6 @@ public:
     std::wstring wfn = AnsiToWString(__FILE__);                           \
     if (FAILED(hr__)) { throw DxException(hr__, L## #x, wfn, __LINE__); } \
 }
-#endif
-
-#ifndef ReleaseCom
-#define ReleaseCom(x) { if(x){ x->Release(); x = 0; } }
 #endif
 
 #ifndef ThrowIfFailedWithBlob

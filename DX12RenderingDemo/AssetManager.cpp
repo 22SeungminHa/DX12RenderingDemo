@@ -32,11 +32,11 @@ void AssetManager::InitializeDefaultTextures(
                 return;
             }
 
-            defaultTextures_[static_cast<size_t>(type)] = LoadTexture(device, cmdList, path.wstring());
+            defaultTextures_[static_cast<size_t>(type)] = LoadTexture(device, cmdList, path);
         };
 
-    loadDefaultTexture(TextureType::BaseColor, L"Default_BaseColor.dds");
-    loadDefaultTexture(TextureType::Normal, L"Default_Normal.dds");
+    loadDefaultTexture(TextureType::BaseColor, L"Default_BaseColor");
+    loadDefaultTexture(TextureType::Normal, L"Default_Normal");
     //loadDefaultTexture(TextureType::MetallicRoughness, L"Default_MetallicRoughness.dds");
 }
 
@@ -57,19 +57,19 @@ std::shared_ptr<Shader> AssetManager::LoadShaderByName(
 std::shared_ptr<Texture> AssetManager::LoadTexture(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
-    const std::wstring& filePath)
+    const std::filesystem::path& filePath)
 {
     std::filesystem::path normalizedPath =
         std::filesystem::weakly_canonical(filePath);
 
-    std::wstring key = normalizedPath.wstring();
+    const std::string key = AssetKey(normalizedPath);
 
     if (auto iter = textures_.find(key); iter != textures_.end())
         return iter->second;
 
     auto texture = std::make_shared<Texture>();
-    texture->LoadDDS(device, cmdList, key);
-    texture->SetKey(normalizedPath.string());
+    texture->LoadDDS(device, cmdList, normalizedPath);
+    texture->SetKey(key);
 
     textures_[key] = texture;
     return texture;
@@ -114,7 +114,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     const std::filesystem::path& matPath)
 {
     const auto normalizedPath = std::filesystem::weakly_canonical(matPath);
-    const std::wstring materialKey = normalizedPath.wstring();
+    const std::string materialKey = AssetKey(normalizedPath);
 
     if (auto iter = materials_.find(materialKey); iter != materials_.end())
         return iter->second;
@@ -162,7 +162,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
                 return;
             }
 
-            textures[static_cast<size_t>(type)] = LoadTexture(device, cmdList, texturePath.wstring());
+            textures[static_cast<size_t>(type)] = LoadTexture(device, cmdList, texturePath);
         };
 
     loadTextureSlot(TextureType::BaseColor, values["BaseColorMap"]);
@@ -180,7 +180,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     //    textures[static_cast<size_t>(TextureType::MetallicRoughness)] = GetDefaultTexture(TextureType::MetallicRoughness);
 
     auto material = std::make_shared<Material>();
-    material->SetKey(normalizedPath.string());
+    material->SetKey(materialKey);
     material->SetShader(shader);
 
     if (renderModeName == "Transparent")

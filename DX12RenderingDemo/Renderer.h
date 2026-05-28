@@ -61,7 +61,7 @@ private:
     std::shared_ptr<Texture> skyboxTexture_;
     D3D12_GPU_DESCRIPTOR_HANDLE skyboxGpuHandle_{};
     UINT skyboxDescriptorIndex_ = UINT_MAX;
-    std::wstring loadedSkyboxPath_;
+    std::filesystem::path loadedSkyboxPath_;
 
 public:
     Renderer();

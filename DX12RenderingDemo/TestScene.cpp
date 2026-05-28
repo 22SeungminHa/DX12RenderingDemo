@@ -43,7 +43,7 @@ void TestScene::OnLoad(
         device,
         cmdList,
         rootSignature,
-        MaterialPath(L"Default_Glass.mat")
+        MaterialPath(L"Default_Glass")
     );
 
     if (!glassMaterial)
@@ -55,7 +55,7 @@ void TestScene::OnLoad(
 
     SkyboxDesc skybox{};
     skybox.enabled = true;
-    skybox.cubemapPath = TexturePath(L"Skybox.dds").wstring();
+    skybox.cubemapPath = TexturePath(L"Skybox");
 
     SetSkybox(skybox);
 }

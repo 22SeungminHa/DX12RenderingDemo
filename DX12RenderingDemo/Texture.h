@@ -10,7 +10,7 @@ public:
     void LoadDDS(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
-        const std::wstring& filePath
+        const std::filesystem::path& filePath
     );
 
     ID3D12Resource* GetResource() const { return texture_.Get(); }

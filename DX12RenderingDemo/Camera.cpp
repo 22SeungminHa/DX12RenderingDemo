@@ -2,8 +2,8 @@
 
 Camera::Camera()
 {
-	viewport_ = { 0.0f, 0.0f, float(FRAME_BUFFER_WIDTH), float(FRAME_BUFFER_HEIGHT), 0.0f, 1.0f };
-	scissorRect_ = { 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT };
+	viewport_ = { 0.0f, 0.0f, float(kFrameBufferWidth), float(kFrameBufferHeight), 0.0f, 1.0f };
+	scissorRect_ = { 0, 0, kFrameBufferWidth, kFrameBufferHeight };
 }
 
 void Camera::SetDesc(const CameraDesc& desc)

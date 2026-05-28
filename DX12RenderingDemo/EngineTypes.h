@@ -37,7 +37,7 @@ enum class SCENE_TYPE
 struct SkyboxDesc
 {
     bool enabled = false;
-    std::wstring cubemapPath;
+    std::filesystem::path cubemapPath;
 };
 
 struct CameraDesc

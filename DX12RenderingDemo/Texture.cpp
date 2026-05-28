@@ -4,7 +4,7 @@
 void Texture::LoadDDS(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
-    const std::wstring& filePath
+    const std::filesystem::path& filePath
 )
 {
     if (!device || !cmdList)

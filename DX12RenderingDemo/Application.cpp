@@ -78,7 +78,7 @@ void Application::ApplyStartupDisplayMode()
 		::SetWindowLongPtr(hwnd_, GWL_STYLE, windowedStyle_);
 		::SetWindowLongPtr(hwnd_, GWL_EXSTYLE, windowedExStyle_);
 
-		RECT windowRect{ 0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT };
+		RECT windowRect{ 0, 0, kFrameBufferWidth, kFrameBufferHeight };
 		::AdjustWindowRectEx(&windowRect, windowedStyle_, FALSE, windowedExStyle_);
 
 		const int windowWidth = windowRect.right - windowRect.left;
