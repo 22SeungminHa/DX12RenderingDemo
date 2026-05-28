@@ -16,8 +16,6 @@ public:
     void AddChild(std::unique_ptr<GameObject> child);
     void RemoveChild(GameObject* child);
 
-    void ReleaseUploadResources();
-
     void Rotate(const Vector3& axis, float angle);
 
     virtual void Animate(float deltaTime);

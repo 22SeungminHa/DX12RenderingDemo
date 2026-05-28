@@ -32,6 +32,7 @@ class Renderer
 private:
     static constexpr UINT kNumFrameResources = 3;
     static constexpr UINT kMaxObjectCount = 1000;
+    static constexpr UINT kMaxMaterialCount = 1000;
     static constexpr UINT kMaxSrvDescriptorCount = 1024;
 
 private:

@@ -18,8 +18,6 @@ public:
 
     bool IsRenderable() const { return mesh_ && material_; }
 
-    void ReleaseUploadResources();
-
 private:
     std::shared_ptr<Mesh> mesh_;
     std::shared_ptr<Material> material_;

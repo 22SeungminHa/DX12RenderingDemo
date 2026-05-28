@@ -12,15 +12,6 @@ GameObject::~GameObject()
 {
 }
 
-void GameObject::ReleaseUploadResources()
-{
-    if (MeshRenderer* meshRenderer = GetComponent<MeshRenderer>())
-        meshRenderer->ReleaseUploadResources();
-
-    for (auto& child : children_)
-        if (child) child->ReleaseUploadResources();
-}
-
 void GameObject::Animate(float deltaTime)
 {
 }

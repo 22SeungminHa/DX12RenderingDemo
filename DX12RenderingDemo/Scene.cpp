@@ -44,10 +44,6 @@ void Scene::Resize(UINT width, UINT height)
 
 void Scene::ReleaseUploadResources()
 {
-	for (auto& object : objects_) {
-		if (object) object->ReleaseUploadResources();
-	}
-
 	OnReleaseUploadResources();
 }
 

@@ -16,17 +16,51 @@ void TestScene::OnLoad(
     objects_.clear();
 
     UINT objectCBIndex = 0;
-    auto object = FBXLoader::LoadLitModel(
-        device,
-        cmdList,
-        rootSignature,
-        assetManager,
-        "../Assets/Meshes/MicroSub.fbx",
-        objectCBIndex
+
+    //auto object = FBXLoader::LoadLitModel(
+    //    device,
+    //    cmdList,
+    //    rootSignature,
+    //    assetManager,
+    //    "../Assets/Meshes/MicroSub.fbx",
+    //    objectCBIndex
+    //);
+
+    //if (object)
+    //    objects_.push_back(std::move(object));
+
+    auto glassCube = std::make_unique<GameObject>();
+    glassCube->SetObjectCBIndex(++objectCBIndex);
+
+    //glassCube->GetTransform()->SetPosition({ 0.0f, 3.0f, 0.0f });
+    //glassCube->GetTransform()->SetScale({ 5.0f, 5.0f, 5.0f });
+
+    auto cubeRenderer = glassCube->AddComponent<MeshRenderer>();
+
+    cubeRenderer->SetMesh(assetManager.LoadCubeMesh(device, cmdList));
+
+    auto glassMaterial = std::make_shared<Material>();
+    glassMaterial->SetKey("TestGlassCubeMaterial");
+    glassMaterial->SetShader(assetManager.LoadGlassShader(device, rootSignature));
+    glassMaterial->SetRenderMode(RenderMode::Transparent);
+    glassMaterial->SetBaseColor({ 0.7f, 0.9f, 1.0f, 1.0f });
+    glassMaterial->SetAlpha(0.25f);
+    glassMaterial->SetFresnelPower(3.0f);
+    glassMaterial->SetSpecularStrength(1.5f);
+
+    glassMaterial->SetTexture(TextureType::BaseColor, assetManager.GetDefaultTexture(TextureType::BaseColor));
+    glassMaterial->SetTexture(
+        TextureType::Normal,
+        assetManager.LoadTexture(
+            device,
+            cmdList,
+            L"../Assets/Textures/T_YFSM_01_n.dds"
+        )
     );
 
-    if (object)
-        objects_.push_back(std::move(object));
+    cubeRenderer->SetMaterial(glassMaterial);
+
+    objects_.push_back(std::move(glassCube));
 
     SkyboxDesc skybox{};
     skybox.enabled = true;

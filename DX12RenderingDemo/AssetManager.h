@@ -26,6 +26,7 @@ public:
     void ReleaseUploadResources();
 
     std::shared_ptr<Texture> GetDefaultTexture(TextureType type) const { return defaultTextures_[static_cast<size_t>(type)]; }
+    std::shared_ptr<Mesh> LoadCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::string& key = "Primitive/Cube");
 
 private:
     std::shared_ptr<Shader> LoadShaderByName(ID3D12Device* device, ID3D12RootSignature* rootSignature, const std::string& shaderName);

@@ -152,8 +152,9 @@ void Renderer::CreateFrameResources()
     {
         frameResources_.push_back(std::make_unique<FrameResource>(
             d3dCore_.GetDevice(),
-            1,                  // pass count
-            kMaxObjectCount));  // object count
+            1,
+            kMaxObjectCount,
+            kMaxMaterialCount));
     }
 
     currentFrameResourceIndex_ = 0;

@@ -247,3 +247,19 @@ std::shared_ptr<Mesh> AssetManager::LoadLitMesh(
 
     return mesh;
 }
+
+std::shared_ptr<Mesh> AssetManager::LoadCubeMesh(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    const std::string& key)
+{
+    if (auto iter = meshes_.find(key); iter != meshes_.end())
+        return iter->second;
+
+    auto mesh = std::make_shared<CubeMesh>(device, cmdList);
+    mesh->SetKey(key);
+
+    meshes_[key] = mesh;
+
+    return mesh;
+}
