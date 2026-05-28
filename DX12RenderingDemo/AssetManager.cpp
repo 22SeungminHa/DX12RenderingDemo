@@ -167,17 +167,12 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
 
     loadTextureSlot(TextureType::BaseColor, values["BaseColorMap"]);
     loadTextureSlot(TextureType::Normal, values["NormalMap"]);
-    //loadTextureSlot(TextureType::MetallicRoughness, values["MetallicRoughness"]);
-    //loadTextureSlot(TextureType::Emissive, values["Emissive"]);
 
     if (!textures[static_cast<size_t>(TextureType::BaseColor)])
         textures[static_cast<size_t>(TextureType::BaseColor)] = GetDefaultTexture(TextureType::BaseColor);
 
     if (!textures[static_cast<size_t>(TextureType::Normal)])
         textures[static_cast<size_t>(TextureType::Normal)] = GetDefaultTexture(TextureType::Normal);
-
-    //if (!textures[static_cast<size_t>(TextureType::MetallicRoughness)])
-    //    textures[static_cast<size_t>(TextureType::MetallicRoughness)] = GetDefaultTexture(TextureType::MetallicRoughness);
 
     auto material = std::make_shared<Material>();
     material->SetKey(materialKey);
@@ -209,8 +204,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
         material->SetSpecularStrength(std::stof(values["SpecularStrength"]));
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
-        if (textures[i])
-            material->SetTexture(static_cast<TextureType>(i), textures[i]);
+        if (textures[i]) material->SetTexture(static_cast<TextureType>(i), textures[i]);
 
     materials_[materialKey] = material;
 
