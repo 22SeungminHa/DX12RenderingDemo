@@ -24,8 +24,7 @@ void AssetManager::InitializeDefaultTextures(
     auto loadDefaultTexture =
         [&](TextureType type, const std::wstring& fileName)
         {
-            const std::filesystem::path& defaultTextureDir = L"../Assets/Textures/";
-            const auto path = defaultTextureDir / fileName;
+            const auto path = TexturePath(fileName);
 
             if (!std::filesystem::exists(path))
             {
@@ -166,8 +165,8 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
             textures[static_cast<size_t>(type)] = LoadTexture(device, cmdList, texturePath.wstring());
         };
 
-    loadTextureSlot(TextureType::BaseColor, values["BaseColor"]);
-    loadTextureSlot(TextureType::Normal, values["Normal"]);
+    loadTextureSlot(TextureType::BaseColor, values["BaseColorMap"]);
+    loadTextureSlot(TextureType::Normal, values["NormalMap"]);
     //loadTextureSlot(TextureType::MetallicRoughness, values["MetallicRoughness"]);
     //loadTextureSlot(TextureType::Emissive, values["Emissive"]);
 
@@ -183,15 +182,31 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     auto material = std::make_shared<Material>();
     material->SetKey(normalizedPath.string());
     material->SetShader(shader);
+
     if (renderModeName == "Transparent")
-    {
         material->SetRenderMode(RenderMode::Transparent);
-        material->SetAlpha(0.25f);
-        material->SetSpecularStrength(1.5f);
-        material->SetFresnelPower(3.0f);
-    }
     else
         material->SetRenderMode(RenderMode::Opaque);
+
+    if (values.contains("BaseColorTint"))
+    {
+        std::stringstream ss(values["BaseColorTint"]);
+
+        float r, g, b, a;
+        char comma;
+
+        ss >> r >> comma >> g >> comma >> b >> comma >> a;
+
+        material->SetBaseColorTint(Vector4(r, g, b, a));
+    }
+    if (values.contains("Alpha"))
+        material->SetAlpha(std::stof(values["Alpha"]));
+
+    if (values.contains("FresnelPower"))
+        material->SetFresnelPower(std::stof(values["FresnelPower"]));
+
+    if (values.contains("SpecularStrength"))
+        material->SetSpecularStrength(std::stof(values["SpecularStrength"]));
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
         if (textures[i])

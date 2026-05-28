@@ -26,8 +26,8 @@ public:
     void SetRenderMode(RenderMode mode) { renderMode_ = mode; }
     RenderMode GetRenderMode() const { return renderMode_; }
 
-    void SetBaseColor(const Vector4& color) { baseColor_ = color; }
-    const Vector4& GetBaseColor() const { return baseColor_; }
+    void SetBaseColorTint(const Vector4& color) { baseColorTint_ = color; }
+    const Vector4& GetBaseColorTint() const { return baseColorTint_; }
 
     void SetAlpha(float alpha) { alpha_ = alpha; }
     float GetAlpha() const { return alpha_; }
@@ -46,7 +46,7 @@ private:
     
     RenderMode renderMode_ = RenderMode::Opaque;
 
-    Vector4 baseColor_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    Vector4 baseColorTint_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     float alpha_ = 1.0f;
     float fresnelPower_ = 5.0f;

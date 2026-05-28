@@ -39,24 +39,15 @@ void TestScene::OnLoad(
 
     cubeRenderer->SetMesh(assetManager.LoadCubeMesh(device, cmdList));
 
-    auto glassMaterial = std::make_shared<Material>();
-    glassMaterial->SetKey("TestGlassCubeMaterial");
-    glassMaterial->SetShader(assetManager.LoadGlassShader(device, rootSignature));
-    glassMaterial->SetRenderMode(RenderMode::Transparent);
-    glassMaterial->SetBaseColor({ 0.7f, 0.9f, 1.0f, 1.0f });
-    glassMaterial->SetAlpha(0.25f);
-    glassMaterial->SetFresnelPower(3.0f);
-    glassMaterial->SetSpecularStrength(1.5f);
-
-    glassMaterial->SetTexture(TextureType::BaseColor, assetManager.GetDefaultTexture(TextureType::BaseColor));
-    glassMaterial->SetTexture(
-        TextureType::Normal,
-        assetManager.LoadTexture(
-            device,
-            cmdList,
-            L"../Assets/Textures/T_YFSM_01_n.dds"
-        )
+    auto glassMaterial = assetManager.LoadMaterialFromFile(
+        device,
+        cmdList,
+        rootSignature,
+        MaterialPath(L"Default_Glass.mat")
     );
+
+    if (!glassMaterial)
+        return;
 
     cubeRenderer->SetMaterial(glassMaterial);
 
@@ -64,7 +55,7 @@ void TestScene::OnLoad(
 
     SkyboxDesc skybox{};
     skybox.enabled = true;
-    skybox.cubemapPath = L"../Assets/Textures/Skybox.dds";
+    skybox.cubemapPath = TexturePath(L"Skybox.dds").wstring();
 
     SetSkybox(skybox);
 }

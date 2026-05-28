@@ -83,7 +83,7 @@ struct PassCB
 
 struct MaterialCB
 {
-    Vector4 baseColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    Vector4 baseColorTint = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     float alpha = 1.0f;
     float fresnelPower = 5.0f;

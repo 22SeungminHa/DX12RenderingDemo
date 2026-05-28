@@ -1,9 +1,9 @@
-Name=Micro_Sub_Glass
+Name=Default_Glass
 Shader=GlassShader
 RenderMode=Transparent
 
 BaseColorMap=Default_Glass_BaseColor.dds
-NormalMap=Metal_18_N.dds
+NormalMap=Metal_11_N.dds
 
 baseColorTint=1.0,1.0,1.0,1.0
 Alpha=0.25

@@ -24,7 +24,7 @@ cbuffer cbCameraInfo : register(b1)
 
 cbuffer cbMaterialInfo : register(b2)
 {
-    float4 gBaseColor;
+    float4 gBaseColorTint;
 
     float gAlpha;
     float gFresnelPower;
@@ -92,7 +92,7 @@ VS_OUTPUT VSLit(VS_INPUT input)
 float4 PSLit(VS_OUTPUT input) : SV_TARGET
 {
     float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
-    float4 baseColor = texColor * input.color * gBaseColor;
+    float4 baseColor = texColor * input.color * gBaseColorTint;
 
     float3 normalW = normalize(input.normalW);
     float3 tangentW = normalize(input.tangentW);
@@ -137,7 +137,7 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
 float4 PSGlass(VS_OUTPUT input) : SV_TARGET
 {
     float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
-    float4 baseColor = texColor * input.color * gBaseColor;
+    float4 baseColor = texColor * input.color * gBaseColorTint;
 
     float3 normalW = normalize(input.normalW);
     float3 tangentW = normalize(input.tangentW);

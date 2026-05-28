@@ -535,7 +535,7 @@ void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
         return;
 
     MaterialCB materialCB{};
-    materialCB.baseColor = material->GetBaseColor();
+    materialCB.baseColorTint = material->GetBaseColorTint();
     materialCB.alpha = material->GetAlpha();
     materialCB.fresnelPower = material->GetFresnelPower();
     materialCB.specularStrength = material->GetSpecularStrength();

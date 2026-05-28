@@ -80,6 +80,16 @@ inline std::wstring AnsiToWString(const std::string& str)
     return std::wstring(buffer);
 }
 
+inline std::filesystem::path TexturePath(const std::wstring& name)
+{
+    return std::filesystem::path(L"../Assets/Textures") / name;
+}
+
+inline std::filesystem::path MaterialPath(const std::wstring& name)
+{
+    return std::filesystem::path(L"../Assets/Materials") / name;
+}
+
 class d3dUtil
 {
 public:
