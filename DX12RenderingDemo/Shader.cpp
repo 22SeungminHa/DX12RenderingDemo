@@ -81,18 +81,18 @@ D3D12_INPUT_LAYOUT_DESC Shader::CreateInputLayout()
 	return desc;
 }
 
-D3D12_SHADER_BYTECODE Shader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE Shader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	pd3dShaderBlob.Reset();
+	shaderBlob.Reset();
 
 	D3D12_SHADER_BYTECODE shaderByteCode;
 	shaderByteCode.BytecodeLength = 0;
 	shaderByteCode.pShaderBytecode = NULL;
 	return shaderByteCode;
 }
-D3D12_SHADER_BYTECODE Shader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE Shader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	pd3dShaderBlob.Reset();
+	shaderBlob.Reset();
 
 	D3D12_SHADER_BYTECODE shaderByteCode;
 	shaderByteCode.BytecodeLength = 0;
@@ -102,43 +102,33 @@ D3D12_SHADER_BYTECODE Shader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob
 
 //셰이더 소스 코드를 컴파일하여 바이트 코드 구조체를 반환한다. 
 D3D12_SHADER_BYTECODE Shader::CompileShaderFromFile(
-	const WCHAR * pszFileName,
-	LPCSTR pszShaderName,
-	LPCSTR pszShaderProfile,
-	ComPtr<ID3DBlob>&pd3dShaderBlob)
+	const WCHAR* fileName,
+	LPCSTR shaderName,
+	LPCSTR shaderProfile,
+	ComPtr<ID3DBlob>& shaderBlob)
 {
-	UINT compileFlag = 0;
-#if defined(_DEBUG)
-	compileFlag = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
-	
-	pd3dShaderBlob.Reset();
-	ComPtr<ID3DBlob> errors;
+	shaderBlob = d3dUtil::CompileShader(
+		fileName,
+		nullptr,
+		shaderName,
+		shaderProfile
+	);
 
-	HRESULT hr = D3DCompileFromFile(pszFileName, NULL, NULL,
-		pszShaderName, pszShaderProfile,
-		compileFlag, 0,
-		pd3dShaderBlob.GetAddressOf(),
-		errors.GetAddressOf());
-
-	if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
-	ThrowIfFailed(hr);
-	
 	D3D12_SHADER_BYTECODE shaderByteCode{};
-	shaderByteCode.BytecodeLength = pd3dShaderBlob->GetBufferSize();
-	shaderByteCode.pShaderBytecode = pd3dShaderBlob->GetBufferPointer();
+	shaderByteCode.BytecodeLength = shaderBlob->GetBufferSize();
+	shaderByteCode.pShaderBytecode = shaderBlob->GetBufferPointer();
 
 	return shaderByteCode;
 }
 
 //그래픽스 파이프라인 상태 객체를 생성한다. 
-void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void Shader::CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature)
 {
 	ComPtr<ID3DBlob> vsBlob;
 	ComPtr<ID3DBlob> psBlob;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
-	desc.pRootSignature = pd3dGraphicsRootSignature;
+	desc.pRootSignature = rootSignature;
 	desc.VS = CreateVertexShader(vsBlob);
 	desc.PS = CreatePixelShader(psBlob);
 	desc.RasterizerState = CreateRasterizerState();
@@ -150,8 +140,8 @@ void Shader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGra
 	desc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	desc.SampleDesc.Count = 1;
 	desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-	
-	CreatePipelineStates(pd3dDevice, desc);
+
+	CreatePipelineStates(device, desc);
 }
 
 void Shader::CreatePipelineStates(
@@ -179,9 +169,9 @@ void Shader::CreatePipelineStates(
 	pipelineStates_.push_back(std::move(transparentPso));
 }
 
-void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderMode renderMode)
+void Shader::OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode)
 {
-	if (!pd3dCommandList || pipelineStates_.empty())
+	if (!cmdList || pipelineStates_.empty())
 		return;
 
 	UINT psoIndex = 0;
@@ -189,12 +179,12 @@ void Shader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderM
 	if (pipelineStates_.size() >= 2)
 		psoIndex = (renderMode == RenderMode::Transparent) ? 1 : 0;
 
-	pd3dCommandList->SetPipelineState(pipelineStates_[psoIndex].Get());
+	cmdList->SetPipelineState(pipelineStates_[psoIndex].Get());
 }
 
-void Shader::Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera, RenderMode renderMode)
+void Shader::Render(ID3D12GraphicsCommandList* cmdList, Camera* pCamera, RenderMode renderMode)
 {
-	OnPrepareRender(pd3dCommandList, renderMode);
+	OnPrepareRender(cmdList, renderMode);
 }
 
 LitShader::LitShader()
@@ -212,7 +202,7 @@ D3D12_INPUT_LAYOUT_DESC LitShader::CreateInputLayout()
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 52, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 } 
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 52, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	D3D12_INPUT_LAYOUT_DESC desc{};
@@ -222,21 +212,21 @@ D3D12_INPUT_LAYOUT_DESC LitShader::CreateInputLayout()
 	return desc;
 }
 
-D3D12_SHADER_BYTECODE LitShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE LitShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSLit", "vs_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSLit", "vs_5_1", shaderBlob);
 }
 
-D3D12_SHADER_BYTECODE LitShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE LitShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSLit", "ps_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSLit", "ps_5_1", shaderBlob);
 }
 
-void LitShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void LitShader::CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature)
 {
 	pipelineStates_.clear();
 	pipelineStates_.reserve(2);
-	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	Shader::CreateShader(device, rootSignature);
 }
 
 GlassShader::GlassShader()
@@ -247,13 +237,13 @@ GlassShader::~GlassShader()
 {
 }
 
-D3D12_SHADER_BYTECODE GlassShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE GlassShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
 		L"Shaders.hlsl",
 		"PSGlass",
 		"ps_5_1",
-		pd3dShaderBlob
+		shaderBlob
 	);
 }
 
@@ -267,12 +257,12 @@ D3D12_RASTERIZER_DESC GlassShader::CreateRasterizerState()
 	return desc;
 }
 
-void GlassShader::CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature)
+void GlassShader::CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature)
 {
 	pipelineStates_.clear();
 	pipelineStates_.reserve(1);
 
-	Shader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+	Shader::CreateShader(device, rootSignature);
 }
 
 void GlassShader::CreatePipelineStates(
@@ -305,14 +295,14 @@ D3D12_INPUT_LAYOUT_DESC SkyboxShader::CreateInputLayout()
 	return desc;
 }
 
-D3D12_SHADER_BYTECODE SkyboxShader::CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE SkyboxShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSSkybox", "vs_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSSkybox", "vs_5_1", shaderBlob);
 }
 
-D3D12_SHADER_BYTECODE SkyboxShader::CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob)
+D3D12_SHADER_BYTECODE SkyboxShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSSkybox", "ps_5_1", pd3dShaderBlob);
+	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSSkybox", "ps_5_1", shaderBlob);
 }
 
 D3D12_RASTERIZER_DESC SkyboxShader::CreateRasterizerState()

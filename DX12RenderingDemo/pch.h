@@ -9,9 +9,6 @@
 
 #pragma comment(lib, "dxguid.lib")
 
-inline constexpr UINT kFrameBufferWidth = 800;
-inline constexpr UINT kFrameBufferHeight = 600;
-
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
 #include <windows.h>
@@ -68,7 +65,17 @@ using namespace DirectX::PackedVector;
 using namespace DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
-extern ComPtr<ID3D12Resource> CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType, D3D12_RESOURCE_STATES d3dResourceStates, ComPtr<ID3D12Resource>& pd3dUploadBuffer);
+inline constexpr UINT kFrameBufferWidth = 800;
+inline constexpr UINT kFrameBufferHeight = 600;
+
+extern ComPtr<ID3D12Resource> CreateBufferResource(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    const void* data,
+    UINT64 byteSize,
+    D3D12_HEAP_TYPE heapType,
+    D3D12_RESOURCE_STATES finalState,
+    ComPtr<ID3D12Resource>& uploadBuffer);
 
 inline std::wstring AnsiToWString(const std::string& str)
 {
@@ -95,15 +102,14 @@ inline std::string AssetKey(const std::filesystem::path& path)
 class d3dUtil
 {
 public:
-    static bool IsKeyDown(int vkeyCode);
-    static std::string ToString(HRESULT hr);
-
     // 상수 버퍼의 크기는 반드시 최소 하드웨어 할당 크기(흔히 256바이트)의 배수여야 한다.
     static UINT CalcConstantBufferByteSize(UINT byteSize) { return (byteSize + 255) & ~255; }
 
-    static ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
-    static ComPtr<ID3D12Resource> CreateDefaultBuffer(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const void* initData, UINT64 byteSize, ComPtr<ID3D12Resource>& uploadBuffer);
-    static ComPtr<ID3DBlob> CompileShader(const std::wstring& filename, const D3D_SHADER_MACRO* defines, const std::string& entrypoint, const std::string& target);
+    static ComPtr<ID3DBlob> CompileShader(
+        const std::wstring& filename,
+        const D3D_SHADER_MACRO* defines,
+        const std::string& entrypoint,
+        const std::string& target);
 };
 
 class DxException

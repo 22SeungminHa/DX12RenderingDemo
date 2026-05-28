@@ -118,8 +118,8 @@ void Application::OnDestroy()
 
 	if (renderer_) renderer_->WaitForGpuComplete();
 	if (sceneManager_) sceneManager_->ReleaseCurrentScene();
-	if (renderer_) renderer_->Shutdown();
 	if (assetManager_) assetManager_->Clear();
+	if (renderer_) renderer_->Shutdown();
 }
 
 LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

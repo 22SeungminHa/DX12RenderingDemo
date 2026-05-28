@@ -45,7 +45,7 @@ LoadedMeshLit::LoadedMeshLit(
 	vertexBuffer_ = ::CreateBufferResource(
 		device,
 		cmdList,
-		const_cast<LitVertex*>(vertices.data()),
+		vertices.data(),
 		stride_ * vertexCnt_,
 		D3D12_HEAP_TYPE_DEFAULT,
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
@@ -58,7 +58,7 @@ LoadedMeshLit::LoadedMeshLit(
 	indexBuffer_ = ::CreateBufferResource(
 		device,
 		cmdList,
-		const_cast<UINT*>(indices.data()),
+		indices.data(),
 		sizeof(UINT) * indexCnt_,
 		D3D12_HEAP_TYPE_DEFAULT,
 		D3D12_RESOURCE_STATE_INDEX_BUFFER,
