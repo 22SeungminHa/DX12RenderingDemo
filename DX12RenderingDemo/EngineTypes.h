@@ -92,5 +92,5 @@ struct MaterialCB
     float alpha = 1.0f;
     float fresnelPower = 5.0f;
     float specularStrength = 0.5f;
-    float padding0 = 0.0f;
+    float reflectionStrength = 0.0f;
 };

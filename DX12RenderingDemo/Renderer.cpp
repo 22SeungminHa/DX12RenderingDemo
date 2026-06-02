@@ -539,6 +539,7 @@ void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
     materialCB.alpha = material->GetAlpha();
     materialCB.fresnelPower = material->GetFresnelPower();
     materialCB.specularStrength = material->GetSpecularStrength();
+    materialCB.reflectionStrength = material->GetReflectionStrength();
 
     currentFrameResource_->materialCB_->CopyData(materialIndex, materialCB);
 
@@ -591,6 +592,9 @@ bool Renderer::BindMaterial(Material* material, Camera* camera)
         return false;
 
     BindMaterialTextures(material);
+
+    if (material->UseEnvironmentReflection())
+        BindSkyboxTexture();
 
     const UINT materialCBIndex = GetOrCreateMaterialCBIndex(material);
     if (materialCBIndex == UINT_MAX)
@@ -719,4 +723,17 @@ void Renderer::ReleaseSkyboxUploadResources()
 {
     if (skyboxMesh_)
         skyboxMesh_->ReleaseUploadResources();
+}
+
+void Renderer::BindSkyboxTexture()
+{
+    if (!srvDescriptorHeap_ || skyboxDescriptorIndex_ == UINT_MAX)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    cmdList->SetGraphicsRootDescriptorTable(4, skyboxGpuHandle_);
 }

@@ -1,11 +1,9 @@
 Name=Micro_Sub_Body
-Shader=GlassShader
-RenderMode=Transparent
+Shader=LitShader
+RenderMode=Opaque
 
-BaseColorMap=Default_Glass_BaseColor.dds
+BaseColorMap=MicroSub_BaseColor.dds
 NormalMap=MicroSub_Normal.dds
 
 BaseColorTint=1.0,1.0,1.0,1.0
-Alpha=0.25
-FresnelPower=3.0
-SpecularStrength=1.5
+SpecularStrength=0.2

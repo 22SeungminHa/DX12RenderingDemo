@@ -24,19 +24,20 @@ public:
     //Texture* GetMetallicRoughnessTexture() const { return GetTexture(TextureType::MetallicRoughness); }
 
     void SetRenderMode(RenderMode mode) { renderMode_ = mode; }
-    RenderMode GetRenderMode() const { return renderMode_; }
-
     void SetBaseColorTint(const Vector4& color) { baseColorTint_ = color; }
-    const Vector4& GetBaseColorTint() const { return baseColorTint_; }
-
     void SetAlpha(float alpha) { alpha_ = alpha; }
-    float GetAlpha() const { return alpha_; }
-
     void SetFresnelPower(float power) { fresnelPower_ = power; }
-    float GetFresnelPower() const { return fresnelPower_; }
-
     void SetSpecularStrength(float strength) { specularStrength_ = strength; }
+    void SetReflectionStrength(float strength) { reflectionStrength_ = strength; }
+
+    RenderMode GetRenderMode() const { return renderMode_; }
+    const Vector4& GetBaseColorTint() const { return baseColorTint_; }
+    float GetAlpha() const { return alpha_; }
+    float GetFresnelPower() const { return fresnelPower_; }
     float GetSpecularStrength() const { return specularStrength_; }
+    float GetReflectionStrength() const { return reflectionStrength_; }
+
+    bool UseEnvironmentReflection() const { return reflectionStrength_ > 0.0f; }
 
 private:
     UINT materialCBIndex_ = UINT_MAX;
@@ -51,4 +52,5 @@ private:
     float alpha_ = 1.0f;
     float fresnelPower_ = 5.0f;
     float specularStrength_ = 0.5f;
+    float reflectionStrength_ = 0.0f;
 };

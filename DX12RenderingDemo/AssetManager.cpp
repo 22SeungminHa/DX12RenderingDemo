@@ -39,7 +39,6 @@ void AssetManager::InitializeDefaultTextures(
 
     loadDefaultTexture(TextureType::BaseColor, L"Default_BaseColor");
     loadDefaultTexture(TextureType::Normal, L"Default_Normal");
-    //loadDefaultTexture(TextureType::MetallicRoughness, L"Default_MetallicRoughness.dds");
 }
 
 std::shared_ptr<Shader> AssetManager::LoadShaderByName(
@@ -214,14 +213,10 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
 
         material->SetBaseColorTint(Vector4(r, g, b, a));
     }
-    if (values.contains("Alpha"))
-        material->SetAlpha(std::stof(values["Alpha"]));
-
-    if (values.contains("FresnelPower"))
-        material->SetFresnelPower(std::stof(values["FresnelPower"]));
-
-    if (values.contains("SpecularStrength"))
-        material->SetSpecularStrength(std::stof(values["SpecularStrength"]));
+    if (values.contains("Alpha")) material->SetAlpha(std::stof(values["Alpha"]));
+    if (values.contains("FresnelPower")) material->SetFresnelPower(std::stof(values["FresnelPower"]));
+    if (values.contains("SpecularStrength")) material->SetSpecularStrength(std::stof(values["SpecularStrength"]));
+    if (values.contains("ReflectionStrength")) material->SetReflectionStrength(std::stof(values["ReflectionStrength"]));
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
         if (textures[i]) material->SetTexture(static_cast<TextureType>(i), textures[i]);

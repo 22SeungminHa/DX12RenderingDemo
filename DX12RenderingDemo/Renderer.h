@@ -120,6 +120,7 @@ private:
     bool BindMaterial(Material* material, Camera* camera);
     void BindMaterialData(const Material* material, UINT materialIndex);
     void BindMaterialTextures(Material* material);
+    void BindSkyboxTexture();
     
     // Material GPU Resources
     UINT GetOrCreateMaterialCBIndex(Material* material);
