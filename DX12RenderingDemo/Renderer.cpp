@@ -35,6 +35,9 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 
     horizontalBlurShader_ = std::make_unique<HorizontalBlurShader>();
     horizontalBlurShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
+    
+    verticalBlurShader_ = std::make_unique<VerticalBlurShader>();
+    verticalBlurShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
 }
 
 void Renderer::Shutdown()
@@ -52,6 +55,7 @@ void Renderer::Shutdown()
     ReleaseBrightPassTexture();
 
     horizontalBlurShader_.reset();
+    verticalBlurShader_.reset();
     ReleaseBlurTempTexture();
 
     ReleaseFrameResources();
@@ -462,6 +466,7 @@ void Renderer::Render(Scene* scene)
 
     RenderBrightPass(camera);
     RenderHorizontalBlur(camera);
+    RenderVerticalBlur(camera);
 
     d3dCore_.BeginRender();
     RenderPostProcess(camera);
@@ -962,7 +967,7 @@ void Renderer::RenderPostProcess(Camera* camera)
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, sceneColorSrv_);
+    cmdList->SetGraphicsRootDescriptorTable(3, brightColorSrv_);
 
     postProcessShader_->Render(cmdList, camera, RenderMode::Opaque);
 
@@ -1284,4 +1289,39 @@ void Renderer::RenderHorizontalBlur(Camera* camera)
     cmdList->DrawInstanced(3, 1, 0, 0);
 
     TransitionBlurTemp(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+void Renderer::RenderVerticalBlur(Camera* camera)
+{
+    if (!camera || !verticalBlurShader_ || !blurTempBuffer_ || !brightColorBuffer_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    TransitionBrightColor(D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const auto& viewport = camera->GetViewport();
+    const auto& scissor = camera->GetScissorRect();
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissor);
+
+    cmdList->OMSetRenderTargets(1, &brightColorRtv_, FALSE, nullptr);
+
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    cmdList->ClearRenderTargetView(brightColorRtv_, clearColor, 0, nullptr);
+
+    cmdList->SetGraphicsRootSignature(rootSignature_.Get());
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    cmdList->SetGraphicsRootDescriptorTable(3, blurTempSrv_);
+
+    verticalBlurShader_->Render(cmdList, camera, RenderMode::Opaque);
+
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->DrawInstanced(3, 1, 0, 0);
+
+    TransitionBrightColor(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }

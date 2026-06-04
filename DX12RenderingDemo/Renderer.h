@@ -15,6 +15,7 @@ class AssetManager;
 class PostProcessShader;
 class BrightPassShader;
 class HorizontalBlurShader;
+class VerticalBlurShader;
 
 struct MaterialGpuBinding
 {
@@ -93,6 +94,7 @@ private:
     D3D12_RESOURCE_STATES blurTempState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
     std::unique_ptr<HorizontalBlurShader> horizontalBlurShader_;
+    std::unique_ptr<VerticalBlurShader> verticalBlurShader_;
 
 public:
     Renderer();
@@ -182,4 +184,5 @@ private:
     void ReleaseBlurTempTexture();
     void TransitionBlurTemp(D3D12_RESOURCE_STATES afterState);
     void RenderHorizontalBlur(Camera* camera);
+    void RenderVerticalBlur(Camera* camera);
 };
