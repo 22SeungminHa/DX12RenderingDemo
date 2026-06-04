@@ -144,6 +144,9 @@
     <ClInclude Include="DescriptorAllocator.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="MaterialBinder.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -243,6 +246,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DescriptorAllocator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialBinder.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

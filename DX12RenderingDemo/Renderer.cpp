@@ -21,6 +21,8 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     CreateSrvDescriptorHeap();
     CreateFrameResources();
 
+    materialBinder_.Initialize(d3dCore_.GetDevice(), &srvDescriptorAllocator_);
+
     skyboxRenderer_ = std::make_unique<SkyboxRenderer>();
     skyboxRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_);
 
@@ -39,6 +41,8 @@ void Renderer::Shutdown()
         postProcessRenderer_->Shutdown();
 
     postProcessRenderer_.reset();
+
+    materialBinder_.Shutdown();
 
     ReleaseFrameResources();
     ReleaseSrvDescriptorHeap();
@@ -184,9 +188,6 @@ void Renderer::ReleaseFrameResources()
 {
     currentFrameResource_ = nullptr;
     frameResources_.clear();
-
-    materialCBIndexTable_.clear();
-    nextMaterialCBIndex_ = 0;
 }
 
 void Renderer::CreateSrvDescriptorHeap()
@@ -196,119 +197,7 @@ void Renderer::CreateSrvDescriptorHeap()
 
 void Renderer::ReleaseSrvDescriptorHeap()
 {
-    materialGpuBindingTable_.clear();
     srvDescriptorAllocator_.Shutdown();
-}
-
-MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
-{
-    MaterialGpuBinding empty{};
-
-    if (!material || !srvDescriptorAllocator_.GetHeap())
-        return empty;
-
-    const std::string& materialKey = material->GetKey();
-
-    if (materialKey.empty())
-    {
-        LOG("Material key is empty");
-        return empty;
-    }
-
-    if (auto iter = materialGpuBindingTable_.find(materialKey); iter != materialGpuBindingTable_.end())
-        return iter->second;
-
-    constexpr UINT materialTextureCount = static_cast<UINT>(TextureType::End);
-
-    std::array<Texture*, materialTextureCount> materialTextures{};
-
-    for (UINT i = 0; i < materialTextureCount; ++i)
-    {
-        TextureType type = static_cast<TextureType>(i);
-        Texture* texture = material->GetTexture(type);
-
-        if (!texture || !texture->GetResource())
-        {
-            LOG("Material texture slot is empty. Material: " << materialKey << ", Slot: " << i);
-            return empty;
-        }
-
-        materialTextures[i] = texture;
-    }
-
-    DescriptorAllocation allocation = srvDescriptorAllocator_.Allocate(materialTextureCount);
-
-    if (!allocation.IsValid())
-    {
-        LOG("SRV descriptor heap is full");
-        return empty;
-    }
-
-    for (UINT i = 0; i < materialTextureCount; ++i)
-    {
-        if (!CreateTextureSrvDescriptor(materialTextures[i], allocation.startIndex + i))
-        {
-            LOG("Failed to copy texture SRV. Material: " << materialKey << ", Slot: " << i);
-            return empty;
-        }
-    }
-
-    MaterialGpuBinding binding{};
-    binding.startDescriptorIndex = allocation.startIndex;
-    binding.gpuHandle = allocation.gpuHandle;
-    binding.valid = true;
-
-    materialGpuBindingTable_[materialKey] = binding;
-
-    return binding;
-}
-
-bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex)
-{
-    if (!texture || !texture->GetResource())
-        return false;
-
-    if (!srvDescriptorAllocator_.IsValidIndex(descriptorIndex))
-        return false;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle =
-        srvDescriptorAllocator_.GetCpuHandle(descriptorIndex);
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = texture->GetResource()->GetDesc().Format;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
-    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-    d3dCore_.GetDevice()->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        dstHandle);
-
-    return true;
-}
-
-void Renderer::BindMaterialTextures(Material* material)
-{
-    if (!material || !srvDescriptorAllocator_.GetHeap())
-        return;
-
-    MaterialGpuBinding binding = GetOrCreateMaterialGpuBinding(material);
-
-    if (!binding.valid)
-        return;
-
-    auto* cmdList = d3dCore_.GetRenderCommandList();
-
-    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorAllocator_.GetHeap() };
-    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-    cmdList->SetGraphicsRootDescriptorTable(
-        static_cast<UINT>(RootParam::MaterialTextures),
-        binding.gpuHandle
-    );
 }
 
 void Renderer::AdvanceFrameResource()
@@ -502,7 +391,7 @@ void Renderer::DrawMeshRenderer(
     if (!mesh || !material)
         return;
 
-    if (!BindMaterial(material, camera))
+    if (!materialBinder_.Bind(d3dCore_.GetRenderCommandList(), material, camera, currentFrameResource_, skyboxRenderer_.get()))
         return;
 
     mesh->Render(d3dCore_.GetRenderCommandList());
@@ -578,87 +467,6 @@ void Renderer::RenderTransparentQueue(Camera* camera)
     );
 
     RenderItems(transparentQueue_, camera);
-}
-
-void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
-{
-    if (!material || !currentFrameResource_ || !currentFrameResource_->materialCB_)
-        return;
-
-    MaterialCB materialCB{};
-    materialCB.baseColorTint = material->GetBaseColorTint();
-    materialCB.alpha = material->GetAlpha();
-    materialCB.fresnelPower = material->GetFresnelPower();
-    materialCB.specularStrength = material->GetSpecularStrength();
-    materialCB.reflectionStrength = material->GetReflectionStrength();
-
-    currentFrameResource_->materialCB_->CopyData(materialIndex, materialCB);
-
-    const UINT matCBByteSize =
-        D3DUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
-
-    D3D12_GPU_VIRTUAL_ADDRESS matCBAddress =
-        currentFrameResource_->materialCB_->GetResource()->GetGPUVirtualAddress()
-        + static_cast<UINT64>(materialIndex) * matCBByteSize;
-
-    d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(
-        static_cast<UINT>(RootParam::MaterialCB),
-        matCBAddress);
-}
-
-UINT Renderer::GetOrCreateMaterialCBIndex(Material* material)
-{
-    if (!material)
-        return UINT_MAX;
-
-    const std::string& materialKey = material->GetKey();
-    if (materialKey.empty())
-        return UINT_MAX;
-
-    if (material->GetMaterialCBIndex() != UINT_MAX)
-        return material->GetMaterialCBIndex();
-
-    if (auto iter = materialCBIndexTable_.find(materialKey);
-        iter != materialCBIndexTable_.end())
-    {
-        material->SetMaterialCBIndex(iter->second);
-        return iter->second;
-    }
-
-    const UINT index = nextMaterialCBIndex_++;
-    materialCBIndexTable_[materialKey] = index;
-    material->SetMaterialCBIndex(index);
-
-    return index;
-}
-
-bool Renderer::BindMaterial(Material* material, Camera* camera)
-{
-    if (!material)
-        return false;
-
-    Shader* shader = material->GetShader();
-    if (!shader)
-        return false;
-
-    BindMaterialTextures(material);
-
-    if (material->UseEnvironmentReflection() && skyboxRenderer_)
-        skyboxRenderer_->BindSkyboxTexture(d3dCore_.GetRenderCommandList());
-
-    const UINT materialCBIndex = GetOrCreateMaterialCBIndex(material);
-    if (materialCBIndex == UINT_MAX)
-        return false;
-
-    BindMaterialData(material, materialCBIndex);
-
-    shader->Render(
-        d3dCore_.GetRenderCommandList(),
-        camera,
-        material->GetRenderMode()
-    );
-
-    return true;
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)

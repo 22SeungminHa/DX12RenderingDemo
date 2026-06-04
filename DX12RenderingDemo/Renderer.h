@@ -4,6 +4,7 @@
 #include "PostProcessRenderer.h"
 #include "SkyboxRenderer.h"
 #include "DescriptorAllocator.h"
+#include "MaterialBinder.h"
 
 class Scene;
 class GameObject;
@@ -13,13 +14,6 @@ class Texture;
 class Material;
 class FrameResource;
 class AssetManager;
-
-struct MaterialGpuBinding
-{
-    UINT startDescriptorIndex = UINT_MAX;
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{};
-    bool valid = false;
-};
 
 struct RenderItem
 {
@@ -50,9 +44,7 @@ private:
     std::vector<RenderItem> opaqueQueue_;
     std::vector<RenderItem> transparentQueue_;
 
-    UINT nextMaterialCBIndex_ = 0;
-    std::unordered_map<std::string, UINT> materialCBIndexTable_;
-    std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
+    MaterialBinder materialBinder_;
 
     std::unique_ptr<SkyboxRenderer> skyboxRenderer_;
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
@@ -110,14 +102,6 @@ private:
     // GPU Binding
     void BindCameraData(Camera* camera);
     void BindObjectData(const GameObject* object);
-    bool BindMaterial(Material* material, Camera* camera);
-    void BindMaterialData(const Material* material, UINT materialIndex);
-    void BindMaterialTextures(Material* material);
-    
-    // Material GPU Resources
-    UINT GetOrCreateMaterialCBIndex(Material* material);
-    MaterialGpuBinding GetOrCreateMaterialGpuBinding(Material* material);
-    bool CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex);
 
     // Draw
     void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
