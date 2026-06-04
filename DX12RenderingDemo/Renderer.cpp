@@ -21,8 +21,13 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     CreateSrvDescriptorHeap();
     CreateFrameResources();
 
-    skyboxShader_ = std::make_unique<SkyboxShader>();
-    skyboxShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
+    skyboxRenderer_ = std::make_unique<SkyboxRenderer>();
+    skyboxRenderer_->Initialize(
+        d3dCore_.GetDevice(),
+        rootSignature_.Get(),
+        srvDescriptorHeap_.Get(),
+        srvDescriptorSize_,
+        nextSrvDescriptorIndex_);
 
     postProcessRenderer_ = std::make_unique<PostProcessRenderer>();
     postProcessRenderer_->Initialize(
@@ -37,12 +42,10 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 
 void Renderer::Shutdown()
 {
-    skyboxMesh_.reset();
-    skyboxShader_.reset();
-    skyboxTexture_.reset();
-    loadedSkyboxPath_.clear();
-    skyboxDescriptorIndex_ = UINT_MAX;
-    skyboxGpuHandle_ = {};
+    if (skyboxRenderer_)
+        skyboxRenderer_->Shutdown();
+
+    skyboxRenderer_.reset();
 
     if (postProcessRenderer_)
         postProcessRenderer_->Shutdown();
@@ -455,7 +458,8 @@ void Renderer::Render(Scene* scene)
 
     BindCameraData(camera);
 
-    RenderSkybox(scene, camera);
+    if (skyboxRenderer_)
+        skyboxRenderer_->Render(cmdList, camera, scene->GetSkybox());
 
     BuildRenderQueues(scene, camera);
 
@@ -646,8 +650,8 @@ bool Renderer::BindMaterial(Material* material, Camera* camera)
 
     BindMaterialTextures(material);
 
-    if (material->UseEnvironmentReflection())
-        BindSkyboxTexture();
+    if (material->UseEnvironmentReflection() && skyboxRenderer_)
+        skyboxRenderer_->BindSkyboxTexture(d3dCore_.GetRenderCommandList());
 
     const UINT materialCBIndex = GetOrCreateMaterialCBIndex(material);
     if (materialCBIndex == UINT_MAX)
@@ -664,129 +668,19 @@ bool Renderer::BindMaterial(Material* material, Camera* camera)
     return true;
 }
 
-void Renderer::RenderSkybox(Scene* scene, Camera* camera)
-{
-    if (!scene || !camera)
-        return;
-
-    const SkyboxDesc& skybox = scene->GetSkybox();
-
-    if (!skybox.enabled)
-        return;
-
-    if (!skyboxShader_)
-        return;
-
-    if (loadedSkyboxPath_ != skybox.cubemapPath)
-        return;
-
-    if (!skyboxMesh_ || !skyboxTexture_)
-        return;
-
-    auto* cmdList = d3dCore_.GetRenderCommandList();
-
-    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
-    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-    cmdList->SetGraphicsRootDescriptorTable(4, skyboxGpuHandle_);
-
-    skyboxShader_->Render(cmdList, camera, RenderMode::Opaque);
-    skyboxMesh_->Render(cmdList);
-}
-
-bool Renderer::PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager) 
-{
-    if (!skybox.enabled || skybox.cubemapPath.empty())
-        return false;
-
-    if (loadedSkyboxPath_ == skybox.cubemapPath && skyboxTexture_ && skyboxMesh_)
-        return true;
-
-    auto* device = d3dCore_.GetDevice();
-    auto* uploadCmdList = d3dCore_.GetUploadCommandList();
-
-    if (!device || !uploadCmdList)
-        return false;
-
-    skyboxTexture_ = assetManager.LoadTexture(device, uploadCmdList, skybox.cubemapPath);
-
-    if (!skyboxMesh_)
-        skyboxMesh_ = std::make_unique<SkyboxMesh>(device, uploadCmdList);
-
-    if (skyboxDescriptorIndex_ == UINT_MAX)
-    {
-        if (nextSrvDescriptorIndex_ + 1 > kMaxSrvDescriptorCount)
-        {
-            LOG("SRV descriptor heap is full. Skybox SRV failed.");
-            return false;
-        }
-
-        skyboxDescriptorIndex_ = nextSrvDescriptorIndex_++;
-    }
-
-    if (!CreateSkyboxSrvDescriptor(skyboxTexture_.get(), skyboxDescriptorIndex_))
-        return false;
-
-    skyboxGpuHandle_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-    skyboxGpuHandle_.ptr += static_cast<SIZE_T>(skyboxDescriptorIndex_) * srvDescriptorSize_;
-
-    loadedSkyboxPath_ = skybox.cubemapPath;
-
-    return true;
-}
-
-bool Renderer::CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex)
-{
-    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
-        return false;
-
-    if (descriptorIndex >= kMaxSrvDescriptorCount)
-        return false;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle =
-        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-
-    dstHandle.ptr += static_cast<SIZE_T>(descriptorIndex) * srvDescriptorSize_;
-
-    const D3D12_RESOURCE_DESC resourceDesc = texture->GetResource()->GetDesc();
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = resourceDesc.Format;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-    srvDesc.TextureCube.MostDetailedMip = 0;
-    srvDesc.TextureCube.MipLevels = resourceDesc.MipLevels;
-    srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-
-    d3dCore_.GetDevice()->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        dstHandle
-    );
-
-    return true;
-}
-
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)
 {
-    return PrepareSkyboxResources(skybox, assetManager);
+    if (!skyboxRenderer_)
+        return false;
+
+    return skyboxRenderer_->Prepare(
+        skybox,
+        assetManager,
+        d3dCore_.GetUploadCommandList());
 }
 
 void Renderer::ReleaseSkyboxUploadResources()
 {
-    if (skyboxMesh_)
-        skyboxMesh_->ReleaseUploadResources();
-}
-
-void Renderer::BindSkyboxTexture()
-{
-    if (!srvDescriptorHeap_ || skyboxDescriptorIndex_ == UINT_MAX)
-        return;
-
-    auto* cmdList = d3dCore_.GetRenderCommandList();
-
-    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
-    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-    cmdList->SetGraphicsRootDescriptorTable(4, skyboxGpuHandle_);
+    if (skyboxRenderer_)
+        skyboxRenderer_->ReleaseUploadResources();
 }

@@ -2,6 +2,7 @@
 #include "EngineTypes.h"
 #include "D3DCore.h"
 #include "PostProcessRenderer.h"
+#include "SkyboxRenderer.h"
 
 class Scene;
 class GameObject;
@@ -10,8 +11,6 @@ class MeshRenderer;
 class Texture;
 class Material;
 class FrameResource;
-class SkyboxShader;
-class SkyboxMesh;
 class AssetManager;
 
 struct MaterialGpuBinding
@@ -56,14 +55,7 @@ private:
     std::unordered_map<std::string, UINT> materialCBIndexTable_;
     std::unordered_map<std::string, MaterialGpuBinding> materialGpuBindingTable_;
 
-    std::unique_ptr<SkyboxShader> skyboxShader_;
-    std::unique_ptr<SkyboxMesh> skyboxMesh_;
-
-    std::shared_ptr<Texture> skyboxTexture_;
-    D3D12_GPU_DESCRIPTOR_HANDLE skyboxGpuHandle_{};
-    UINT skyboxDescriptorIndex_ = UINT_MAX;
-    std::filesystem::path loadedSkyboxPath_;
-
+    std::unique_ptr<SkyboxRenderer> skyboxRenderer_;
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
 
 public:
@@ -88,7 +80,6 @@ public:
     // GPU Synchronization
     void WaitForGpuComplete();
 
-    void RenderSkybox(Scene* scene, Camera* camera);
     bool PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager);
     void ReleaseSkyboxUploadResources();
 
@@ -123,7 +114,6 @@ private:
     bool BindMaterial(Material* material, Camera* camera);
     void BindMaterialData(const Material* material, UINT materialIndex);
     void BindMaterialTextures(Material* material);
-    void BindSkyboxTexture();
     
     // Material GPU Resources
     UINT GetOrCreateMaterialCBIndex(Material* material);
@@ -132,7 +122,4 @@ private:
 
     // Draw
     void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
-
-    bool PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager);
-    bool CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex);
 };
