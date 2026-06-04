@@ -59,7 +59,7 @@ PassCB Camera::BuildPassCB() const
 
     passCB.mainLight.direction = Vector3(0.0f, 0.0f, -1.0f);
     passCB.mainLight.direction.Normalize();
-    passCB.mainLight.color = Vector4(1.0, 0.95, 0.85, 1.0f);
+    passCB.mainLight.color = Vector4(1.0f, 0.95f, 0.85f, 1.0f);
 
     passCB.ambientColor = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
     passCB.specularPower = 32.0f;

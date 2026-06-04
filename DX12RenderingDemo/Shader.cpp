@@ -102,13 +102,13 @@ D3D12_SHADER_BYTECODE Shader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 
 //셰이더 소스 코드를 컴파일하여 바이트 코드 구조체를 반환한다. 
 D3D12_SHADER_BYTECODE Shader::CompileShaderFromFile(
-	const WCHAR* fileName,
+	const std::filesystem::path& filePath,
 	LPCSTR shaderName,
 	LPCSTR shaderProfile,
 	ComPtr<ID3DBlob>& shaderBlob)
 {
 	shaderBlob = D3DUtil::CompileShader(
-		fileName,
+		filePath,
 		nullptr,
 		shaderName,
 		shaderProfile
@@ -219,12 +219,12 @@ D3D12_INPUT_LAYOUT_DESC LitShader::CreateInputLayout()
 
 D3D12_SHADER_BYTECODE LitShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSLit", "vs_5_1", shaderBlob);
+	return Shader::CompileShaderFromFile(AssetPath::ShaderFile(L"Lit"), "VSLit", "vs_5_1", shaderBlob);
 }
 
 D3D12_SHADER_BYTECODE LitShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSLit", "ps_5_1", shaderBlob);
+	return Shader::CompileShaderFromFile(AssetPath::ShaderFile(L"Lit"), "PSLit", "ps_5_1", shaderBlob);
 }
 
 void LitShader::CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature)
@@ -245,7 +245,7 @@ GlassShader::~GlassShader()
 D3D12_SHADER_BYTECODE GlassShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"Glass"),
 		"PSGlass",
 		"ps_5_1",
 		shaderBlob
@@ -289,8 +289,7 @@ D3D12_INPUT_LAYOUT_DESC SkyboxShader::CreateInputLayout()
 {
 	inputElementDescs_ =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-		  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
 	D3D12_INPUT_LAYOUT_DESC desc{};
@@ -302,12 +301,12 @@ D3D12_INPUT_LAYOUT_DESC SkyboxShader::CreateInputLayout()
 
 D3D12_SHADER_BYTECODE SkyboxShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "VSSkybox", "vs_5_1", shaderBlob);
+	return Shader::CompileShaderFromFile(AssetPath::ShaderFile(L"Skybox"), "VSSkybox", "vs_5_1", shaderBlob);
 }
 
 D3D12_SHADER_BYTECODE SkyboxShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
-	return Shader::CompileShaderFromFile(L"Shaders.hlsl", "PSSkybox", "ps_5_1", shaderBlob);
+	return Shader::CompileShaderFromFile(AssetPath::ShaderFile(L"Skybox"), "PSSkybox", "ps_5_1", shaderBlob);
 }
 
 D3D12_RASTERIZER_DESC SkyboxShader::CreateRasterizerState()
@@ -356,7 +355,7 @@ D3D12_INPUT_LAYOUT_DESC PostProcessShader::CreateInputLayout()
 D3D12_SHADER_BYTECODE PostProcessShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"PostProcess"),
 		"VSFullscreen",
 		"vs_5_1",
 		shaderBlob
@@ -366,7 +365,7 @@ D3D12_SHADER_BYTECODE PostProcessShader::CreateVertexShader(ComPtr<ID3DBlob>& sh
 D3D12_SHADER_BYTECODE PostProcessShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"PostProcess"),
 		"PSCopy",
 		"ps_5_1",
 		shaderBlob
@@ -416,7 +415,7 @@ DXGI_FORMAT BrightPassShader::CreateRtvFormat() const
 D3D12_SHADER_BYTECODE BrightPassShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"PostProcess"),
 		"PSBrightPass",
 		"ps_5_1",
 		shaderBlob
@@ -431,7 +430,7 @@ DXGI_FORMAT HorizontalBlurShader::CreateRtvFormat() const
 D3D12_SHADER_BYTECODE HorizontalBlurShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"PostProcess"),
 		"PSBlurHorizontal",
 		"ps_5_1",
 		shaderBlob
@@ -446,7 +445,7 @@ DXGI_FORMAT VerticalBlurShader::CreateRtvFormat() const
 D3D12_SHADER_BYTECODE VerticalBlurShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
 {
 	return Shader::CompileShaderFromFile(
-		L"Shaders.hlsl",
+		AssetPath::ShaderFile(L"PostProcess"),
 		"PSBlurVertical",
 		"ps_5_1",
 		shaderBlob

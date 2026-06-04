@@ -21,10 +21,10 @@ public:
     virtual DXGI_FORMAT CreateRtvFormat() const;
 
     D3D12_SHADER_BYTECODE CompileShaderFromFile(
-        const WCHAR* pszFileName,
-        LPCSTR pszShaderName,
-        LPCSTR pszShaderProfile,
-        ComPtr<ID3DBlob>& pd3dShaderBlob);
+        const std::filesystem::path& filePath,
+        LPCSTR shaderName,
+        LPCSTR shaderProfile,
+        ComPtr<ID3DBlob>& shaderBlob);
 
     virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);

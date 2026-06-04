@@ -65,6 +65,7 @@ public:
     static std::filesystem::path Texture(const std::wstring& name) { return std::filesystem::path(L"../Assets/Textures") / (name + L".dds"); }
     static std::filesystem::path Material(const std::wstring& name) { return std::filesystem::path(L"../Assets/Materials") / (name + L".mat"); }
     static std::filesystem::path FBX(const std::wstring& name) { return std::filesystem::path(L"../Assets/Meshes") / (name + L".fbx"); }
+    static std::filesystem::path ShaderFile(const std::wstring& name) { return std::filesystem::path(L"../Shaders") / (name + L".hlsl"); }
 
     static std::string Key(const std::filesystem::path& path) { return path.lexically_normal().generic_string(); }
 };
@@ -75,7 +76,7 @@ public:
     static UINT CalcConstantBufferByteSize(UINT byteSize) { return (byteSize + 255) & ~255; }
 
     static ComPtr<ID3DBlob> CompileShader(
-        const std::wstring& filename,
+        const std::filesystem::path& filePath,
         const D3D_SHADER_MACRO* defines,
         const std::string& entrypoint,
         const std::string& target);

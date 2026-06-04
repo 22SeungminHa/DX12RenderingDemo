@@ -224,9 +224,24 @@
     <None Include="SimpleMath.inl">
       <Filter>소스 파일\Utility</Filter>
     </None>
+    <None Include="..\Shaders\Common.hlsli">
+      <Filter>소스 파일\Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders.hlsl">
+    <FxCompile Include="..\Shaders\Glass.hlsl">
+      <Filter>소스 파일\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Lit.hlsl">
+      <Filter>소스 파일\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\PostProcess.hlsl">
+      <Filter>소스 파일\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Shaders.hlsl">
+      <Filter>소스 파일\Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Shaders\Skybox.hlsl">
       <Filter>소스 파일\Shader</Filter>
     </FxCompile>
   </ItemGroup>
