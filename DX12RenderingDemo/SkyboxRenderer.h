@@ -1,5 +1,6 @@
 #pragma once
 #include "EngineTypes.h"
+#include "DescriptorAllocator.h"
 
 class Camera;
 class Texture;
@@ -10,24 +11,11 @@ class SkyboxMesh;
 class SkyboxRenderer
 {
 public:
-    void Initialize(
-        ID3D12Device* device,
-        ID3D12RootSignature* rootSignature,
-        ID3D12DescriptorHeap* srvDescriptorHeap,
-        UINT srvDescriptorSize,
-        UINT& nextSrvDescriptorIndex);
-
+    void Initialize(ID3D12Device* device, ID3D12RootSignature* rootSignature, DescriptorAllocator* srvAllocator);
     void Shutdown();
 
-    bool Prepare(
-        const SkyboxDesc& skybox,
-        AssetManager& assetManager,
-        ID3D12GraphicsCommandList* uploadCmdList);
-
-    void Render(
-        ID3D12GraphicsCommandList* cmdList,
-        Camera* camera,
-        const SkyboxDesc& skybox);
+    bool Prepare(const SkyboxDesc& skybox, AssetManager& assetManager, ID3D12GraphicsCommandList* uploadCmdList);
+    void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera, const SkyboxDesc& skybox);
 
     void BindSkyboxTexture(ID3D12GraphicsCommandList* cmdList);
 
@@ -38,15 +26,13 @@ private:
 
 private:
     ID3D12Device* device_ = nullptr;
-    ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
-    UINT srvDescriptorSize_ = 0;
+    DescriptorAllocator* srvAllocator_ = nullptr;
+    DescriptorAllocation srv_;
 
     std::unique_ptr<SkyboxShader> shader_;
     std::unique_ptr<SkyboxMesh> mesh_;
 
     std::shared_ptr<Texture> texture_;
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle_{};
-    UINT descriptorIndex_ = UINT_MAX;
 
     std::filesystem::path loadedPath_;
 };

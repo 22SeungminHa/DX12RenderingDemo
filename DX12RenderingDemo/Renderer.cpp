@@ -22,22 +22,10 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     CreateFrameResources();
 
     skyboxRenderer_ = std::make_unique<SkyboxRenderer>();
-    skyboxRenderer_->Initialize(
-        d3dCore_.GetDevice(),
-        rootSignature_.Get(),
-        srvDescriptorHeap_.Get(),
-        srvDescriptorSize_,
-        nextSrvDescriptorIndex_);
+    skyboxRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_);
 
     postProcessRenderer_ = std::make_unique<PostProcessRenderer>();
-    postProcessRenderer_->Initialize(
-        d3dCore_.GetDevice(),
-        rootSignature_.Get(),
-        srvDescriptorHeap_.Get(),
-        srvDescriptorSize_,
-        nextSrvDescriptorIndex_,
-        width,
-        height);
+    postProcessRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, width, height);
 }
 
 void Renderer::Shutdown()
@@ -198,42 +186,25 @@ void Renderer::ReleaseFrameResources()
     frameResources_.clear();
 
     materialCBIndexTable_.clear();
-    nextMaterialCBIndex_ = 0;//cmdList
+    nextMaterialCBIndex_ = 0;
 }
 
 void Renderer::CreateSrvDescriptorHeap()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
-    heapDesc.NumDescriptors = kMaxSrvDescriptorCount;
-    heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    heapDesc.NodeMask = 0;
-
-    ThrowIfFailed(
-        d3dCore_.GetDevice()->CreateDescriptorHeap(
-            &heapDesc,
-            IID_PPV_ARGS(srvDescriptorHeap_.GetAddressOf()))
-    );
-
-    srvDescriptorSize_ =
-        d3dCore_.GetDevice()->GetDescriptorHandleIncrementSize(
-            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    srvDescriptorAllocator_.Initialize(d3dCore_.GetDevice(), kMaxSrvDescriptorCount);
 }
 
 void Renderer::ReleaseSrvDescriptorHeap()
 {
     materialGpuBindingTable_.clear();
-
-    srvDescriptorHeap_.Reset();
-    srvDescriptorSize_ = 0;
-    nextSrvDescriptorIndex_ = 0;
+    srvDescriptorAllocator_.Shutdown();
 }
 
 MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
 {
     MaterialGpuBinding empty{};
 
-    if (!material || !srvDescriptorHeap_)
+    if (!material || !srvDescriptorAllocator_.GetHeap())
         return empty;
 
     const std::string& materialKey = material->GetKey();
@@ -265,17 +236,17 @@ MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
         materialTextures[i] = texture;
     }
 
-    if (nextSrvDescriptorIndex_ + materialTextureCount > kMaxSrvDescriptorCount)
+    DescriptorAllocation allocation = srvDescriptorAllocator_.Allocate(materialTextureCount);
+
+    if (!allocation.IsValid())
     {
         LOG("SRV descriptor heap is full");
         return empty;
     }
 
-    const UINT startIndex = nextSrvDescriptorIndex_;
-
     for (UINT i = 0; i < materialTextureCount; ++i)
     {
-        if (!CreateTextureSrvDescriptor(materialTextures[i], startIndex + i))
+        if (!CreateTextureSrvDescriptor(materialTextures[i], allocation.startIndex + i))
         {
             LOG("Failed to copy texture SRV. Material: " << materialKey << ", Slot: " << i);
             return empty;
@@ -283,29 +254,25 @@ MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
     }
 
     MaterialGpuBinding binding{};
-    binding.startDescriptorIndex = startIndex;
-    binding.gpuHandle = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-    binding.gpuHandle.ptr += static_cast<SIZE_T>(startIndex) * srvDescriptorSize_;
+    binding.startDescriptorIndex = allocation.startIndex;
+    binding.gpuHandle = allocation.gpuHandle;
     binding.valid = true;
 
     materialGpuBindingTable_[materialKey] = binding;
-
-    nextSrvDescriptorIndex_ += materialTextureCount;
 
     return binding;
 }
 
 bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex)
 {
-    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
+    if (!texture || !texture->GetResource())
         return false;
 
-    if (descriptorIndex >= kMaxSrvDescriptorCount)
+    if (!srvDescriptorAllocator_.IsValidIndex(descriptorIndex))
         return false;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-
-    dstHandle.ptr += static_cast<SIZE_T>(descriptorIndex) * srvDescriptorSize_;
+    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle =
+        srvDescriptorAllocator_.GetCpuHandle(descriptorIndex);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -315,14 +282,17 @@ bool Renderer::CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex
     srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    d3dCore_.GetDevice()->CreateShaderResourceView(texture->GetResource(), &srvDesc, dstHandle);
+    d3dCore_.GetDevice()->CreateShaderResourceView(
+        texture->GetResource(),
+        &srvDesc,
+        dstHandle);
 
     return true;
 }
 
 void Renderer::BindMaterialTextures(Material* material)
 {
-    if (!material || !srvDescriptorHeap_)
+    if (!material || !srvDescriptorAllocator_.GetHeap())
         return;
 
     MaterialGpuBinding binding = GetOrCreateMaterialGpuBinding(material);
@@ -332,7 +302,7 @@ void Renderer::BindMaterialTextures(Material* material)
 
     auto* cmdList = d3dCore_.GetRenderCommandList();
 
-    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorAllocator_.GetHeap() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     cmdList->SetGraphicsRootDescriptorTable(
@@ -473,12 +443,7 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
     auto* cmdList = d3dCore_.GetRenderCommandList();
 
     if (postProcessRenderer_)
-    {
-        postProcessRenderer_->BeginSceneRender(
-            cmdList,
-            camera,
-            d3dCore_.GetDsvHandle());
-    }
+        postProcessRenderer_->BeginSceneRender(cmdList, camera, d3dCore_.GetDsvHandle());
 
     cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 
@@ -504,14 +469,7 @@ void Renderer::RenderToBackBuffer(Camera* camera)
     d3dCore_.BeginRender();
 
     if (postProcessRenderer_)
-    {
-        postProcessRenderer_->Render(
-            d3dCore_.GetRenderCommandList(),
-            camera,
-            rootSignature_.Get(),
-            srvDescriptorHeap_.Get(),
-            d3dCore_.GetCurrentRtvHandle());
-    }
+        postProcessRenderer_->Render(d3dCore_.GetRenderCommandList(), camera, rootSignature_.Get(), d3dCore_.GetCurrentRtvHandle());
 
     d3dCore_.EndRender();
 }

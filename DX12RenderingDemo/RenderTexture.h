@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "DescriptorAllocator.h"
 
 class RenderTexture
 {
@@ -12,9 +12,7 @@ public:
         UINT width,
         UINT height,
         DXGI_FORMAT format,
-        ID3D12DescriptorHeap* srvDescriptorHeap,
-        UINT srvDescriptorSize,
-        UINT srvDescriptorIndex,
+        const DescriptorAllocation& srvAllocation,
         const float clearColor[4]);
 
     void Release();

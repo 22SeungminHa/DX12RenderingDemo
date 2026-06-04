@@ -3,6 +3,7 @@
 #include "D3DCore.h"
 #include "PostProcessRenderer.h"
 #include "SkyboxRenderer.h"
+#include "DescriptorAllocator.h"
 
 class Scene;
 class GameObject;
@@ -44,9 +45,7 @@ private:
     FrameResource* currentFrameResource_ = nullptr;
     UINT currentFrameResourceIndex_ = 0;
 
-    ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
-    UINT srvDescriptorSize_ = 0;
-    UINT nextSrvDescriptorIndex_ = 0;
+    DescriptorAllocator srvDescriptorAllocator_;
 
     std::vector<RenderItem> opaqueQueue_;
     std::vector<RenderItem> transparentQueue_;

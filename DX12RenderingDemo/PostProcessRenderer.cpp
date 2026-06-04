@@ -1,23 +1,21 @@
 #include "PostProcessRenderer.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "DescriptorAllocator.h"
 
 void PostProcessRenderer::Initialize(
     ID3D12Device* device,
     ID3D12RootSignature* rootSignature,
-    ID3D12DescriptorHeap* srvDescriptorHeap,
-    UINT srvDescriptorSize,
-    UINT& nextSrvDescriptorIndex,
+    DescriptorAllocator* srvAllocator,
     UINT width,
     UINT height)
 {
     device_ = device;
-    srvDescriptorHeap_ = srvDescriptorHeap;
-    srvDescriptorSize_ = srvDescriptorSize;
+    srvAllocator_ = srvAllocator;
 
-    sceneColorSrvDescriptorIndex_ = nextSrvDescriptorIndex++;
-    brightColorSrvDescriptorIndex_ = nextSrvDescriptorIndex++;
-    blurTempSrvDescriptorIndex_ = nextSrvDescriptorIndex++;
+    sceneColorSrv_ = srvAllocator_->Allocate();
+    brightColorSrv_ = srvAllocator_->Allocate();
+    blurTempSrv_ = srvAllocator_->Allocate();
 
     CreateRenderTextures(width, height);
 
@@ -45,13 +43,12 @@ void PostProcessRenderer::Shutdown()
     brightColor_.Release();
     blurTemp_.Release();
 
-    sceneColorSrvDescriptorIndex_ = UINT_MAX;
-    brightColorSrvDescriptorIndex_ = UINT_MAX;
-    blurTempSrvDescriptorIndex_ = UINT_MAX;
+    sceneColorSrv_ = {};
+    brightColorSrv_ = {};
+    blurTempSrv_ = {};
 
     device_ = nullptr;
-    srvDescriptorHeap_ = nullptr;
-    srvDescriptorSize_ = 0;
+    srvAllocator_ = nullptr;
 }
 
 void PostProcessRenderer::Resize(UINT width, UINT height)
@@ -61,7 +58,7 @@ void PostProcessRenderer::Resize(UINT width, UINT height)
 
 void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
 {
-    if (!device_ || !srvDescriptorHeap_ || width == 0 || height == 0)
+    if (!device_ || !srvAllocator_ || width == 0 || height == 0)
         return;
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -71,9 +68,7 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
         width,
         height,
         kSceneColorFormat,
-        srvDescriptorHeap_,
-        srvDescriptorSize_,
-        sceneColorSrvDescriptorIndex_,
+        sceneColorSrv_,
         clearColor);
 
     brightColor_.Create(
@@ -81,9 +76,7 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
         width,
         height,
         kSceneColorFormat,
-        srvDescriptorHeap_,
-        srvDescriptorSize_,
-        brightColorSrvDescriptorIndex_,
+        brightColorSrv_,
         clearColor);
 
     blurTemp_.Create(
@@ -91,9 +84,7 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
         width,
         height,
         kSceneColorFormat,
-        srvDescriptorHeap_,
-        srvDescriptorSize_,
-        blurTempSrvDescriptorIndex_,
+        blurTempSrv_,
         clearColor);
 }
 
@@ -136,9 +127,10 @@ void PostProcessRenderer::Render(
     ID3D12GraphicsCommandList* cmdList,
     Camera* camera,
     ID3D12RootSignature* rootSignature,
-    ID3D12DescriptorHeap* srvDescriptorHeap,
-    D3D12_CPU_DESCRIPTOR_HANDLE finalRtv)
+    D3D12_CPU_DESCRIPTOR_HANDLE finalRtv) 
 {
+    ID3D12DescriptorHeap* srvDescriptorHeap = srvAllocator_ ? srvAllocator_->GetHeap() : nullptr;
+
     RenderBrightPass(cmdList, camera, rootSignature, srvDescriptorHeap);
     RenderHorizontalBlur(cmdList, camera, rootSignature, srvDescriptorHeap);
     RenderVerticalBlur(cmdList, camera, rootSignature, srvDescriptorHeap);

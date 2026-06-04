@@ -4,19 +4,17 @@
 #include "Texture.h"
 #include "AssetManager.h"
 #include "Camera.h"
+#include "DescriptorAllocator.h"
 
 void SkyboxRenderer::Initialize(
     ID3D12Device* device,
     ID3D12RootSignature* rootSignature,
-    ID3D12DescriptorHeap* srvDescriptorHeap,
-    UINT srvDescriptorSize,
-    UINT& nextSrvDescriptorIndex)
+    DescriptorAllocator* srvAllocator)
 {
     device_ = device;
-    srvDescriptorHeap_ = srvDescriptorHeap;
-    srvDescriptorSize_ = srvDescriptorSize;
+    srvAllocator_ = srvAllocator;
 
-    descriptorIndex_ = nextSrvDescriptorIndex++;
+    srv_ = srvAllocator_->Allocate();
 
     shader_ = std::make_unique<SkyboxShader>();
     shader_->CreateShader(device_, rootSignature);
@@ -29,12 +27,10 @@ void SkyboxRenderer::Shutdown()
     texture_.reset();
 
     loadedPath_.clear();
-    gpuHandle_ = {};
-    descriptorIndex_ = UINT_MAX;
 
     device_ = nullptr;
-    srvDescriptorHeap_ = nullptr;
-    srvDescriptorSize_ = 0;
+    srv_ = {};
+    srvAllocator_ = nullptr;
 }
 
 bool SkyboxRenderer::Prepare(
@@ -66,13 +62,8 @@ bool SkyboxRenderer::Prepare(
 
 bool SkyboxRenderer::CreateSkyboxSrvDescriptor(Texture* texture)
 {
-    if (!texture || !texture->GetResource() || !srvDescriptorHeap_)
+    if (!texture || !texture->GetResource() || !srvAllocator_ || !srv_.IsValid())
         return false;
-
-    D3D12_CPU_DESCRIPTOR_HANDLE dstHandle =
-        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-
-    dstHandle.ptr += static_cast<SIZE_T>(descriptorIndex_) * srvDescriptorSize_;
 
     const D3D12_RESOURCE_DESC resourceDesc = texture->GetResource()->GetDesc();
 
@@ -87,10 +78,7 @@ bool SkyboxRenderer::CreateSkyboxSrvDescriptor(Texture* texture)
     device_->CreateShaderResourceView(
         texture->GetResource(),
         &srvDesc,
-        dstHandle);
-
-    gpuHandle_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
-    gpuHandle_.ptr += static_cast<SIZE_T>(descriptorIndex_) * srvDescriptorSize_;
+        srv_.cpuHandle);
 
     return true;
 }
@@ -120,15 +108,15 @@ void SkyboxRenderer::Render(
 
 void SkyboxRenderer::BindSkyboxTexture(ID3D12GraphicsCommandList* cmdList)
 {
-    if (!cmdList || !srvDescriptorHeap_ || descriptorIndex_ == UINT_MAX)
+    if (!cmdList || !srvAllocator_ || !srv_.IsValid())
         return;
 
-    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_ };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvAllocator_->GetHeap() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     cmdList->SetGraphicsRootDescriptorTable(
         static_cast<UINT>(RootParam::SkyboxTexture),
-        gpuHandle_);
+        srv_.gpuHandle);
 }
 
 void SkyboxRenderer::ReleaseUploadResources()

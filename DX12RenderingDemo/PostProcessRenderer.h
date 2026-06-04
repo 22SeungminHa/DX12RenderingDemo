@@ -6,6 +6,7 @@ class PostProcessShader;
 class BrightPassShader;
 class HorizontalBlurShader;
 class VerticalBlurShader;
+class DescriptorAllocator;
 
 class PostProcessRenderer
 {
@@ -19,9 +20,7 @@ public:
     void Initialize(
         ID3D12Device* device,
         ID3D12RootSignature* rootSignature,
-        ID3D12DescriptorHeap* srvDescriptorHeap,
-        UINT srvDescriptorSize,
-        UINT& nextSrvDescriptorIndex,
+        DescriptorAllocator* srvAllocator,
         UINT width,
         UINT height);
 
@@ -39,7 +38,6 @@ public:
         ID3D12GraphicsCommandList* cmdList,
         Camera* camera,
         ID3D12RootSignature* rootSignature,
-        ID3D12DescriptorHeap* srvDescriptorHeap,
         D3D12_CPU_DESCRIPTOR_HANDLE finalRtv);
 
 private:
@@ -72,12 +70,11 @@ private:
 
 private:
     ID3D12Device* device_ = nullptr;
-    ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
-    UINT srvDescriptorSize_ = 0;
+    DescriptorAllocator* srvAllocator_ = nullptr;
 
-    UINT sceneColorSrvDescriptorIndex_ = UINT_MAX;
-    UINT brightColorSrvDescriptorIndex_ = UINT_MAX;
-    UINT blurTempSrvDescriptorIndex_ = UINT_MAX;
+    DescriptorAllocation sceneColorSrv_;
+    DescriptorAllocation brightColorSrv_;
+    DescriptorAllocation blurTempSrv_;
 
     RenderTexture sceneColor_;
     RenderTexture brightColor_;

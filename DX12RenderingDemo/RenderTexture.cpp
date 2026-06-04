@@ -5,14 +5,12 @@ bool RenderTexture::Create(
     UINT width,
     UINT height,
     DXGI_FORMAT format,
-    ID3D12DescriptorHeap* srvDescriptorHeap,
-    UINT srvDescriptorSize,
-    UINT srvDescriptorIndex,
+    const DescriptorAllocation& srvAllocation,
     const float clearColor[4])
 {
     Release();
 
-    if (!device || !srvDescriptorHeap || width == 0 || height == 0)
+    if (!device || width == 0 || height == 0 || !srvAllocation.IsValid())
         return false;
 
     D3D12_RESOURCE_DESC textureDesc{};
@@ -57,11 +55,6 @@ bool RenderTexture::Create(
     rtv_ = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
     device->CreateRenderTargetView(resource_.Get(), nullptr, rtv_);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle =
-        srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-
-    srvCpuHandle.ptr += static_cast<SIZE_T>(srvDescriptorIndex) * srvDescriptorSize;
-
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Format = format;
@@ -70,10 +63,12 @@ bool RenderTexture::Create(
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    device->CreateShaderResourceView(resource_.Get(), &srvDesc, srvCpuHandle);
+    device->CreateShaderResourceView(
+        resource_.Get(),
+        &srvDesc,
+        srvAllocation.cpuHandle);
 
-    srv_ = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-    srv_.ptr += static_cast<SIZE_T>(srvDescriptorIndex) * srvDescriptorSize;
+    srv_ = srvAllocation.gpuHandle;
 
     return true;
 }

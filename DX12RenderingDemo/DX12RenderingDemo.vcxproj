@@ -149,6 +149,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="DescriptorAllocator.h" />
     <ClInclude Include="DX12RenderingDemo.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="FBXLoader.h" />
@@ -187,6 +188,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="DescriptorAllocator.cpp" />
     <ClCompile Include="DX12RenderingDemo.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="FBXLoader.cpp" />
