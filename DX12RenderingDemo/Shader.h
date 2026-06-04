@@ -100,3 +100,13 @@ public:
     virtual DXGI_FORMAT CreateRtvFormat() const override;
     virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
 };
+
+class HorizontalBlurShader : public PostProcessShader
+{
+public:
+    HorizontalBlurShader() = default;
+    virtual ~HorizontalBlurShader() = default;
+
+    virtual DXGI_FORMAT CreateRtvFormat() const override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
+};

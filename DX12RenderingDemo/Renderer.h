@@ -14,6 +14,7 @@ class SkyboxMesh;
 class AssetManager;
 class PostProcessShader;
 class BrightPassShader;
+class HorizontalBlurShader;
 
 struct MaterialGpuBinding
 {
@@ -83,6 +84,15 @@ private:
     D3D12_RESOURCE_STATES brightColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
     std::unique_ptr<BrightPassShader> brightPassShader_;
+
+    ComPtr<ID3D12Resource> blurTempBuffer_;
+    ComPtr<ID3D12DescriptorHeap> blurTempRtvHeap_;
+    D3D12_CPU_DESCRIPTOR_HANDLE blurTempRtv_{};
+    D3D12_GPU_DESCRIPTOR_HANDLE blurTempSrv_{};
+    UINT blurTempSrvDescriptorIndex_ = UINT_MAX;
+    D3D12_RESOURCE_STATES blurTempState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    std::unique_ptr<HorizontalBlurShader> horizontalBlurShader_;
 
 public:
     Renderer();
@@ -167,4 +177,9 @@ private:
     void ReleaseBrightPassTexture();
     void TransitionBrightColor(D3D12_RESOURCE_STATES afterState);
     void RenderBrightPass(Camera* camera);
+
+    void CreateBlurTempTexture(UINT width, UINT height);
+    void ReleaseBlurTempTexture();
+    void TransitionBlurTemp(D3D12_RESOURCE_STATES afterState);
+    void RenderHorizontalBlur(Camera* camera);
 };

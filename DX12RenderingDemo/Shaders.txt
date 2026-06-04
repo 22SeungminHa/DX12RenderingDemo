@@ -290,3 +290,26 @@ float4 PSBrightPass(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
 
     return float4(color * brightFactor, 1.0f);
 }
+
+float4 PSBlurHorizontal(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
+{
+    float2 texelSize;
+    gSceneColorMap.GetDimensions(texelSize.x, texelSize.y);
+    texelSize = 1.0f / texelSize;
+
+    float2 uv = input.texCoord;
+
+    float3 color = float3(0.0f, 0.0f, 0.0f);
+
+    color += gSceneColorMap.Sample(gSampler, uv + float2(-4.0f * texelSize.x, 0.0f)).rgb * 0.05f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(-3.0f * texelSize.x, 0.0f)).rgb * 0.09f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(-2.0f * texelSize.x, 0.0f)).rgb * 0.12f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(-1.0f * texelSize.x, 0.0f)).rgb * 0.15f;
+    color += gSceneColorMap.Sample(gSampler, uv).rgb * 0.18f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(1.0f * texelSize.x, 0.0f)).rgb * 0.15f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(2.0f * texelSize.x, 0.0f)).rgb * 0.12f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(3.0f * texelSize.x, 0.0f)).rgb * 0.09f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(4.0f * texelSize.x, 0.0f)).rgb * 0.05f;
+
+    return float4(color, 1.0f);
+}

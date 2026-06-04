@@ -422,3 +422,18 @@ D3D12_SHADER_BYTECODE BrightPassShader::CreatePixelShader(ComPtr<ID3DBlob>& shad
 		shaderBlob
 	);
 }
+
+DXGI_FORMAT HorizontalBlurShader::CreateRtvFormat() const
+{
+	return DXGI_FORMAT_R16G16B16A16_FLOAT;
+}
+
+D3D12_SHADER_BYTECODE HorizontalBlurShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
+{
+	return Shader::CompileShaderFromFile(
+		L"Shaders.hlsl",
+		"PSBlurHorizontal",
+		"ps_5_1",
+		shaderBlob
+	);
+}
