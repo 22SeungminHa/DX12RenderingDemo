@@ -24,6 +24,9 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 
     skyboxShader_ = std::make_unique<SkyboxShader>();
     skyboxShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
+
+    postProcessShader_ = std::make_unique<PostProcessShader>();
+    postProcessShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
 }
 
 void Renderer::Shutdown()
@@ -34,6 +37,8 @@ void Renderer::Shutdown()
     loadedSkyboxPath_.clear();
     skyboxDescriptorIndex_ = UINT_MAX;
     skyboxGpuHandle_ = {};
+
+    postProcessShader_.reset();
 
     ReleaseFrameResources();
     ReleaseSceneRenderTexture();
@@ -434,6 +439,7 @@ void Renderer::Render(Scene* scene)
     EndSceneRender();
 
     d3dCore_.BeginRender();
+    RenderPostProcess(camera);
     d3dCore_.EndRender();
     d3dCore_.ExecuteCommandList();
     d3dCore_.Present(0, 0);
@@ -911,4 +917,30 @@ void Renderer::BeginSceneRender(Camera* camera)
 void Renderer::EndSceneRender()
 {
     TransitionSceneColor(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+void Renderer::RenderPostProcess(Camera* camera)
+{
+    if (!camera || !postProcessShader_ || !sceneColorBuffer_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    const auto& viewport = camera->GetViewport();
+    const auto& scissor = camera->GetScissorRect();
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissor);
+
+    cmdList->SetGraphicsRootSignature(rootSignature_.Get());
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    cmdList->SetGraphicsRootDescriptorTable(3, sceneColorSrv_);
+
+    postProcessShader_->Render(cmdList, camera, RenderMode::Opaque);
+
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->DrawInstanced(3, 1, 0, 0);
 }

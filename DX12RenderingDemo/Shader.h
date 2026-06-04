@@ -18,6 +18,8 @@ public:
     virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
     virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
     
+    virtual DXGI_FORMAT CreateRtvFormat() const;
+
     D3D12_SHADER_BYTECODE CompileShaderFromFile(
         const WCHAR* pszFileName,
         LPCSTR pszShaderName,
@@ -72,4 +74,19 @@ public:
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
     virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState(RenderMode renderMode) override;
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) override;
+};
+
+class PostProcessShader : public Shader
+{
+public:
+    PostProcessShader() = default;
+    virtual ~PostProcessShader() = default;
+
+    virtual DXGI_FORMAT CreateRtvFormat() const override;
+    virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout() override;
+    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob) override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
+    virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState(RenderMode renderMode) override;
+    virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) override;
+    virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
 };

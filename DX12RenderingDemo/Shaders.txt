@@ -224,3 +224,40 @@ float4 PSSkybox(VS_SKYBOX_OUTPUT input) : SV_TARGET
 {
     return gSkyboxMap.Sample(gSampler, normalize(input.direction));
 }
+
+Texture2D gSceneColorMap : register(t0);
+
+struct VS_FULLSCREEN_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float2 texCoord : TEXCOORD;
+};
+
+VS_FULLSCREEN_OUTPUT VSFullscreen(uint vertexID : SV_VertexID)
+{
+    VS_FULLSCREEN_OUTPUT output;
+
+    float2 positions[3] =
+    {
+        float2(-1.0f, -1.0f),
+        float2(-1.0f, 3.0f),
+        float2(3.0f, -1.0f)
+    };
+
+    float2 texCoords[3] =
+    {
+        float2(0.0f, 1.0f),
+        float2(0.0f, -1.0f),
+        float2(2.0f, 1.0f)
+    };
+
+    output.position = float4(positions[vertexID], 0.0f, 1.0f);
+    output.texCoord = texCoords[vertexID];
+
+    return output;
+}
+
+float4 PSCopy(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
+{
+    return gSceneColorMap.Sample(gSampler, input.texCoord);
+}

@@ -12,6 +12,7 @@ class FrameResource;
 class SkyboxShader;
 class SkyboxMesh;
 class AssetManager;
+class PostProcessShader;
 
 struct MaterialGpuBinding
 {
@@ -70,6 +71,8 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE sceneColorSrv_{};
     UINT sceneColorSrvDescriptorIndex_ = UINT_MAX;
     D3D12_RESOURCE_STATES sceneColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    std::unique_ptr<PostProcessShader> postProcessShader_;
 
 public:
     Renderer();
@@ -147,4 +150,6 @@ private:
     void BeginSceneRender(Camera* camera);
     void EndSceneRender();
     void TransitionSceneColor(D3D12_RESOURCE_STATES afterState);
+    
+    void RenderPostProcess(Camera* camera);
 };

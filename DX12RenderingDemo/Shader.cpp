@@ -136,12 +136,17 @@ void Shader::CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignatu
 	desc.SampleMask = UINT_MAX;
 	desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	desc.NumRenderTargets = 1;
-	desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.RTVFormats[0] = CreateRtvFormat();
 	desc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	desc.SampleDesc.Count = 1;
 	desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	CreatePipelineStates(device, desc);
+}
+
+DXGI_FORMAT Shader::CreateRtvFormat() const
+{
+	return DXGI_FORMAT_R16G16B16A16_FLOAT;
 }
 
 void Shader::CreatePipelineStates(
@@ -333,4 +338,72 @@ void SkyboxShader::CreatePipelineStates(
 		IID_PPV_ARGS(pso.GetAddressOf())));
 
 	pipelineStates_.push_back(std::move(pso));
+}
+
+DXGI_FORMAT PostProcessShader::CreateRtvFormat() const
+{
+	return DXGI_FORMAT_R8G8B8A8_UNORM;
+}
+
+D3D12_INPUT_LAYOUT_DESC PostProcessShader::CreateInputLayout()
+{
+	D3D12_INPUT_LAYOUT_DESC desc{};
+	desc.pInputElementDescs = nullptr;
+	desc.NumElements = 0;
+	return desc;
+}
+
+D3D12_SHADER_BYTECODE PostProcessShader::CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob)
+{
+	return Shader::CompileShaderFromFile(
+		L"Shaders.hlsl",
+		"VSFullscreen",
+		"vs_5_1",
+		shaderBlob
+	);
+}
+
+D3D12_SHADER_BYTECODE PostProcessShader::CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob)
+{
+	return Shader::CompileShaderFromFile(
+		L"Shaders.hlsl",
+		"PSCopy",
+		"ps_5_1",
+		shaderBlob
+	);
+}
+
+D3D12_DEPTH_STENCIL_DESC PostProcessShader::CreateDepthStencilState(RenderMode renderMode)
+{
+	D3D12_DEPTH_STENCIL_DESC desc{};
+	desc.DepthEnable = FALSE;
+	desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	desc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	desc.StencilEnable = FALSE;
+	return desc;
+}
+
+void PostProcessShader::CreatePipelineStates(
+	ID3D12Device* device,
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
+{
+	desc.BlendState = CreateBlendState(RenderMode::Opaque);
+	desc.DepthStencilState = CreateDepthStencilState(RenderMode::Opaque);
+	desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+
+	ComPtr<ID3D12PipelineState> pso;
+	ThrowIfFailed(device->CreateGraphicsPipelineState(
+		&desc,
+		IID_PPV_ARGS(pso.GetAddressOf())));
+
+	pipelineStates_.push_back(std::move(pso));
+}
+
+D3D12_RASTERIZER_DESC PostProcessShader::CreateRasterizerState()
+{
+	D3D12_RASTERIZER_DESC desc = Shader::CreateRasterizerState();
+
+	desc.CullMode = D3D12_CULL_MODE_NONE;
+
+	return desc;
 }
