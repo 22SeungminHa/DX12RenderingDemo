@@ -226,6 +226,7 @@ float4 PSSkybox(VS_SKYBOX_OUTPUT input) : SV_TARGET
 }
 
 Texture2D gSceneColorMap : register(t0);
+Texture2D gBloomMap : register(t3);
 
 struct VS_FULLSCREEN_OUTPUT
 {
@@ -259,7 +260,12 @@ VS_FULLSCREEN_OUTPUT VSFullscreen(uint vertexID : SV_VertexID)
 
 float4 PSCopy(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
 {
-    float3 color = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+    float3 sceneColor = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+    float3 bloomColor = gBloomMap.Sample(gSampler, input.texCoord).rgb;
+
+    float bloomStrength = 0.65f;
+
+    float3 color = sceneColor + bloomColor * bloomStrength;
 
     float exposure = 1.15f;
     color *= exposure;
@@ -310,6 +316,29 @@ float4 PSBlurHorizontal(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
     color += gSceneColorMap.Sample(gSampler, uv + float2(2.0f * texelSize.x, 0.0f)).rgb * 0.12f;
     color += gSceneColorMap.Sample(gSampler, uv + float2(3.0f * texelSize.x, 0.0f)).rgb * 0.09f;
     color += gSceneColorMap.Sample(gSampler, uv + float2(4.0f * texelSize.x, 0.0f)).rgb * 0.05f;
+
+    return float4(color, 1.0f);
+}
+
+float4 PSBlurVertical(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
+{
+    float2 texelSize;
+    gSceneColorMap.GetDimensions(texelSize.x, texelSize.y);
+    texelSize = 1.0f / texelSize;
+
+    float2 uv = input.texCoord;
+
+    float3 color = float3(0.0f, 0.0f, 0.0f);
+
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, -4.0f * texelSize.y)).rgb * 0.05f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, -3.0f * texelSize.y)).rgb * 0.09f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, -2.0f * texelSize.y)).rgb * 0.12f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, -1.0f * texelSize.y)).rgb * 0.15f;
+    color += gSceneColorMap.Sample(gSampler, uv).rgb * 0.18f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, 1.0f * texelSize.y)).rgb * 0.15f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, 2.0f * texelSize.y)).rgb * 0.12f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, 3.0f * texelSize.y)).rgb * 0.09f;
+    color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, 4.0f * texelSize.y)).rgb * 0.05f;
 
     return float4(color, 1.0f);
 }

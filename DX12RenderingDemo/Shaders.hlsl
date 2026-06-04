@@ -226,6 +226,7 @@ float4 PSSkybox(VS_SKYBOX_OUTPUT input) : SV_TARGET
 }
 
 Texture2D gSceneColorMap : register(t0);
+Texture2D gBloomMap : register(t3);
 
 struct VS_FULLSCREEN_OUTPUT
 {
@@ -259,7 +260,12 @@ VS_FULLSCREEN_OUTPUT VSFullscreen(uint vertexID : SV_VertexID)
 
 float4 PSCopy(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
 {
-    float3 color = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+    float3 sceneColor = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+    float3 bloomColor = gBloomMap.Sample(gSampler, input.texCoord).rgb;
+
+    float bloomStrength = 0.65f;
+
+    float3 color = sceneColor + bloomColor * bloomStrength;
 
     float exposure = 1.15f;
     color *= exposure;

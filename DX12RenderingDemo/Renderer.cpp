@@ -68,7 +68,7 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[5]{};
+    D3D12_ROOT_PARAMETER rootParameters[6]{};
 
     // b0 : ObjectCB
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -113,6 +113,19 @@ void Renderer::CreateRootSignature()
     rootParameters[4].DescriptorTable.NumDescriptorRanges = 1;
     rootParameters[4].DescriptorTable.pDescriptorRanges = &skyboxSrvRange;
     rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // t3 : Bloom texture
+    D3D12_DESCRIPTOR_RANGE bloomSrvRange{};
+    bloomSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    bloomSrvRange.NumDescriptors = 1;
+    bloomSrvRange.BaseShaderRegister = 3;
+    bloomSrvRange.RegisterSpace = 0;
+    bloomSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[5].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[5].DescriptorTable.pDescriptorRanges = &bloomSrvRange;
+    rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_STATIC_SAMPLER_DESC sampler{};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -967,7 +980,8 @@ void Renderer::RenderPostProcess(Camera* camera)
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, brightColorSrv_);
+    cmdList->SetGraphicsRootDescriptorTable(3, sceneColorSrv_);
+    cmdList->SetGraphicsRootDescriptorTable(5, brightColorSrv_);
 
     postProcessShader_->Render(cmdList, camera, RenderMode::Opaque);
 
