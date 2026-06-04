@@ -1,6 +1,7 @@
 #pragma once
 #include "EngineTypes.h"
 #include "D3DCore.h"
+#include "PostProcessRenderer.h"
 
 class Scene;
 class GameObject;
@@ -12,10 +13,6 @@ class FrameResource;
 class SkyboxShader;
 class SkyboxMesh;
 class AssetManager;
-class PostProcessShader;
-class BrightPassShader;
-class HorizontalBlurShader;
-class VerticalBlurShader;
 
 struct MaterialGpuBinding
 {
@@ -38,7 +35,6 @@ private:
     static constexpr UINT kMaxObjectCount = 1000;
     static constexpr UINT kMaxMaterialCount = 1000;
     static constexpr UINT kMaxSrvDescriptorCount = 1024;
-    static constexpr DXGI_FORMAT kSceneColorFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
 private:
     D3DCore d3dCore_;
@@ -68,33 +64,7 @@ private:
     UINT skyboxDescriptorIndex_ = UINT_MAX;
     std::filesystem::path loadedSkyboxPath_;
 
-    ComPtr<ID3D12Resource> sceneColorBuffer_;
-    ComPtr<ID3D12DescriptorHeap> sceneColorRtvHeap_;
-    D3D12_CPU_DESCRIPTOR_HANDLE sceneColorRtv_{};
-    D3D12_GPU_DESCRIPTOR_HANDLE sceneColorSrv_{};
-    UINT sceneColorSrvDescriptorIndex_ = UINT_MAX;
-    D3D12_RESOURCE_STATES sceneColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-    std::unique_ptr<PostProcessShader> postProcessShader_;
-
-    ComPtr<ID3D12Resource> brightColorBuffer_;
-    ComPtr<ID3D12DescriptorHeap> brightColorRtvHeap_;
-    D3D12_CPU_DESCRIPTOR_HANDLE brightColorRtv_{};
-    D3D12_GPU_DESCRIPTOR_HANDLE brightColorSrv_{};
-    UINT brightColorSrvDescriptorIndex_ = UINT_MAX;
-    D3D12_RESOURCE_STATES brightColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-    std::unique_ptr<BrightPassShader> brightPassShader_;
-
-    ComPtr<ID3D12Resource> blurTempBuffer_;
-    ComPtr<ID3D12DescriptorHeap> blurTempRtvHeap_;
-    D3D12_CPU_DESCRIPTOR_HANDLE blurTempRtv_{};
-    D3D12_GPU_DESCRIPTOR_HANDLE blurTempSrv_{};
-    UINT blurTempSrvDescriptorIndex_ = UINT_MAX;
-    D3D12_RESOURCE_STATES blurTempState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-    std::unique_ptr<HorizontalBlurShader> horizontalBlurShader_;
-    std::unique_ptr<VerticalBlurShader> verticalBlurShader_;
+    std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
 
 public:
     Renderer();
@@ -165,24 +135,4 @@ private:
 
     bool PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager);
     bool CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex);
-
-    void CreateSceneRenderTexture(UINT width, UINT height);
-    void ReleaseSceneRenderTexture();
-
-    void BeginSceneRender(Camera* camera);
-    void EndSceneRender();
-    void TransitionSceneColor(D3D12_RESOURCE_STATES afterState);
-    
-    void RenderPostProcess(Camera* camera);
-
-    void CreateBrightPassTexture(UINT width, UINT height);
-    void ReleaseBrightPassTexture();
-    void TransitionBrightColor(D3D12_RESOURCE_STATES afterState);
-    void RenderBrightPass(Camera* camera);
-
-    void CreateBlurTempTexture(UINT width, UINT height);
-    void ReleaseBlurTempTexture();
-    void TransitionBlurTemp(D3D12_RESOURCE_STATES afterState);
-    void RenderHorizontalBlur(Camera* camera);
-    void RenderVerticalBlur(Camera* camera);
 };

@@ -1,0 +1,90 @@
+#pragma once
+#include "RenderTexture.h"
+
+class Camera;
+class PostProcessShader;
+class BrightPassShader;
+class HorizontalBlurShader;
+class VerticalBlurShader;
+
+class PostProcessRenderer
+{
+public:
+    static constexpr DXGI_FORMAT kSceneColorFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+public:
+    PostProcessRenderer() = default;
+    ~PostProcessRenderer() = default;
+
+    void Initialize(
+        ID3D12Device* device,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap,
+        UINT srvDescriptorSize,
+        UINT& nextSrvDescriptorIndex,
+        UINT width,
+        UINT height);
+
+    void Shutdown();
+    void Resize(UINT width, UINT height);
+
+    void BeginSceneRender(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle);
+
+    void EndSceneRender(ID3D12GraphicsCommandList* cmdList);
+
+    void Render(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap,
+        D3D12_CPU_DESCRIPTOR_HANDLE finalRtv);
+
+private:
+    void CreateRenderTextures(UINT width, UINT height);
+
+    void RenderBrightPass(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap);
+
+    void RenderHorizontalBlur(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap);
+
+    void RenderVerticalBlur(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap);
+
+    void RenderFinalComposite(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature,
+        ID3D12DescriptorHeap* srvDescriptorHeap,
+        D3D12_CPU_DESCRIPTOR_HANDLE finalRtv);
+
+private:
+    ID3D12Device* device_ = nullptr;
+    ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
+    UINT srvDescriptorSize_ = 0;
+
+    UINT sceneColorSrvDescriptorIndex_ = UINT_MAX;
+    UINT brightColorSrvDescriptorIndex_ = UINT_MAX;
+    UINT blurTempSrvDescriptorIndex_ = UINT_MAX;
+
+    RenderTexture sceneColor_;
+    RenderTexture brightColor_;
+    RenderTexture blurTemp_;
+
+    std::unique_ptr<PostProcessShader> postProcessShader_;
+    std::unique_ptr<BrightPassShader> brightPassShader_;
+    std::unique_ptr<HorizontalBlurShader> horizontalBlurShader_;
+    std::unique_ptr<VerticalBlurShader> verticalBlurShader_;
+};
