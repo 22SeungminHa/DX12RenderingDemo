@@ -6,10 +6,7 @@
 #include "Camera.h"
 #include "DescriptorAllocator.h"
 
-void SkyboxRenderer::Initialize(
-    ID3D12Device* device,
-    ID3D12RootSignature* rootSignature,
-    DescriptorAllocator* srvAllocator)
+void SkyboxRenderer::Initialize(ID3D12Device* device, ID3D12RootSignature* rootSignature, DescriptorAllocator* srvAllocator)
 {
     device_ = device;
     srvAllocator_ = srvAllocator;
@@ -33,10 +30,7 @@ void SkyboxRenderer::Shutdown()
     srvAllocator_ = nullptr;
 }
 
-bool SkyboxRenderer::Prepare(
-    const SkyboxDesc& skybox,
-    AssetManager& assetManager,
-    ID3D12GraphicsCommandList* uploadCmdList)
+bool SkyboxRenderer::Prepare(const SkyboxDesc& skybox, AssetManager& assetManager, ID3D12GraphicsCommandList* uploadCmdList)
 {
     if (!skybox.enabled || skybox.cubemapPath.empty())
         return false;
@@ -75,10 +69,7 @@ bool SkyboxRenderer::CreateSkyboxSrvDescriptor(Texture* texture)
     srvDesc.TextureCube.MipLevels = resourceDesc.MipLevels;
     srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 
-    device_->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        srv_.cpuHandle);
+    device_->CreateShaderResourceView(texture->GetResource(), &srvDesc, srv_.cpuHandle);
 
     return true;
 }

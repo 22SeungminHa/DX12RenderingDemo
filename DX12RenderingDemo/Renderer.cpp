@@ -149,16 +149,14 @@ void Renderer::CreateRootSignature()
             D3D_ROOT_SIGNATURE_VERSION_1,
             signatureBlob.GetAddressOf(),
             errorBlob.GetAddressOf()),
-            errorBlob.Get()
-    );
+            errorBlob.Get());
 
     ThrowIfFailed(
         d3dCore_.GetDevice()->CreateRootSignature(
             0,
             signatureBlob->GetBufferPointer(),
             signatureBlob->GetBufferSize(),
-            IID_PPV_ARGS(rootSignature_.GetAddressOf()))
-    );
+            IID_PPV_ARGS(rootSignature_.GetAddressOf())));
 }
 
 void Renderer::ReleaseRootSignature()

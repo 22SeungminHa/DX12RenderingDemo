@@ -65,7 +65,8 @@ void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
 
 void RenderQueueBuilder::SortTransparentQueue()
 {
-    std::sort(transparentQueue_.begin(), transparentQueue_.end(), [](const RenderItem& a, const RenderItem& b) {
-        return a.distanceToCamera > b.distanceToCamera;
-    });
+    std::sort(transparentQueue_.begin(), transparentQueue_.end(),
+        [](const RenderItem& a, const RenderItem& b) {
+            return a.distanceToCamera > b.distanceToCamera;
+        });
 }

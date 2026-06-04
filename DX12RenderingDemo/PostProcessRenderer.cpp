@@ -63,29 +63,9 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-    sceneColor_.Create(
-        device_,
-        width,
-        height,
-        kSceneColorFormat,
-        sceneColorSrv_,
-        clearColor);
-
-    brightColor_.Create(
-        device_,
-        width,
-        height,
-        kSceneColorFormat,
-        brightColorSrv_,
-        clearColor);
-
-    blurTemp_.Create(
-        device_,
-        width,
-        height,
-        kSceneColorFormat,
-        blurTempSrv_,
-        clearColor);
+    sceneColor_.Create(device_, width, height, kSceneColorFormat, sceneColorSrv_, clearColor);
+    brightColor_.Create(device_, width, height, kSceneColorFormat, brightColorSrv_, clearColor);
+    blurTemp_.Create(device_, width, height, kSceneColorFormat, blurTempSrv_, clearColor);
 }
 
 void PostProcessRenderer::BeginSceneRender(

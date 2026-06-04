@@ -63,10 +63,7 @@ bool RenderTexture::Create(
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    device->CreateShaderResourceView(
-        resource_.Get(),
-        &srvDesc,
-        srvAllocation.cpuHandle);
+    device->CreateShaderResourceView(resource_.Get(), &srvDesc, srvAllocation.cpuHandle);
 
     srv_ = srvAllocation.gpuHandle;
 

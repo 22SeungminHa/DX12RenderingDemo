@@ -34,11 +34,7 @@ private:
     bool CreateTextureSrvDescriptor(Texture* texture, UINT descriptorIndex);
 
     void BindMaterialTextures(ID3D12GraphicsCommandList* cmdList, Material* material);
-    void BindMaterialData(
-        ID3D12GraphicsCommandList* cmdList,
-        const Material* material,
-        UINT materialIndex,
-        FrameResource* frameResource);
+    void BindMaterialData(ID3D12GraphicsCommandList* cmdList, const Material* material, UINT materialIndex, FrameResource* frameResource);
 
 private:
     ID3D12Device* device_ = nullptr;

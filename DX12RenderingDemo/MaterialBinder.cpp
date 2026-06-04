@@ -65,8 +65,7 @@ UINT MaterialBinder::GetOrCreateMaterialCBIndex(Material* material)
     if (material->GetMaterialCBIndex() != UINT_MAX)
         return material->GetMaterialCBIndex();
 
-    if (auto iter = materialCBIndexTable_.find(materialKey);
-        iter != materialCBIndexTable_.end())
+    if (auto iter = materialCBIndexTable_.find(materialKey); iter != materialCBIndexTable_.end())
     {
         material->SetMaterialCBIndex(iter->second);
         return iter->second;
@@ -94,8 +93,7 @@ MaterialGpuBinding MaterialBinder::GetOrCreateMaterialGpuBinding(Material* mater
         return empty;
     }
 
-    if (auto iter = materialGpuBindingTable_.find(materialKey);
-        iter != materialGpuBindingTable_.end())
+    if (auto iter = materialGpuBindingTable_.find(materialKey); iter != materialGpuBindingTable_.end())
     {
         return iter->second;
     }
@@ -164,10 +162,7 @@ bool MaterialBinder::CreateTextureSrvDescriptor(Texture* texture, UINT descripto
     srvDesc.Texture2D.MipLevels = texture->GetResource()->GetDesc().MipLevels;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    device_->CreateShaderResourceView(
-        texture->GetResource(),
-        &srvDesc,
-        dstHandle);
+    device_->CreateShaderResourceView(texture->GetResource(), &srvDesc, dstHandle);
 
     return true;
 }
@@ -210,8 +205,7 @@ void MaterialBinder::BindMaterialData(
 
     frameResource->materialCB_->CopyData(materialIndex, materialCB);
 
-    const UINT matCBByteSize =
-        D3DUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
+    const UINT matCBByteSize = D3DUtil::CalcConstantBufferByteSize(sizeof(MaterialCB));
 
     D3D12_GPU_VIRTUAL_ADDRESS matCBAddress =
         frameResource->materialCB_->GetResource()->GetGPUVirtualAddress()
