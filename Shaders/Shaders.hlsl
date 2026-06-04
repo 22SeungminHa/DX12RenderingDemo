@@ -1,5 +1,0 @@
-#include "../Shaders/Common.hlsli"
-#include "../Shaders/Lit.hlsl"
-#include "../Shaders/Glass.hlsl"
-#include "../Shaders/Skybox.hlsl"
-#include "../Shaders/PostProcess.hlsl"

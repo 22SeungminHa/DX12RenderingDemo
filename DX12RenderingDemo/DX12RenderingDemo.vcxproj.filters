@@ -28,11 +28,14 @@
     <Filter Include="소스 파일\Utility">
       <UniqueIdentifier>{59e43fbc-9a8a-4fcb-8b43-6f5897f26660}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Shader">
-      <UniqueIdentifier>{f3e05c7e-9e5a-47c4-a94c-5e7e913edd5a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Resource">
       <UniqueIdentifier>{5d5e5db7-ad55-4abf-b18a-cb223f909ca7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Resource\Shaders">
+      <UniqueIdentifier>{cd1538b3-429c-411c-a8e4-8f1d11572e27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\HLSL">
+      <UniqueIdentifier>{f3e05c7e-9e5a-47c4-a94c-5e7e913edd5a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -102,9 +105,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>소스 파일\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>소스 파일\Resource</Filter>
-    </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>소스 파일\Resource</Filter>
     </ClInclude>
@@ -128,6 +128,9 @@
     </ClInclude>
     <ClInclude Include="Component.h">
       <Filter>소스 파일\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>소스 파일\Resource\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,9 +191,6 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>소스 파일\Resource</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>소스 파일\Resource</Filter>
-    </ClCompile>
     <ClCompile Include="Texture.cpp">
       <Filter>소스 파일\Resource</Filter>
     </ClCompile>
@@ -205,6 +205,21 @@
     </ClCompile>
     <ClCompile Include="Component.cpp">
       <Filter>소스 파일\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>소스 파일\Resource\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="LitShader.cpp">
+      <Filter>소스 파일\Resource\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="GlassShader.cpp">
+      <Filter>소스 파일\Resource\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyboxShader.cpp">
+      <Filter>소스 파일\Resource\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="PostProcessShader.cpp">
+      <Filter>소스 파일\Resource\Shaders</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -225,24 +240,21 @@
       <Filter>소스 파일\Utility</Filter>
     </None>
     <None Include="..\Shaders\Common.hlsli">
-      <Filter>소스 파일\Shader</Filter>
+      <Filter>소스 파일\HLSL</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Shaders\Glass.hlsl">
-      <Filter>소스 파일\Shader</Filter>
+      <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\Lit.hlsl">
-      <Filter>소스 파일\Shader</Filter>
+      <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\PostProcess.hlsl">
-      <Filter>소스 파일\Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Shaders\Shaders.hlsl">
-      <Filter>소스 파일\Shader</Filter>
+      <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\Skybox.hlsl">
-      <Filter>소스 파일\Shader</Filter>
+      <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
