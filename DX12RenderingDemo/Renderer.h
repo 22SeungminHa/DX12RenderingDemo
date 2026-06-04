@@ -34,6 +34,7 @@ private:
     static constexpr UINT kMaxObjectCount = 1000;
     static constexpr UINT kMaxMaterialCount = 1000;
     static constexpr UINT kMaxSrvDescriptorCount = 1024;
+    static constexpr DXGI_FORMAT kSceneColorFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
 private:
     D3DCore d3dCore_;
@@ -62,6 +63,13 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE skyboxGpuHandle_{};
     UINT skyboxDescriptorIndex_ = UINT_MAX;
     std::filesystem::path loadedSkyboxPath_;
+
+    ComPtr<ID3D12Resource> sceneColorBuffer_;
+    ComPtr<ID3D12DescriptorHeap> sceneColorRtvHeap_;
+    D3D12_CPU_DESCRIPTOR_HANDLE sceneColorRtv_{};
+    D3D12_GPU_DESCRIPTOR_HANDLE sceneColorSrv_{};
+    UINT sceneColorSrvDescriptorIndex_ = UINT_MAX;
+    D3D12_RESOURCE_STATES sceneColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
 public:
     Renderer();
@@ -132,4 +140,11 @@ private:
 
     bool PrepareSkyboxResources(const SkyboxDesc& skybox, AssetManager& assetManager);
     bool CreateSkyboxSrvDescriptor(Texture* texture, UINT descriptorIndex);
+
+    void CreateSceneRenderTexture(UINT width, UINT height);
+    void ReleaseSceneRenderTexture();
+
+    void BeginSceneRender(Camera* camera);
+    void EndSceneRender();
+    void TransitionSceneColor(D3D12_RESOURCE_STATES afterState);
 };

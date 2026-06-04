@@ -166,7 +166,7 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
     float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.06f;
 
     float broadSpec = pow(ndoth, 32.0f) * 0.18f;
-    float sharpSpec = pow(ndoth, 180.0f) * 1.15f;
+    float sharpSpec = pow(ndoth, 256.0f) * 1.15f;
 
     float3 specular =
         float3(1.0f, 1.0f, 1.0f) *
