@@ -341,10 +341,10 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
     if (skyboxRenderer_)
         skyboxRenderer_->Render(cmdList, camera, scene->GetSkybox());
 
-    BuildRenderQueues(scene, camera);
+    renderQueueBuilder_.Build(scene, camera);
 
-    RenderItems(opaqueQueue_, camera);
-    RenderTransparentQueue(camera);
+    RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
+    RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
 
     if (postProcessRenderer_)
         postProcessRenderer_->EndSceneRender(cmdList);
@@ -397,55 +397,6 @@ void Renderer::DrawMeshRenderer(
     mesh->Render(d3dCore_.GetRenderCommandList());
 }
 
-void Renderer::BuildRenderQueues(Scene* scene, Camera* camera)
-{
-    opaqueQueue_.clear();
-    transparentQueue_.clear();
-
-    if (!scene || !camera)
-        return;
-
-    const auto& objects = scene->GetObjects();
-
-    for (const auto& object : objects)
-    {
-        if (!object) continue;
-        CollectRenderItems(object.get(), camera);
-    }
-}
-
-void Renderer::CollectRenderItems(GameObject* object, Camera* camera)
-{
-    if (!object)
-        return;
-
-    object->OnPrepareRender();
-
-    MeshRenderer* meshRenderer = object->GetComponent<MeshRenderer>();
-
-    if (meshRenderer && meshRenderer->IsRenderable())
-    {
-        Material* material = meshRenderer->GetMaterial();
-
-        RenderItem item{};
-        item.object = object;
-        item.meshRenderer = meshRenderer;
-
-        Vector3 objectPos = object->GetWorldMatrix().Translation();
-        Vector3 cameraPos = camera->GetPosition();
-
-        item.distanceToCamera = Vector3::DistanceSquared(objectPos, cameraPos);
-
-        if (material && material->GetRenderMode() == RenderMode::Transparent)
-            transparentQueue_.push_back(item);
-        else
-            opaqueQueue_.push_back(item);
-    }
-
-    for (const auto& child : object->GetChildren())
-        CollectRenderItems(child.get(), camera);
-}
-
 void Renderer::RenderItems(const std::vector<RenderItem>& queue, Camera* camera)
 {
     for (const RenderItem& item : queue)
@@ -456,17 +407,6 @@ void Renderer::RenderItems(const std::vector<RenderItem>& queue, Camera* camera)
         BindObjectData(item.object);
         DrawMeshRenderer(item.object, item.meshRenderer, camera);
     }
-}
-
-void Renderer::RenderTransparentQueue(Camera* camera)
-{
-    std::sort(transparentQueue_.begin(), transparentQueue_.end(),
-        [](const RenderItem& a, const RenderItem& b) {
-            return a.distanceToCamera > b.distanceToCamera;
-        }
-    );
-
-    RenderItems(transparentQueue_, camera);
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)

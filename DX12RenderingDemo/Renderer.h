@@ -5,6 +5,7 @@
 #include "SkyboxRenderer.h"
 #include "DescriptorAllocator.h"
 #include "MaterialBinder.h"
+#include "RenderQueueBuilder.h"
 
 class Scene;
 class GameObject;
@@ -14,13 +15,6 @@ class Texture;
 class Material;
 class FrameResource;
 class AssetManager;
-
-struct RenderItem
-{
-    GameObject* object = nullptr;
-    MeshRenderer* meshRenderer = nullptr;
-    float distanceToCamera = 0.0f;
-};
 
 class Renderer
 {
@@ -40,10 +34,7 @@ private:
     UINT currentFrameResourceIndex_ = 0;
 
     DescriptorAllocator srvDescriptorAllocator_;
-
-    std::vector<RenderItem> opaqueQueue_;
-    std::vector<RenderItem> transparentQueue_;
-
+    RenderQueueBuilder renderQueueBuilder_;
     MaterialBinder materialBinder_;
 
     std::unique_ptr<SkyboxRenderer> skyboxRenderer_;
@@ -94,10 +85,7 @@ private:
     void WaitForCurrentFrameResource();
 
     // Render Queue
-    void BuildRenderQueues(Scene* scene, Camera* camera);
-    void CollectRenderItems(GameObject* object, Camera* camera);
     void RenderItems(const std::vector<RenderItem>& queue, Camera* camera);
-    void RenderTransparentQueue(Camera* camera);
 
     // GPU Binding
     void BindCameraData(Camera* camera);
