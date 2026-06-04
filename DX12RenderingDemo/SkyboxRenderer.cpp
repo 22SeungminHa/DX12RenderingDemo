@@ -126,7 +126,9 @@ void SkyboxRenderer::BindSkyboxTexture(ID3D12GraphicsCommandList* cmdList)
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_ };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(4, gpuHandle_);
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::SkyboxTexture),
+        gpuHandle_);
 }
 
 void SkyboxRenderer::ReleaseUploadResources()

@@ -3,6 +3,16 @@
 
 // enums
 
+enum class RootParam : UINT
+{
+    ObjectCB = 0,
+    PassCB = 1,
+    MaterialCB = 2,
+    MaterialTextures = 3,
+    SkyboxTexture = 4,
+    PostProcessTexture = 5,
+};
+
 enum class TextureType
 {
     BaseColor,

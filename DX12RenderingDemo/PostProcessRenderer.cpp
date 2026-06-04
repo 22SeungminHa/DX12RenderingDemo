@@ -173,7 +173,9 @@ void PostProcessRenderer::RenderBrightPass(
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, sceneColor_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::MaterialTextures),
+        sceneColor_.GetSrv());
 
     brightPassShader_->Render(cmdList, camera, RenderMode::Opaque);
 
@@ -211,7 +213,9 @@ void PostProcessRenderer::RenderHorizontalBlur(
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, brightColor_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::MaterialTextures),
+        brightColor_.GetSrv());
 
     horizontalBlurShader_->Render(cmdList, camera, RenderMode::Opaque);
 
@@ -249,7 +253,9 @@ void PostProcessRenderer::RenderVerticalBlur(
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, blurTemp_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::MaterialTextures),
+        blurTemp_.GetSrv());
 
     verticalBlurShader_->Render(cmdList, camera, RenderMode::Opaque);
 
@@ -282,8 +288,13 @@ void PostProcessRenderer::RenderFinalComposite(
     ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    cmdList->SetGraphicsRootDescriptorTable(3, sceneColor_.GetSrv());
-    cmdList->SetGraphicsRootDescriptorTable(5, brightColor_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::MaterialTextures),
+        sceneColor_.GetSrv());
+
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::PostProcessTexture),
+        brightColor_.GetSrv());
 
     postProcessShader_->Render(cmdList, camera, RenderMode::Opaque);
 

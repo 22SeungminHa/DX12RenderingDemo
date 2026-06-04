@@ -198,7 +198,7 @@ void Renderer::ReleaseFrameResources()
     frameResources_.clear();
 
     materialCBIndexTable_.clear();
-    nextMaterialCBIndex_ = 0;
+    nextMaterialCBIndex_ = 0;//cmdList
 }
 
 void Renderer::CreateSrvDescriptorHeap()
@@ -336,7 +336,7 @@ void Renderer::BindMaterialTextures(Material* material)
     cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     cmdList->SetGraphicsRootDescriptorTable(
-        3,
+        static_cast<UINT>(RootParam::MaterialTextures),
         binding.gpuHandle
     );
 }
@@ -372,7 +372,9 @@ void Renderer::BindCameraData(Camera* camera)
     PassCB passCB = camera->BuildPassCB();
     currentFrameResource_->passCB_->CopyData(0, passCB);
 
-    cmdList->SetGraphicsRootConstantBufferView(1, currentFrameResource_->passCB_->GetResource()->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(
+        static_cast<UINT>(RootParam::PassCB),
+        currentFrameResource_->passCB_->GetResource()->GetGPUVirtualAddress());
 }
 
 void Renderer::BindObjectData(const GameObject* object)
@@ -399,7 +401,9 @@ void Renderer::BindObjectData(const GameObject* object)
         currentFrameResource_->objectCB_->GetResource()->GetGPUVirtualAddress()
         + (static_cast<UINT64>(objectIndex) * objCBByteSize);
 
-    d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(0, objCBAddress);
+    d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(
+        static_cast<UINT>(RootParam::ObjectCB),
+        objCBAddress);
 }
 
 void Renderer::Resize(UINT width, UINT height)
@@ -435,25 +439,47 @@ void Renderer::WaitForSceneLoad(UINT64 fenceValue)
 
 void Renderer::Render(Scene* scene)
 {
-    if (!scene) return;
+    Camera* camera = BeginFrame(scene);
+    if (!camera)
+        return;
+
+    RenderSceneToTexture(scene, camera);
+    RenderToBackBuffer(camera);
+    EndFrame();
+}
+
+Camera* Renderer::BeginFrame(Scene* scene)
+{
+    if (!scene)
+        return nullptr;
 
     Camera* camera = scene->GetActiveCamera();
-    if (!camera) return;
+    if (!camera)
+        return nullptr;
 
     AdvanceFrameResource();
     WaitForCurrentFrameResource();
 
     d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
 
+    return camera;
+}
+
+void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
+{
+    if (!scene || !camera)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
     if (postProcessRenderer_)
     {
         postProcessRenderer_->BeginSceneRender(
-            d3dCore_.GetRenderCommandList(),
+            cmdList,
             camera,
             d3dCore_.GetDsvHandle());
     }
 
-    auto* cmdList = d3dCore_.GetRenderCommandList();
     cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 
     BindCameraData(camera);
@@ -467,7 +493,13 @@ void Renderer::Render(Scene* scene)
     RenderTransparentQueue(camera);
 
     if (postProcessRenderer_)
-        postProcessRenderer_->EndSceneRender(d3dCore_.GetRenderCommandList());
+        postProcessRenderer_->EndSceneRender(cmdList);
+}
+
+void Renderer::RenderToBackBuffer(Camera* camera)
+{
+    if (!camera)
+        return;
 
     d3dCore_.BeginRender();
 
@@ -480,8 +512,12 @@ void Renderer::Render(Scene* scene)
             srvDescriptorHeap_.Get(),
             d3dCore_.GetCurrentRtvHandle());
     }
-    
+
     d3dCore_.EndRender();
+}
+
+void Renderer::EndFrame()
+{
     d3dCore_.ExecuteCommandList();
     d3dCore_.Present(0, 0);
 
@@ -608,9 +644,8 @@ void Renderer::BindMaterialData(const Material* material, UINT materialIndex)
         + static_cast<UINT64>(materialIndex) * matCBByteSize;
 
     d3dCore_.GetRenderCommandList()->SetGraphicsRootConstantBufferView(
-        2,
-        matCBAddress
-    );
+        static_cast<UINT>(RootParam::MaterialCB),
+        matCBAddress);
 }
 
 UINT Renderer::GetOrCreateMaterialCBIndex(Material* material)

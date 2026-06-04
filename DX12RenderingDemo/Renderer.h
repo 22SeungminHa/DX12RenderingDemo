@@ -122,4 +122,9 @@ private:
 
     // Draw
     void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
+
+    Camera* BeginFrame(Scene* scene);
+    void RenderSceneToTexture(Scene* scene, Camera* camera);
+    void RenderToBackBuffer(Camera* camera);
+    void EndFrame();
 };
