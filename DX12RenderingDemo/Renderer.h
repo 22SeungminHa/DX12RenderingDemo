@@ -13,6 +13,7 @@ class SkyboxShader;
 class SkyboxMesh;
 class AssetManager;
 class PostProcessShader;
+class BrightPassShader;
 
 struct MaterialGpuBinding
 {
@@ -73,6 +74,15 @@ private:
     D3D12_RESOURCE_STATES sceneColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
     std::unique_ptr<PostProcessShader> postProcessShader_;
+
+    ComPtr<ID3D12Resource> brightColorBuffer_;
+    ComPtr<ID3D12DescriptorHeap> brightColorRtvHeap_;
+    D3D12_CPU_DESCRIPTOR_HANDLE brightColorRtv_{};
+    D3D12_GPU_DESCRIPTOR_HANDLE brightColorSrv_{};
+    UINT brightColorSrvDescriptorIndex_ = UINT_MAX;
+    D3D12_RESOURCE_STATES brightColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    std::unique_ptr<BrightPassShader> brightPassShader_;
 
 public:
     Renderer();
@@ -152,4 +162,9 @@ private:
     void TransitionSceneColor(D3D12_RESOURCE_STATES afterState);
     
     void RenderPostProcess(Camera* camera);
+
+    void CreateBrightPassTexture(UINT width, UINT height);
+    void ReleaseBrightPassTexture();
+    void TransitionBrightColor(D3D12_RESOURCE_STATES afterState);
+    void RenderBrightPass(Camera* camera);
 };

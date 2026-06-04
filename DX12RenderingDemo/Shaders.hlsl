@@ -259,5 +259,34 @@ VS_FULLSCREEN_OUTPUT VSFullscreen(uint vertexID : SV_VertexID)
 
 float4 PSCopy(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
 {
-    return gSceneColorMap.Sample(gSampler, input.texCoord);
+    float3 color = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+
+    float exposure = 1.15f;
+    color *= exposure;
+
+    float contrast = 1.08f;
+    color = (color - 0.5f) * contrast + 0.5f;
+
+    float saturation = 1.1f;
+    float luminance = dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+    color = lerp(float3(luminance, luminance, luminance), color, saturation);
+
+    color = saturate(color);
+
+    float gamma = 2.2f;
+    color = pow(color, 1.0f / gamma);
+
+    return float4(color, 1.0f);
+}
+
+float4 PSBrightPass(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
+{
+    float3 color = gSceneColorMap.Sample(gSampler, input.texCoord).rgb;
+
+    float brightness = dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+    float threshold = 1.0f;
+
+    float brightFactor = saturate((brightness - threshold) / max(brightness, 0.0001f));
+
+    return float4(color * brightFactor, 1.0f);
 }

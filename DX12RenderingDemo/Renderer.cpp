@@ -20,6 +20,7 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     CreateRootSignature();
     CreateSrvDescriptorHeap();
     CreateSceneRenderTexture(width, height);
+    CreateBrightPassTexture(width, height);
     CreateFrameResources();
 
     skyboxShader_ = std::make_unique<SkyboxShader>();
@@ -27,6 +28,9 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 
     postProcessShader_ = std::make_unique<PostProcessShader>();
     postProcessShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
+
+    brightPassShader_ = std::make_unique<BrightPassShader>();
+    brightPassShader_->CreateShader(d3dCore_.GetDevice(), rootSignature_.Get());
 }
 
 void Renderer::Shutdown()
@@ -39,6 +43,9 @@ void Renderer::Shutdown()
     skyboxGpuHandle_ = {};
 
     postProcessShader_.reset();
+
+    brightPassShader_.reset();
+    ReleaseBrightPassTexture();
 
     ReleaseFrameResources();
     ReleaseSceneRenderTexture();
@@ -206,6 +213,9 @@ void Renderer::ReleaseSrvDescriptorHeap()
 
     sceneColorSrvDescriptorIndex_ = UINT_MAX;
     sceneColorSrv_ = {};
+
+    brightColorSrvDescriptorIndex_ = UINT_MAX;
+    brightColorSrv_ = {};
 }
 
 MaterialGpuBinding Renderer::GetOrCreateMaterialGpuBinding(Material* material)
@@ -388,6 +398,7 @@ void Renderer::Resize(UINT width, UINT height)
 
     d3dCore_.Resize(width, height);
     CreateSceneRenderTexture(width, height);
+    CreateBrightPassTexture(width, height);
 }
 
 void Renderer::ResetUploadCmdList()
@@ -437,6 +448,8 @@ void Renderer::Render(Scene* scene)
     RenderTransparentQueue(camera);
 
     EndSceneRender();
+
+    RenderBrightPass(camera);
 
     d3dCore_.BeginRender();
     RenderPostProcess(camera);
@@ -943,4 +956,162 @@ void Renderer::RenderPostProcess(Camera* camera)
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void Renderer::CreateBrightPassTexture(UINT width, UINT height)
+{
+    if (width == 0 || height == 0)
+        return;
+
+    ReleaseBrightPassTexture();
+
+    ID3D12Device* device = d3dCore_.GetDevice();
+    if (!device || !srvDescriptorHeap_)
+        return;
+
+    D3D12_RESOURCE_DESC textureDesc{};
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureDesc.Width = width;
+    textureDesc.Height = height;
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = kSceneColorFormat;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    D3D12_CLEAR_VALUE clearValue{};
+    clearValue.Format = kSceneColorFormat;
+    clearValue.Color[0] = 0.0f;
+    clearValue.Color[1] = 0.0f;
+    clearValue.Color[2] = 0.0f;
+    clearValue.Color[3] = 1.0f;
+
+    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+
+    ThrowIfFailed(device->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        &clearValue,
+        IID_PPV_ARGS(brightColorBuffer_.GetAddressOf())
+    ));
+
+    brightColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
+    rtvHeapDesc.NumDescriptors = 1;
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    ThrowIfFailed(device->CreateDescriptorHeap(
+        &rtvHeapDesc,
+        IID_PPV_ARGS(brightColorRtvHeap_.GetAddressOf())
+    ));
+
+    brightColorRtv_ = brightColorRtvHeap_->GetCPUDescriptorHandleForHeapStart();
+
+    device->CreateRenderTargetView(
+        brightColorBuffer_.Get(),
+        nullptr,
+        brightColorRtv_
+    );
+
+    if (brightColorSrvDescriptorIndex_ == UINT_MAX)
+    {
+        if (nextSrvDescriptorIndex_ + 1 > kMaxSrvDescriptorCount)
+        {
+            LOG("SRV descriptor heap is full. Bright color SRV failed.");
+            return;
+        }
+
+        brightColorSrvDescriptorIndex_ = nextSrvDescriptorIndex_++;
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE srvCpuHandle =
+        srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+
+    srvCpuHandle.ptr +=
+        static_cast<SIZE_T>(brightColorSrvDescriptorIndex_) * srvDescriptorSize_;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = kSceneColorFormat;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+
+    device->CreateShaderResourceView(
+        brightColorBuffer_.Get(),
+        &srvDesc,
+        srvCpuHandle
+    );
+
+    brightColorSrv_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+    brightColorSrv_.ptr +=
+        static_cast<SIZE_T>(brightColorSrvDescriptorIndex_) * srvDescriptorSize_;
+}
+
+void Renderer::ReleaseBrightPassTexture()
+{
+    brightColorBuffer_.Reset();
+    brightColorRtvHeap_.Reset();
+
+    brightColorRtv_ = {};
+    brightColorState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+}
+
+void Renderer::TransitionBrightColor(D3D12_RESOURCE_STATES afterState)
+{
+    if (!brightColorBuffer_)
+        return;
+
+    if (brightColorState_ == afterState)
+        return;
+
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = brightColorBuffer_.Get();
+    barrier.Transition.StateBefore = brightColorState_;
+    barrier.Transition.StateAfter = afterState;
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    d3dCore_.GetRenderCommandList()->ResourceBarrier(1, &barrier);
+
+    brightColorState_ = afterState;
+}
+
+void Renderer::RenderBrightPass(Camera* camera)
+{
+    if (!camera || !brightPassShader_ || !sceneColorBuffer_ || !brightColorBuffer_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    TransitionBrightColor(D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const auto& viewport = camera->GetViewport();
+    const auto& scissor = camera->GetScissorRect();
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissor);
+
+    cmdList->OMSetRenderTargets(1, &brightColorRtv_, FALSE, nullptr);
+
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    cmdList->ClearRenderTargetView(brightColorRtv_, clearColor, 0, nullptr);
+
+    cmdList->SetGraphicsRootSignature(rootSignature_.Get());
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    cmdList->SetGraphicsRootDescriptorTable(3, sceneColorSrv_);
+
+    brightPassShader_->Render(cmdList, camera, RenderMode::Opaque);
+
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    cmdList->DrawInstanced(3, 1, 0, 0);
+
+    TransitionBrightColor(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }

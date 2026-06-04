@@ -90,3 +90,13 @@ public:
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) override;
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
 };
+
+class BrightPassShader : public PostProcessShader
+{
+public:
+    BrightPassShader() = default;
+    virtual ~BrightPassShader() = default;
+
+    virtual DXGI_FORMAT CreateRtvFormat() const override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
+};
