@@ -45,6 +45,16 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
     float3 fresnelColor = float3(0.65f, 0.85f, 1.0f) * fresnel * 0.45f;
 
     float glassAlpha = saturate(baseColor.a * gAlpha);
+    
+    float2 sceneSize;
+    gRefractionSceneMap.GetDimensions(sceneSize.x, sceneSize.y);
+
+    float2 screenUV = input.position.xy / sceneSize;
+
+    float2 distortion = normalT.xy * gRefractionStrength;
+    float2 refractedUV = saturate(screenUV + distortion);
+
+    float3 refractionColor = gRefractionSceneMap.Sample(gSampler, refractedUV).rgb;
 
     float3 transparentBody = ambient + diffuse;
     
@@ -52,16 +62,13 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
     float3 reflectionColor = gSkyboxMap.Sample(gSampler, reflectDir).rgb;
     float reflectionStrength = saturate(gReflectionStrength) * saturate(0.35f + fresnel * 0.65f);
     
+    float refractionAmount = saturate(gRefractionStrength * 20.0f);
+
     float3 finalColor =
-        transparentBody * lerp(0.3f, 0.75f, glassAlpha) +
+        lerp(transparentBody, refractionColor, refractionAmount) * lerp(0.3f, 0.75f, glassAlpha) +
         specular +
         fresnelColor +
         reflectionColor * reflectionStrength;
     
-    //float3 finalColor =
-    //    transparentBody * lerp(0.3f, 0.75f, glassAlpha) +
-    //    specular +
-    //    fresnelColor;
-
     return float4(finalColor, glassAlpha);
 }

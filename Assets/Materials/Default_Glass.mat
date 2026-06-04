@@ -3,10 +3,12 @@ Shader=GlassShader
 RenderMode=Transparent
 
 BaseColorMap=Default_Glass_BaseColor.dds
-NormalMap=Metal_11_N.dds
+NormalMap=T_YFSM_01_n.dds
 
 BaseColorTint=1.0,1.0,1.0,1.0
 Alpha=0.45
 FresnelPower=3.0
 SpecularStrength=1.5
 ReflectionStrength=0.5
+RefractionStrength=0.05
+Thickness=2.0

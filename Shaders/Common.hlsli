@@ -33,11 +33,14 @@ cbuffer cbMaterialInfo : register(b2)
     float gFresnelPower;
     float gSpecularStrength;
     float gReflectionStrength;
+    float gRefractionStrength;
+    float3 gMaterialPad0;
 };
 
 Texture2D gDiffuseMap : register(t0);
 Texture2D gNormalMap : register(t1);
 TextureCube gSkyboxMap : register(t2);
+Texture2D gRefractionSceneMap : register(t4);
 
 SamplerState gSampler : register(s0);
 

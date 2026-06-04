@@ -40,6 +40,9 @@ public:
         ID3D12RootSignature* rootSignature,
         D3D12_CPU_DESCRIPTOR_HANDLE finalRtv);
 
+    D3D12_GPU_DESCRIPTOR_HANDLE GetRefractionSceneSrv() const { return refractionSceneColor_.GetSrv(); }
+    void CaptureRefractionScene(ID3D12GraphicsCommandList* cmdList);
+
 private:
     void CreateRenderTextures(UINT width, UINT height);
 
@@ -75,10 +78,12 @@ private:
     DescriptorAllocation sceneColorSrv_;
     DescriptorAllocation brightColorSrv_;
     DescriptorAllocation blurTempSrv_;
+    DescriptorAllocation refractionSceneColorSrv_;
 
     RenderTexture sceneColor_;
     RenderTexture brightColor_;
     RenderTexture blurTemp_;
+    RenderTexture refractionSceneColor_;
 
     std::unique_ptr<PostProcessShader> postProcessShader_;
     std::unique_ptr<BrightPassShader> brightPassShader_;

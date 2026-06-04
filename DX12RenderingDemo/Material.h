@@ -29,13 +29,15 @@ public:
     void SetFresnelPower(float power) { fresnelPower_ = power; }
     void SetSpecularStrength(float strength) { specularStrength_ = strength; }
     void SetReflectionStrength(float strength) { reflectionStrength_ = strength; }
-
+    void SetRefractionStrength(float strength) { refractionStrength_ = strength; }
+    
     RenderMode GetRenderMode() const { return renderMode_; }
     const Vector4& GetBaseColorTint() const { return baseColorTint_; }
     float GetAlpha() const { return alpha_; }
     float GetFresnelPower() const { return fresnelPower_; }
     float GetSpecularStrength() const { return specularStrength_; }
     float GetReflectionStrength() const { return reflectionStrength_; }
+    float GetRefractionStrength() const { return refractionStrength_; }
 
     bool UseEnvironmentReflection() const { return reflectionStrength_ > 0.0f; }
 
@@ -53,4 +55,5 @@ private:
     float fresnelPower_ = 5.0f;
     float specularStrength_ = 0.5f;
     float reflectionStrength_ = 0.0f;
+    float refractionStrength_ = 0.0f;
 };

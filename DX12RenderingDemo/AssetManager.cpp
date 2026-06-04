@@ -217,6 +217,7 @@ std::shared_ptr<Material> AssetManager::LoadMaterialFromFile(
     if (values.contains("FresnelPower")) material->SetFresnelPower(std::stof(values["FresnelPower"]));
     if (values.contains("SpecularStrength")) material->SetSpecularStrength(std::stof(values["SpecularStrength"]));
     if (values.contains("ReflectionStrength")) material->SetReflectionStrength(std::stof(values["ReflectionStrength"]));
+    if (values.contains("RefractionStrength")) material->SetRefractionStrength(std::stof(values["RefractionStrength"]));
 
     for (size_t i = 0; i < static_cast<size_t>(TextureType::End); ++i)
         if (textures[i]) material->SetTexture(static_cast<TextureType>(i), textures[i]);

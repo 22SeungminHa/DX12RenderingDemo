@@ -11,6 +11,7 @@ enum class RootParam : UINT
     MaterialTextures = 3,
     SkyboxTexture = 4,
     PostProcessTexture = 5,
+    SceneColorTexture = 6,
 };
 
 enum class TextureType
@@ -103,4 +104,6 @@ struct MaterialCB
     float fresnelPower = 5.0f;
     float specularStrength = 0.5f;
     float reflectionStrength = 0.0f;
+    float refractionStrength = 0.0f;
+    Vector3 pad0 = Vector3::Zero;
 };

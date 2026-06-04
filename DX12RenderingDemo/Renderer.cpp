@@ -53,7 +53,7 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[6]{};
+    D3D12_ROOT_PARAMETER rootParameters[7]{};
 
     // b0 : ObjectCB
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -111,6 +111,19 @@ void Renderer::CreateRootSignature()
     rootParameters[5].DescriptorTable.NumDescriptorRanges = 1;
     rootParameters[5].DescriptorTable.pDescriptorRanges = &bloomSrvRange;
     rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // t4 : Scene color texture for refraction
+    D3D12_DESCRIPTOR_RANGE sceneColorSrvRange{};
+    sceneColorSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    sceneColorSrvRange.NumDescriptors = 1;
+    sceneColorSrvRange.BaseShaderRegister = 4;
+    sceneColorSrvRange.RegisterSpace = 0;
+    sceneColorSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[6].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[6].DescriptorTable.pDescriptorRanges = &sceneColorSrvRange;
+    rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_STATIC_SAMPLER_DESC sampler{};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -342,8 +355,17 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
     renderQueueBuilder_.Build(scene, camera);
 
     RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
-    RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
 
+    if (postProcessRenderer_)
+    {
+        postProcessRenderer_->CaptureRefractionScene(cmdList);
+
+        cmdList->SetGraphicsRootDescriptorTable(
+            static_cast<UINT>(RootParam::SceneColorTexture),
+            postProcessRenderer_->GetRefractionSceneSrv());
+    }
+
+    RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
     if (postProcessRenderer_)
         postProcessRenderer_->EndSceneRender(cmdList);
 }
@@ -375,10 +397,7 @@ void Renderer::WaitForGpuComplete()
     d3dCore_.WaitForGpuComplete();
 }
 
-void Renderer::DrawMeshRenderer(
-    const GameObject* object,
-    const MeshRenderer* meshRenderer,
-    Camera* camera)
+void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera)
 {
     if (!object || !meshRenderer || !meshRenderer->IsRenderable())
         return;

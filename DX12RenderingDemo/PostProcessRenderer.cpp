@@ -16,6 +16,7 @@ void PostProcessRenderer::Initialize(
     sceneColorSrv_ = srvAllocator_->Allocate();
     brightColorSrv_ = srvAllocator_->Allocate();
     blurTempSrv_ = srvAllocator_->Allocate();
+    refractionSceneColorSrv_ = srvAllocator_->Allocate();
 
     CreateRenderTextures(width, height);
 
@@ -42,10 +43,12 @@ void PostProcessRenderer::Shutdown()
     sceneColor_.Release();
     brightColor_.Release();
     blurTemp_.Release();
+    refractionSceneColor_.Release();
 
     sceneColorSrv_ = {};
     brightColorSrv_ = {};
     blurTempSrv_ = {};
+    refractionSceneColorSrv_ = {};
 
     device_ = nullptr;
     srvAllocator_ = nullptr;
@@ -66,6 +69,7 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
     sceneColor_.Create(device_, width, height, kSceneColorFormat, sceneColorSrv_, clearColor);
     brightColor_.Create(device_, width, height, kSceneColorFormat, brightColorSrv_, clearColor);
     blurTemp_.Create(device_, width, height, kSceneColorFormat, blurTempSrv_, clearColor);
+    refractionSceneColor_.Create(device_, width, height, kSceneColorFormat, refractionSceneColorSrv_, clearColor);
 }
 
 void PostProcessRenderer::BeginSceneRender(
@@ -272,4 +276,20 @@ void PostProcessRenderer::RenderFinalComposite(
 
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void PostProcessRenderer::CaptureRefractionScene(ID3D12GraphicsCommandList* cmdList)
+{
+    if (!cmdList || !sceneColor_.GetResource() || !refractionSceneColor_.GetResource())
+        return;
+
+    sceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    refractionSceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_COPY_DEST);
+
+    cmdList->CopyResource(
+        refractionSceneColor_.GetResource(),
+        sceneColor_.GetResource());
+
+    refractionSceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    sceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }

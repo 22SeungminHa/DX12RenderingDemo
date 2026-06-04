@@ -202,6 +202,7 @@ void MaterialBinder::BindMaterialData(
     materialCB.fresnelPower = material->GetFresnelPower();
     materialCB.specularStrength = material->GetSpecularStrength();
     materialCB.reflectionStrength = material->GetReflectionStrength();
+    materialCB.refractionStrength = material->GetRefractionStrength();
 
     frameResource->materialCB_->CopyData(materialIndex, materialCB);
 
