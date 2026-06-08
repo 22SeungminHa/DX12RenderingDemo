@@ -354,18 +354,23 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
 
     renderQueueBuilder_.Build(scene, camera);
 
+    //RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
+
+    //if (postProcessRenderer_)
+    //{
+    //    postProcessRenderer_->CaptureRefractionScene(cmdList);
+
+    //    cmdList->SetGraphicsRootDescriptorTable(
+    //        static_cast<UINT>(RootParam::SceneColorTexture),
+    //        postProcessRenderer_->GetRefractionSceneSrv());
+    //}
+
+    //RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
+    
     RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
 
-    if (postProcessRenderer_)
-    {
-        postProcessRenderer_->CaptureRefractionScene(cmdList);
+    RenderTransparentItems(renderQueueBuilder_.GetTransparentQueue(), camera);
 
-        cmdList->SetGraphicsRootDescriptorTable(
-            static_cast<UINT>(RootParam::SceneColorTexture),
-            postProcessRenderer_->GetRefractionSceneSrv());
-    }
-
-    RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
     if (postProcessRenderer_)
         postProcessRenderer_->EndSceneRender(cmdList);
 }
@@ -414,15 +419,35 @@ void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* me
     mesh->Render(d3dCore_.GetRenderCommandList());
 }
 
-void Renderer::RenderItems(const std::vector<RenderItem>& queue, Camera* camera)
+void Renderer::RenderItem(const RenderItemDesc& item, Camera* camera)
 {
-    for (const RenderItem& item : queue)
-    {
-        if (!item.object || !item.meshRenderer)
-            continue;
+    if (!item.object || !item.meshRenderer)
+        return;
 
-        BindObjectData(item.object);
-        DrawMeshRenderer(item.object, item.meshRenderer, camera);
+    BindObjectData(item.object);
+    DrawMeshRenderer(item.object, item.meshRenderer, camera);
+}
+
+void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
+{
+    for (const RenderItemDesc& item : queue)
+        RenderItem(item, camera);
+}
+
+void Renderer::RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
+{
+    for (const RenderItemDesc& item : queue)
+    {
+        if (postProcessRenderer_)
+        {
+            postProcessRenderer_->CaptureRefractionScene(d3dCore_.GetRenderCommandList());
+
+            d3dCore_.GetRenderCommandList()->SetGraphicsRootDescriptorTable(
+                static_cast<UINT>(RootParam::SceneColorTexture),
+                postProcessRenderer_->GetRefractionSceneSrv());
+        }
+
+        RenderItem(item, camera);
     }
 }
 

@@ -85,7 +85,9 @@ private:
     void WaitForCurrentFrameResource();
 
     // Render Queue
-    void RenderItems(const std::vector<RenderItem>& queue, Camera* camera);
+    void RenderItem(const RenderItemDesc& item, Camera* camera);
+    void RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
+    void RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
 
     // GPU Binding
     void BindCameraData(Camera* camera);

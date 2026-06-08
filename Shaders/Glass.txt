@@ -65,10 +65,10 @@ float4 PSGlass(VS_OUTPUT input) : SV_TARGET
     float refractionAmount = saturate(gRefractionStrength * 20.0f);
 
     float3 finalColor =
-        lerp(transparentBody, refractionColor, refractionAmount) * lerp(0.3f, 0.75f, glassAlpha) +
+        refractionColor +
         specular +
         fresnelColor +
         reflectionColor * reflectionStrength;
     
-    return float4(finalColor, glassAlpha);
+    return float4(finalColor, 1.0f);
 }

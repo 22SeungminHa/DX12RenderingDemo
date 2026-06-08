@@ -44,7 +44,7 @@ void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
     {
         Material* material = meshRenderer->GetMaterial();
 
-        RenderItem item{};
+        RenderItemDesc item{};
         item.object = object;
         item.meshRenderer = meshRenderer;
 
@@ -66,7 +66,7 @@ void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
 void RenderQueueBuilder::SortTransparentQueue()
 {
     std::sort(transparentQueue_.begin(), transparentQueue_.end(),
-        [](const RenderItem& a, const RenderItem& b) {
+        [](const RenderItemDesc& a, const RenderItemDesc& b) {
             return a.distanceToCamera > b.distanceToCamera;
         });
 }

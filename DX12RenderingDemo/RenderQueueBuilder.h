@@ -6,7 +6,7 @@ class Camera;
 class GameObject;
 class MeshRenderer;
 
-struct RenderItem
+struct RenderItemDesc
 {
     GameObject* object = nullptr;
     MeshRenderer* meshRenderer = nullptr;
@@ -19,14 +19,14 @@ public:
     void Build(Scene* scene, Camera* camera);
     void Clear();
 
-    const std::vector<RenderItem>& GetOpaqueQueue() const { return opaqueQueue_; }
-    const std::vector<RenderItem>& GetTransparentQueue() const { return transparentQueue_; }
+    const std::vector<RenderItemDesc>& GetOpaqueQueue() const { return opaqueQueue_; }
+    const std::vector<RenderItemDesc>& GetTransparentQueue() const { return transparentQueue_; }
 
 private:
     void CollectRenderItems(GameObject* object, Camera* camera);
     void SortTransparentQueue();
 
 private:
-    std::vector<RenderItem> opaqueQueue_;
-    std::vector<RenderItem> transparentQueue_;
+    std::vector<RenderItemDesc> opaqueQueue_;
+    std::vector<RenderItemDesc> transparentQueue_;
 };
