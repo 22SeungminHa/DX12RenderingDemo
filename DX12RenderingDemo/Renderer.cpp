@@ -436,6 +436,28 @@ void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* cam
 
 void Renderer::RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
+    switch (refractionMode_)
+    {
+    case RefractionMode::SingleCapture:
+        RenderSingleCapture(queue, camera);
+        break;
+
+    case RefractionMode::PerGlassCapture:
+        RenderPerGlassCapture(queue, camera);
+        break;
+
+    case RefractionMode::AccumulationBuffer:
+        RenderAccumulation(queue, camera);
+        break;
+
+    default:
+        RenderPerGlassCapture(queue, camera);
+        break;
+    }
+}
+
+void Renderer::RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, Camera* camera)
+{
     for (const RenderItemDesc& item : queue)
     {
         if (postProcessRenderer_)
@@ -449,6 +471,25 @@ void Renderer::RenderTransparentItems(const std::vector<RenderItemDesc>& queue, 
 
         RenderItem(item, camera);
     }
+}
+
+void Renderer::RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Camera* camera)
+{
+    if (postProcessRenderer_)
+    {
+        postProcessRenderer_->CaptureRefractionScene(d3dCore_.GetRenderCommandList());
+
+        d3dCore_.GetRenderCommandList()->SetGraphicsRootDescriptorTable(
+            static_cast<UINT>(RootParam::SceneColorTexture),
+            postProcessRenderer_->GetRefractionSceneSrv());
+    }
+
+    RenderItems(queue, camera);
+}
+
+void Renderer::RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera)
+{
+    RenderPerGlassCapture(queue, camera);
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)

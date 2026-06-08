@@ -30,6 +30,15 @@ enum class RenderMode
     End
 };
 
+enum class RefractionMode
+{
+    SingleCapture,
+    PerGlassCapture,
+    AccumulationBuffer,
+
+    End
+};
+
 enum class SCENE_TYPE
 {
     None,
