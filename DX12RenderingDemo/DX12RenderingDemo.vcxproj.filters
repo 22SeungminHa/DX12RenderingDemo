@@ -153,6 +153,9 @@
     <ClInclude Include="targetver.h">
       <Filter>소스 파일\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="GlassRenderer.h">
+      <Filter>소스 파일\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shader.cpp">
@@ -259,6 +262,9 @@
     </ClCompile>
     <ClCompile Include="SimpleMath.cpp">
       <Filter>소스 파일\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="GlassRenderer.cpp">
+      <Filter>소스 파일\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

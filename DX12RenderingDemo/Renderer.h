@@ -6,6 +6,7 @@
 #include "DescriptorAllocator.h"
 #include "MaterialBinder.h"
 #include "RenderQueueBuilder.h"
+#include "GlassRenderer.h"
 
 class Scene;
 class GameObject;
@@ -39,6 +40,7 @@ private:
 
     std::unique_ptr<SkyboxRenderer> skyboxRenderer_;
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
+    std::unique_ptr<GlassRenderer> glassRenderer_;
 
     RefractionMode refractionMode_ = RefractionMode::AccumulationBuffer;
 

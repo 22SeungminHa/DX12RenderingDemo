@@ -28,18 +28,20 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 
     postProcessRenderer_ = std::make_unique<PostProcessRenderer>();
     postProcessRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, width, height);
+
+    glassRenderer_ = std::make_unique<GlassRenderer>();
+    glassRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, width, height);
 }
 
 void Renderer::Shutdown()
 {
-    if (skyboxRenderer_)
-        skyboxRenderer_->Shutdown();
-
+    if (skyboxRenderer_) skyboxRenderer_->Shutdown();
     skyboxRenderer_.reset();
 
-    if (postProcessRenderer_)
-        postProcessRenderer_->Shutdown();
+    if (glassRenderer_) glassRenderer_->Shutdown();
+    glassRenderer_.reset();
 
+    if (postProcessRenderer_) postProcessRenderer_->Shutdown();
     postProcessRenderer_.reset();
 
     materialBinder_.Shutdown();
@@ -311,6 +313,9 @@ void Renderer::Resize(UINT width, UINT height)
 
     if (postProcessRenderer_)
         postProcessRenderer_->Resize(width, height);
+
+    if (glassRenderer_)
+        glassRenderer_->Resize(width, height);
 }
 
 void Renderer::ResetUploadCmdList()
@@ -457,6 +462,9 @@ void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* cam
 
 void Renderer::RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
+    if (queue.empty())
+        return;
+
     switch (refractionMode_)
     {
     case RefractionMode::SingleCapture:
@@ -479,16 +487,19 @@ void Renderer::RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera
 
 void Renderer::RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
+    if (!glassRenderer_ || !postProcessRenderer_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+    RenderTexture& sceneColor = postProcessRenderer_->GetSceneColorTarget();
+
     for (const RenderItemDesc& item : queue)
     {
-        if (postProcessRenderer_)
-        {
-            postProcessRenderer_->CaptureRefractionScene(d3dCore_.GetRenderCommandList());
+        glassRenderer_->CaptureRefractionScene(cmdList, sceneColor);
 
-            d3dCore_.GetRenderCommandList()->SetGraphicsRootDescriptorTable(
-                static_cast<UINT>(RootParam::SceneColorTexture),
-                postProcessRenderer_->GetRefractionSceneSrv());
-        }
+        cmdList->SetGraphicsRootDescriptorTable(
+            static_cast<UINT>(RootParam::SceneColorTexture),
+            glassRenderer_->GetRefractionSceneSrv());
 
         RenderItem(item, camera);
     }
@@ -496,38 +507,42 @@ void Renderer::RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, C
 
 void Renderer::RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
-    if (postProcessRenderer_)
-    {
-        postProcessRenderer_->CaptureRefractionScene(d3dCore_.GetRenderCommandList());
+    if (!glassRenderer_ || !postProcessRenderer_)
+        return;
 
-        d3dCore_.GetRenderCommandList()->SetGraphicsRootDescriptorTable(
-            static_cast<UINT>(RootParam::SceneColorTexture),
-            postProcessRenderer_->GetRefractionSceneSrv());
-    }
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+    RenderTexture& sceneColor = postProcessRenderer_->GetSceneColorTarget();
+
+    glassRenderer_->CaptureRefractionScene(cmdList, sceneColor);
+
+    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::SceneColorTexture), glassRenderer_->GetRefractionSceneSrv());
 
     RenderItems(queue, camera);
 }
 
 void Renderer::RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
-    if (!postProcessRenderer_ || queue.empty())
+    if (!glassRenderer_ || !postProcessRenderer_ || queue.empty())
         return;
 
     auto* cmdList = d3dCore_.GetRenderCommandList();
+    RenderTexture& sceneColor = postProcessRenderer_->GetSceneColorTarget();
 
-    // Opaque + Skybox를 한 번만 Capture
-    postProcessRenderer_->CaptureRefractionScene(cmdList);
+    glassRenderer_->CaptureRefractionScene(cmdList, sceneColor);
 
-    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::SceneColorTexture), postProcessRenderer_->GetRefractionSceneSrv());
+    cmdList->SetGraphicsRootDescriptorTable(
+        static_cast<UINT>(RootParam::SceneColorTexture),
+        glassRenderer_->GetRefractionSceneSrv());
 
-    // Glass 전용 MRT 시작
-    postProcessRenderer_->BeginGlassAccumulation(cmdList, camera, d3dCore_.GetDsvHandle());
-
+    glassRenderer_->BeginAccumulation(cmdList, camera, d3dCore_.GetDsvHandle());
     RenderItems(queue, camera, RenderPass::GlassAccumulation);
+    glassRenderer_->EndAccumulation(cmdList);
 
-    postProcessRenderer_->EndGlassAccumulation(cmdList);
-
-    postProcessRenderer_->CompositeGlassAccumulation(cmdList, camera, rootSignature_.Get());
+    glassRenderer_->CompositeAccumulation(
+        cmdList,
+        camera,
+        rootSignature_.Get(),
+        sceneColor);
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)
