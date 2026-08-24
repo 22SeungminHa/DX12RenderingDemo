@@ -7,6 +7,7 @@ class BrightPassShader;
 class HorizontalBlurShader;
 class VerticalBlurShader;
 class DescriptorAllocator;
+class GlassCompositeShader;
 
 class PostProcessRenderer
 {
@@ -50,6 +51,11 @@ public:
 
     D3D12_GPU_DESCRIPTOR_HANDLE GetGlassAccumSrv() const { return glassAccumColor_.GetSrv(); }
     D3D12_GPU_DESCRIPTOR_HANDLE GetGlassRevealageSrv() const { return glassRevealage_.GetSrv(); }
+
+    void CompositeGlassAccumulation(
+        ID3D12GraphicsCommandList* cmdList,
+        Camera* camera,
+        ID3D12RootSignature* rootSignature);
 
 private:
     void CreateRenderTextures(UINT width, UINT height);
@@ -101,4 +107,5 @@ private:
     std::unique_ptr<BrightPassShader> brightPassShader_;
     std::unique_ptr<HorizontalBlurShader> horizontalBlurShader_;
     std::unique_ptr<VerticalBlurShader> verticalBlurShader_;
+    std::unique_ptr<GlassCompositeShader> glassCompositeShader_;
 };

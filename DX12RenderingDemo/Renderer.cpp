@@ -53,7 +53,7 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[7]{};
+    D3D12_ROOT_PARAMETER rootParameters[9]{};
 
     // b0 : ObjectCB
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -124,6 +124,32 @@ void Renderer::CreateRootSignature()
     rootParameters[6].DescriptorTable.NumDescriptorRanges = 1;
     rootParameters[6].DescriptorTable.pDescriptorRanges = &sceneColorSrvRange;
     rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // t5 : Glass accumulation color
+    D3D12_DESCRIPTOR_RANGE glassAccumSrvRange{};
+    glassAccumSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    glassAccumSrvRange.NumDescriptors = 1;
+    glassAccumSrvRange.BaseShaderRegister = 5;
+    glassAccumSrvRange.RegisterSpace = 0;
+    glassAccumSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[7].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[7].DescriptorTable.pDescriptorRanges = &glassAccumSrvRange;
+    rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // t6 : Glass revealage
+    D3D12_DESCRIPTOR_RANGE glassRevealageSrvRange{};
+    glassRevealageSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    glassRevealageSrvRange.NumDescriptors = 1;
+    glassRevealageSrvRange.BaseShaderRegister = 6;
+    glassRevealageSrvRange.RegisterSpace = 0;
+    glassRevealageSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    rootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[8].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameters[8].DescriptorTable.pDescriptorRanges = &glassRevealageSrvRange;
+    rootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     D3D12_STATIC_SAMPLER_DESC sampler{};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -513,6 +539,8 @@ void Renderer::RenderAccumulation(const std::vector<RenderItemDesc>& queue, Came
     RenderItems(queue, camera, RenderPass::GlassAccumulation);
 
     postProcessRenderer_->EndGlassAccumulation(cmdList);
+
+    postProcessRenderer_->CompositeGlassAccumulation(cmdList, camera, rootSignature_.Get());
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)

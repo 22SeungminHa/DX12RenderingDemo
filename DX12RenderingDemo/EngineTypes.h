@@ -12,6 +12,10 @@ enum class RootParam : UINT
     SkyboxTexture = 4,
     PostProcessTexture = 5,
     SceneColorTexture = 6,
+    GlassAccumTexture = 7,
+    GlassRevealageTexture = 8,
+
+    End
 };
 
 enum class TextureType

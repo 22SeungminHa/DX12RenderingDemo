@@ -112,3 +112,19 @@ D3D12_SHADER_BYTECODE VerticalBlurShader::CreatePixelShader(ComPtr<ID3DBlob>& sh
 		shaderBlob
 	);
 }
+
+DXGI_FORMAT GlassCompositeShader::CreateRtvFormat() const
+{
+	return DXGI_FORMAT_R16G16B16A16_FLOAT;
+}
+
+D3D12_SHADER_BYTECODE GlassCompositeShader::CreatePixelShader(
+	ComPtr<ID3DBlob>& shaderBlob)
+{
+	return Shader::CompileShaderFromFile(
+		AssetPath::ShaderFile(L"PostProcess"),
+		"PSGlassComposite",
+		"ps_5_1",
+		shaderBlob
+	);
+}

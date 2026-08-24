@@ -2,6 +2,8 @@
 
 Texture2D gSceneColorMap : register(t0);
 Texture2D gBloomMap : register(t3);
+Texture2D gGlassAccumMap : register(t5);
+Texture2D gGlassRevealageMap : register(t6);
 
 VS_FULLSCREEN_OUTPUT VSFullscreen(uint vertexID : SV_VertexID)
 {
@@ -110,4 +112,16 @@ float4 PSBlurVertical(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
     color += gSceneColorMap.Sample(gSampler, uv + float2(0.0f, 4.0f * texelSize.y)).rgb * 0.05f;
 
     return float4(color, 1.0f);
+}
+
+float4 PSGlassComposite(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
+{
+    float3 background = gRefractionSceneMap.Sample(gSampler, input.texCoord).rgb;
+    float4 accum = gGlassAccumMap.Sample(gSampler, input.texCoord);
+    float revealage = saturate(gGlassRevealageMap.Sample(gSampler, input.texCoord).r);
+    float3 glassColor = accum.rgb / max(accum.a, 0.0001f);
+    float coverage = 1.0f - revealage;
+    float3 finalColor = lerp(background, glassColor, coverage);
+
+    return float4(finalColor, 1.0f);
 }

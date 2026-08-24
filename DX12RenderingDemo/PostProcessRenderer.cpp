@@ -33,6 +33,9 @@ void PostProcessRenderer::Initialize(
 
     verticalBlurShader_ = std::make_unique<VerticalBlurShader>();
     verticalBlurShader_->CreateShader(device_, rootSignature);
+
+    glassCompositeShader_ = std::make_unique<GlassCompositeShader>();
+    glassCompositeShader_->CreateShader(device_, rootSignature);
 }
 
 void PostProcessRenderer::Shutdown()
@@ -41,6 +44,7 @@ void PostProcessRenderer::Shutdown()
     brightPassShader_.reset();
     horizontalBlurShader_.reset();
     verticalBlurShader_.reset();
+    glassCompositeShader_.reset();
 
     sceneColor_.Release();
     brightColor_.Release();
@@ -336,4 +340,40 @@ void PostProcessRenderer::EndGlassAccumulation(ID3D12GraphicsCommandList* cmdLis
 
     glassAccumColor_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     glassRevealage_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+void PostProcessRenderer::CompositeGlassAccumulation(
+    ID3D12GraphicsCommandList* cmdList,
+    Camera* camera,
+    ID3D12RootSignature* rootSignature)
+{
+    if (!cmdList || !camera || !rootSignature || !glassCompositeShader_ || !sceneColor_.GetResource() || !refractionSceneColor_.GetResource() || !glassAccumColor_.GetResource() || !glassRevealage_.GetResource())
+        return;
+
+    sceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const auto& viewport = camera->GetViewport();
+    const auto& scissor = camera->GetScissorRect();
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissor);
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE rtv = sceneColor_.GetRtv();
+
+    cmdList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
+    cmdList->SetGraphicsRootSignature(rootSignature);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { srvAllocator_->GetHeap() };
+
+    cmdList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::SceneColorTexture), refractionSceneColor_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::GlassAccumTexture), glassAccumColor_.GetSrv());
+    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::GlassRevealageTexture), glassRevealage_.GetSrv());
+
+    glassCompositeShader_->Render(cmdList, camera, RenderMode::Opaque);
+
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    cmdList->DrawInstanced(3, 1, 0, 0);
 }

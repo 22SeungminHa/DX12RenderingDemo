@@ -75,11 +75,9 @@ GLASS_ACCUM_OUTPUT PSGlassAccumulation(VS_OUTPUT input)
     GLASS_ACCUM_OUTPUT output;
 
     float4 glass = EvaluateGlass(input);
-
     float alpha = saturate(glass.a);
 
     output.accumColor = float4(glass.rgb * alpha, alpha);
-
     output.revealage = alpha;
 
     return output;
@@ -88,6 +86,7 @@ GLASS_ACCUM_OUTPUT PSGlassAccumulation(VS_OUTPUT input)
 float4 PSGlass(VS_OUTPUT input) : SV_TARGET
 {
     float4 glass = EvaluateGlass(input);
+    float alpha = saturate(glass.a);
 
-    return float4(glass.rgb, 1.0f);
+    return float4(glass.rgb * alpha, alpha);
 }
