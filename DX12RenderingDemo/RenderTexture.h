@@ -13,6 +13,7 @@ public:
         UINT height,
         DXGI_FORMAT format,
         const DescriptorAllocation& srvAllocation,
+        const RtvDescriptorAllocation& rtvAllocation,
         const float clearColor[4]);
 
     void Release();
@@ -26,7 +27,6 @@ public:
 
 private:
     ComPtr<ID3D12Resource> resource_;
-    ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtv_{};
     D3D12_GPU_DESCRIPTOR_HANDLE srv_{};

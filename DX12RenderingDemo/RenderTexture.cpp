@@ -6,11 +6,12 @@ bool RenderTexture::Create(
     UINT height,
     DXGI_FORMAT format,
     const DescriptorAllocation& srvAllocation,
+    const RtvDescriptorAllocation& rtvAllocation,
     const float clearColor[4])
 {
     Release();
 
-    if (!device || width == 0 || height == 0 || !srvAllocation.IsValid())
+    if (!device || width == 0 || height == 0 || !srvAllocation.IsValid() || !rtvAllocation.IsValid())
         return false;
 
     D3D12_RESOURCE_DESC textureDesc{};
@@ -43,16 +44,8 @@ bool RenderTexture::Create(
 
     state_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-    rtvHeapDesc.NumDescriptors = 1;
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    rtv_ = rtvAllocation.cpuHandle;
 
-    ThrowIfFailed(device->CreateDescriptorHeap(
-        &rtvHeapDesc,
-        IID_PPV_ARGS(rtvHeap_.GetAddressOf())));
-
-    rtv_ = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
     device->CreateRenderTargetView(resource_.Get(), nullptr, rtv_);
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -73,7 +66,6 @@ bool RenderTexture::Create(
 void RenderTexture::Release()
 {
     resource_.Reset();
-    rtvHeap_.Reset();
 
     rtv_ = {};
     srv_ = {};

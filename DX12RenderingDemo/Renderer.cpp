@@ -20,6 +20,7 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     CreateRootSignature();
     CreateFrameResources();
     CreateSrvDescriptorHeap();
+    CreateRtvDescriptorHeap();
 
     materialBinder_.Initialize(d3dCore_.GetDevice(), &srvDescriptorAllocator_);
 
@@ -27,10 +28,10 @@ void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     skyboxRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_);
 
     postProcessRenderer_ = std::make_unique<PostProcessRenderer>();
-    postProcessRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, width, height);
+    postProcessRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, &rtvDescriptorAllocator_, width, height);
 
     glassRenderer_ = std::make_unique<GlassRenderer>();
-    glassRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, width, height);
+    glassRenderer_->Initialize(d3dCore_.GetDevice(), rootSignature_.Get(), &srvDescriptorAllocator_, &rtvDescriptorAllocator_, width, height);
 }
 
 void Renderer::Shutdown()
@@ -47,7 +48,10 @@ void Renderer::Shutdown()
     materialBinder_.Shutdown();
 
     ReleaseFrameResources();
+
+    ReleaseRtvDescriptorHeap();
     ReleaseSrvDescriptorHeap();
+
     ReleaseRootSignature();
 
     d3dCore_.Shutdown();
@@ -161,6 +165,18 @@ void Renderer::CreateSrvDescriptorHeap()
 void Renderer::ReleaseSrvDescriptorHeap()
 {
     srvDescriptorAllocator_.Shutdown();
+}
+
+void Renderer::CreateRtvDescriptorHeap()
+{
+    rtvDescriptorAllocator_.Initialize(
+        d3dCore_.GetDevice(),
+        kMaxRtvDescriptorCount);
+}
+
+void Renderer::ReleaseRtvDescriptorHeap()
+{
+    rtvDescriptorAllocator_.Shutdown();
 }
 
 void Renderer::AdvanceFrameResource()

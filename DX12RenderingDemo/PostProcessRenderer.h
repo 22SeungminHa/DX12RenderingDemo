@@ -21,6 +21,7 @@ public:
         ID3D12Device* device,
         ID3D12RootSignature* rootSignature,
         DescriptorAllocator* srvAllocator,
+        RtvDescriptorAllocator* rtvAllocator,
         UINT width,
         UINT height);
 
@@ -73,10 +74,15 @@ private:
 private:
     ID3D12Device* device_ = nullptr;
     DescriptorAllocator* srvAllocator_ = nullptr;
+    RtvDescriptorAllocator* rtvAllocator_ = nullptr;
 
     DescriptorAllocation sceneColorSrv_;
     DescriptorAllocation brightColorSrv_;
     DescriptorAllocation blurTempSrv_;
+
+    RtvDescriptorAllocation sceneColorRtv_;
+    RtvDescriptorAllocation brightColorRtv_;
+    RtvDescriptorAllocation blurTempRtv_;
 
     RenderTexture sceneColor_;
     RenderTexture brightColor_;

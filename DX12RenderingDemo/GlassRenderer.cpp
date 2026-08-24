@@ -7,15 +7,21 @@ void GlassRenderer::Initialize(
     ID3D12Device* device,
     ID3D12RootSignature* rootSignature,
     DescriptorAllocator* srvAllocator,
+    RtvDescriptorAllocator* rtvAllocator,
     UINT width,
     UINT height)
 {
     device_ = device;
     srvAllocator_ = srvAllocator;
+    rtvAllocator_ = rtvAllocator;
 
     refractionSceneColorSrv_ = srvAllocator_->Allocate();
     glassAccumColorSrv_ = srvAllocator_->Allocate();
     glassRevealageSrv_ = srvAllocator_->Allocate();
+
+    refractionSceneColorRtv_ = rtvAllocator_->Allocate();
+    glassAccumColorRtv_ = rtvAllocator_->Allocate();
+    glassRevealageRtv_ = rtvAllocator_->Allocate();
 
     CreateRenderTextures(width, height);
 
@@ -35,8 +41,13 @@ void GlassRenderer::Shutdown()
     glassAccumColorSrv_ = {};
     glassRevealageSrv_ = {};
 
+    refractionSceneColorRtv_ = {};
+    glassAccumColorRtv_ = {};
+    glassRevealageRtv_ = {};
+
     device_ = nullptr;
     srvAllocator_ = nullptr;
+    rtvAllocator_ = nullptr;
 }
 
 void GlassRenderer::Resize(UINT width, UINT height)
@@ -46,16 +57,16 @@ void GlassRenderer::Resize(UINT width, UINT height)
 
 void GlassRenderer::CreateRenderTextures(UINT width, UINT height)
 {
-    if (!device_ || !srvAllocator_ || width == 0 || height == 0)
+    if (!device_ || !srvAllocator_ || !rtvAllocator_ || width == 0 || height == 0)
         return;
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     const float accumClear[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     const float revealageClear[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    refractionSceneColor_.Create(device_, width, height, kRefractionSceneFormat, refractionSceneColorSrv_, clearColor);
-    glassAccumColor_.Create(device_, width, height, kGlassAccumFormat, glassAccumColorSrv_, accumClear);
-    glassRevealage_.Create(device_, width, height, kGlassRevealageFormat, glassRevealageSrv_, revealageClear);
+    refractionSceneColor_.Create(device_, width, height, kRefractionSceneFormat, refractionSceneColorSrv_, refractionSceneColorRtv_, clearColor);
+    glassAccumColor_.Create(device_, width, height, kGlassAccumFormat, glassAccumColorSrv_, glassAccumColorRtv_, accumClear);
+    glassRevealage_.Create(device_, width, height, kGlassRevealageFormat, glassRevealageSrv_, glassRevealageRtv_, revealageClear);
 }
 
 void GlassRenderer::CaptureRefractionScene(ID3D12GraphicsCommandList* cmdList, RenderTexture& sceneColor)

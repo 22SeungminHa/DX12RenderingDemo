@@ -7,15 +7,21 @@ void PostProcessRenderer::Initialize(
     ID3D12Device* device,
     ID3D12RootSignature* rootSignature,
     DescriptorAllocator* srvAllocator,
+    RtvDescriptorAllocator* rtvAllocator,
     UINT width,
     UINT height)
 {
     device_ = device;
     srvAllocator_ = srvAllocator;
+    rtvAllocator_ = rtvAllocator;
 
     sceneColorSrv_ = srvAllocator_->Allocate();
     brightColorSrv_ = srvAllocator_->Allocate();
     blurTempSrv_ = srvAllocator_->Allocate();
+
+    sceneColorRtv_ = rtvAllocator_->Allocate();
+    brightColorRtv_ = rtvAllocator_->Allocate();
+    blurTempRtv_ = rtvAllocator_->Allocate();
 
     CreateRenderTextures(width, height);
 
@@ -47,8 +53,13 @@ void PostProcessRenderer::Shutdown()
     brightColorSrv_ = {};
     blurTempSrv_ = {};
 
+    sceneColorRtv_ = {};
+    brightColorRtv_ = {};
+    blurTempRtv_ = {};
+
     device_ = nullptr;
     srvAllocator_ = nullptr;
+    rtvAllocator_ = nullptr;
 }
 
 void PostProcessRenderer::Resize(UINT width, UINT height)
@@ -58,14 +69,14 @@ void PostProcessRenderer::Resize(UINT width, UINT height)
 
 void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
 {
-    if (!device_ || !srvAllocator_ || width == 0 || height == 0)
+    if (!device_ || !srvAllocator_ || !rtvAllocator_ || width == 0 || height == 0)
         return;
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-    sceneColor_.Create(device_, width, height, kSceneColorFormat, sceneColorSrv_, clearColor);
-    brightColor_.Create(device_, width, height, kSceneColorFormat, brightColorSrv_, clearColor);
-    blurTemp_.Create(device_, width, height, kSceneColorFormat, blurTempSrv_, clearColor);
+    sceneColor_.Create(device_, width, height, kSceneColorFormat, sceneColorSrv_, sceneColorRtv_, clearColor);
+    brightColor_.Create(device_, width, height, kSceneColorFormat, brightColorSrv_, brightColorRtv_, clearColor);
+    blurTemp_.Create(device_, width, height, kSceneColorFormat, blurTempSrv_, blurTempRtv_, clearColor);
 }
 
 void PostProcessRenderer::BeginSceneRender(

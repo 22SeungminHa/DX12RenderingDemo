@@ -24,6 +24,7 @@ private:
     static constexpr UINT kMaxObjectCount = 1000;
     static constexpr UINT kMaxMaterialCount = 1000;
     static constexpr UINT kMaxSrvDescriptorCount = 1024;
+    static constexpr UINT kMaxRtvDescriptorCount = 64;
 
 private:
     D3DCore d3dCore_;
@@ -35,6 +36,7 @@ private:
     UINT currentFrameResourceIndex_ = 0;
 
     DescriptorAllocator srvDescriptorAllocator_;
+    RtvDescriptorAllocator rtvDescriptorAllocator_;
     RenderQueueBuilder renderQueueBuilder_;
     MaterialBinder materialBinder_;
 
@@ -81,6 +83,8 @@ private:
     void ReleaseRootSignature();
     void CreateSrvDescriptorHeap();
     void ReleaseSrvDescriptorHeap();
+    void CreateRtvDescriptorHeap();
+    void ReleaseRtvDescriptorHeap();
 
     // Frame Resources
     void CreateFrameResources();
