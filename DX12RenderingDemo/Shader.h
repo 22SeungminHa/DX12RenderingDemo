@@ -15,8 +15,8 @@ public:
     virtual D3D12_BLEND_DESC CreateBlendState(RenderMode renderMode);
     virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState(RenderMode renderMode);
 
-    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
-    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
+    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob);
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob);
     
     virtual DXGI_FORMAT CreateRtvFormat() const;
 
@@ -26,11 +26,11 @@ public:
         LPCSTR shaderProfile,
         ComPtr<ID3DBlob>& shaderBlob);
 
-    virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+    virtual void CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature);
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
     
-    virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList, RenderMode renderMode);
-    virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, Camera* pCamera, RenderMode renderMode);
+    virtual void OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode, RenderPass renderPass = RenderPass::Default);
+    virtual void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera, RenderMode renderMode, RenderPass renderPass = RenderPass::Default);
 
 protected:
     std::vector<ComPtr<ID3D12PipelineState>> pipelineStates_;
@@ -44,9 +44,9 @@ public:
     virtual ~LitShader();
 
     virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
-    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
-    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob);
-    virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob);
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob);
+    virtual void CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature);
 };
 
 class GlassShader : public LitShader
@@ -55,11 +55,17 @@ public:
     GlassShader();
     virtual ~GlassShader();
 
-    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
 
-    virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature) override;
+    virtual void CreateShader(ID3D12Device* device, ID3D12RootSignature* rootSignature) override;
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
+    
+    virtual void OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode, RenderPass renderPass = RenderPass::Default) override;
+
+private:
+    D3D12_SHADER_BYTECODE CreateAccumulationPixelShader(ComPtr<ID3DBlob>& shaderBlob);
+    D3D12_BLEND_DESC CreateAccumulationBlendState();
 };
 
 class SkyboxShader : public Shader
@@ -69,8 +75,8 @@ public:
     virtual ~SkyboxShader() = default;
 
     virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout() override;
-    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
-    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& pd3dShaderBlob) override;
+    virtual D3D12_SHADER_BYTECODE CreateVertexShader(ComPtr<ID3DBlob>& shaderBlob) override;
+    virtual D3D12_SHADER_BYTECODE CreatePixelShader(ComPtr<ID3DBlob>& shaderBlob) override;
     virtual D3D12_RASTERIZER_DESC CreateRasterizerState() override;
     virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState(RenderMode renderMode) override;
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) override;

@@ -30,6 +30,14 @@ enum class RenderMode
     End
 };
 
+enum class RenderPass
+{
+    Default,
+    GlassAccumulation,
+
+    End
+};
+
 enum class RefractionMode
 {
     SingleCapture,

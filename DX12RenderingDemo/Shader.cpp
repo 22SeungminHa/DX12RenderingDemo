@@ -174,7 +174,7 @@ void Shader::CreatePipelineStates(
 	pipelineStates_.push_back(std::move(transparentPso));
 }
 
-void Shader::OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode)
+void Shader::OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode, RenderPass renderPass)
 {
 	if (!cmdList || pipelineStates_.empty())
 		return;
@@ -187,7 +187,7 @@ void Shader::OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode rend
 	cmdList->SetPipelineState(pipelineStates_[psoIndex].Get());
 }
 
-void Shader::Render(ID3D12GraphicsCommandList* cmdList, Camera* pCamera, RenderMode renderMode)
+void Shader::Render(ID3D12GraphicsCommandList* cmdList, Camera* pCamera, RenderMode renderMode, RenderPass renderPass)
 {
-	OnPrepareRender(cmdList, renderMode);
+	OnPrepareRender(cmdList, renderMode, renderPass);
 }

@@ -26,7 +26,8 @@ public:
         Material* material,
         Camera* camera,
         FrameResource* frameResource,
-        SkyboxRenderer* skyboxRenderer);
+        SkyboxRenderer* skyboxRenderer,
+        RenderPass renderPass = RenderPass::Default);
 
 private:
     UINT GetOrCreateMaterialCBIndex(Material* material);

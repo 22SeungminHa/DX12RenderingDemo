@@ -28,7 +28,8 @@ bool MaterialBinder::Bind(
     Material* material,
     Camera* camera,
     FrameResource* frameResource,
-    SkyboxRenderer* skyboxRenderer)
+    SkyboxRenderer* skyboxRenderer,
+    RenderPass renderPass) 
 {
     if (!cmdList || !material || !frameResource)
         return false;
@@ -48,7 +49,11 @@ bool MaterialBinder::Bind(
 
     BindMaterialData(cmdList, material, materialCBIndex, frameResource);
 
-    shader->Render(cmdList, camera, material->GetRenderMode());
+    shader->Render(
+        cmdList,
+        camera,
+        material->GetRenderMode(),
+        renderPass);
 
     return true;
 }

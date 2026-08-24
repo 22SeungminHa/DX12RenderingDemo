@@ -87,8 +87,8 @@ private:
     void WaitForCurrentFrameResource();
 
     // Render Queue
-    void RenderItem(const RenderItemDesc& item, Camera* camera);
-    void RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
+    void RenderItem(const RenderItemDesc& item, Camera* camera, RenderPass renderPass = RenderPass::Default);
+    void RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera, RenderPass renderPass = RenderPass::Default);
 
     void RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
@@ -100,7 +100,7 @@ private:
     void BindObjectData(const GameObject* object);
 
     // Draw
-    void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera);
+    void DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera, RenderPass renderPass = RenderPass::Default);
 
     Camera* BeginFrame(Scene* scene);
     void RenderSceneToTexture(Scene* scene, Camera* camera);

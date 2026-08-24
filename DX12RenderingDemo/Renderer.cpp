@@ -16,10 +16,10 @@ Renderer::~Renderer() {}
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
-
+    
     CreateRootSignature();
-    CreateSrvDescriptorHeap();
     CreateFrameResources();
+    CreateSrvDescriptorHeap();
 
     materialBinder_.Initialize(d3dCore_.GetDevice(), &srvDescriptorAllocator_);
 
@@ -402,7 +402,7 @@ void Renderer::WaitForGpuComplete()
     d3dCore_.WaitForGpuComplete();
 }
 
-void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera)
+void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* meshRenderer, Camera* camera, RenderPass renderPass) 
 {
     if (!object || !meshRenderer || !meshRenderer->IsRenderable())
         return;
@@ -413,25 +413,33 @@ void Renderer::DrawMeshRenderer(const GameObject* object, const MeshRenderer* me
     if (!mesh || !material)
         return;
 
-    if (!materialBinder_.Bind(d3dCore_.GetRenderCommandList(), material, camera, currentFrameResource_, skyboxRenderer_.get()))
+    if (!materialBinder_.Bind(
+        d3dCore_.GetRenderCommandList(),
+        material,
+        camera,
+        currentFrameResource_,
+        skyboxRenderer_.get(),
+        renderPass))
+    {
         return;
+    }
 
     mesh->Render(d3dCore_.GetRenderCommandList());
 }
 
-void Renderer::RenderItem(const RenderItemDesc& item, Camera* camera)
+void Renderer::RenderItem(const RenderItemDesc& item, Camera* camera, RenderPass renderPass)
 {
     if (!item.object || !item.meshRenderer)
         return;
 
     BindObjectData(item.object);
-    DrawMeshRenderer(item.object, item.meshRenderer, camera);
+    DrawMeshRenderer(item.object, item.meshRenderer, camera, renderPass);
 }
 
-void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
+void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera, RenderPass renderPass)
 {
     for (const RenderItemDesc& item : queue)
-        RenderItem(item, camera);
+        RenderItem(item, camera, renderPass);
 }
 
 void Renderer::RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
@@ -489,7 +497,22 @@ void Renderer::RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Cam
 
 void Renderer::RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
-    RenderPerGlassCapture(queue, camera);
+    if (!postProcessRenderer_ || queue.empty())
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    // Opaque + Skybox를 한 번만 Capture
+    postProcessRenderer_->CaptureRefractionScene(cmdList);
+
+    cmdList->SetGraphicsRootDescriptorTable(static_cast<UINT>(RootParam::SceneColorTexture), postProcessRenderer_->GetRefractionSceneSrv());
+
+    // Glass 전용 MRT 시작
+    postProcessRenderer_->BeginGlassAccumulation(cmdList, camera, d3dCore_.GetDsvHandle());
+
+    RenderItems(queue, camera, RenderPass::GlassAccumulation);
+
+    postProcessRenderer_->EndGlassAccumulation(cmdList);
 }
 
 bool Renderer::PrepareSkybox(const SkyboxDesc& skybox, AssetManager& assetManager)

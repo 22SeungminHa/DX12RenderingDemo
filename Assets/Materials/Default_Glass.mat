@@ -3,7 +3,7 @@ Shader=GlassShader
 RenderMode=Transparent
 
 BaseColorMap=Default_Glass_BaseColor.dds
-NormalMap=T_YFSM_01_n.dds
+NormalMap=GlassPattern4.dds
 
 BaseColorTint=1.0,1.0,1.0,1.0
 Alpha=0.45

@@ -17,6 +17,8 @@ void PostProcessRenderer::Initialize(
     brightColorSrv_ = srvAllocator_->Allocate();
     blurTempSrv_ = srvAllocator_->Allocate();
     refractionSceneColorSrv_ = srvAllocator_->Allocate();
+    glassAccumColorSrv_ = srvAllocator_->Allocate();
+    glassRevealageSrv_ = srvAllocator_->Allocate();
 
     CreateRenderTextures(width, height);
 
@@ -44,11 +46,15 @@ void PostProcessRenderer::Shutdown()
     brightColor_.Release();
     blurTemp_.Release();
     refractionSceneColor_.Release();
+    glassAccumColor_.Release();
+    glassRevealage_.Release();
 
     sceneColorSrv_ = {};
     brightColorSrv_ = {};
     blurTempSrv_ = {};
     refractionSceneColorSrv_ = {};
+    glassAccumColorSrv_ = {};
+    glassRevealageSrv_ = {};
 
     device_ = nullptr;
     srvAllocator_ = nullptr;
@@ -65,11 +71,15 @@ void PostProcessRenderer::CreateRenderTextures(UINT width, UINT height)
         return;
 
     const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    const float accumClear[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float revealageClear[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     sceneColor_.Create(device_, width, height, kSceneColorFormat, sceneColorSrv_, clearColor);
     brightColor_.Create(device_, width, height, kSceneColorFormat, brightColorSrv_, clearColor);
     blurTemp_.Create(device_, width, height, kSceneColorFormat, blurTempSrv_, clearColor);
     refractionSceneColor_.Create(device_, width, height, kSceneColorFormat, refractionSceneColorSrv_, clearColor);
+    glassAccumColor_.Create(device_, width, height, kGlassAccumFormat, glassAccumColorSrv_, accumClear);
+    glassRevealage_.Create(device_, width, height, kGlassRevealageFormat, glassRevealageSrv_, revealageClear);
 }
 
 void PostProcessRenderer::BeginSceneRender(
@@ -292,4 +302,38 @@ void PostProcessRenderer::CaptureRefractionScene(ID3D12GraphicsCommandList* cmdL
 
     refractionSceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     sceneColor_.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
+void PostProcessRenderer::BeginGlassAccumulation(ID3D12GraphicsCommandList* cmdList, Camera* camera, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle)
+{
+    if (!cmdList || !camera || !glassAccumColor_.GetResource() || !glassRevealage_.GetResource())
+        return;
+
+    glassAccumColor_.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    glassRevealage_.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const auto& viewport = camera->GetViewport();
+    const auto& scissor = camera->GetScissorRect();
+
+    cmdList->RSSetViewports(1, &viewport);
+    cmdList->RSSetScissorRects(1, &scissor);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvs[2] = { glassAccumColor_.GetRtv(), glassRevealage_.GetRtv() };
+
+    cmdList->OMSetRenderTargets(2, rtvs, FALSE, &dsvHandle);
+
+    const float accumClear[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float revealageClear[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    cmdList->ClearRenderTargetView(glassAccumColor_.GetRtv(), accumClear, 0, nullptr);
+    cmdList->ClearRenderTargetView(glassRevealage_.GetRtv(), revealageClear, 0, nullptr);
+}
+
+void PostProcessRenderer::EndGlassAccumulation(ID3D12GraphicsCommandList* cmdList)
+{
+    if (!cmdList)
+        return;
+
+    glassAccumColor_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    glassRevealage_.Transition(cmdList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
