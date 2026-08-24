@@ -21,12 +21,14 @@ public:
 
     const std::vector<RenderItemDesc>& GetOpaqueQueue() const { return opaqueQueue_; }
     const std::vector<RenderItemDesc>& GetTransparentQueue() const { return transparentQueue_; }
+    const std::vector<RenderItemDesc>& GetGlassQueue() const { return glassQueue_; }
 
 private:
     void CollectRenderItems(GameObject* object, Camera* camera);
-    void SortTransparentQueue();
+    void SortBackToFront(std::vector<RenderItemDesc>& queue);
 
 private:
     std::vector<RenderItemDesc> opaqueQueue_;
     std::vector<RenderItemDesc> transparentQueue_;
+    std::vector<RenderItemDesc> glassQueue_;
 };

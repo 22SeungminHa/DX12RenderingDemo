@@ -22,13 +22,15 @@ void RenderQueueBuilder::Build(Scene* scene, Camera* camera)
         CollectRenderItems(object.get(), camera);
     }
 
-    SortTransparentQueue();
+    SortBackToFront(transparentQueue_);
+    SortBackToFront(glassQueue_);
 }
 
 void RenderQueueBuilder::Clear()
 {
     opaqueQueue_.clear();
     transparentQueue_.clear();
+    glassQueue_.clear();
 }
 
 void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
@@ -53,7 +55,9 @@ void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
 
         item.distanceToCamera = Vector3::DistanceSquared(objectPos, cameraPos);
 
-        if (material && material->GetRenderMode() == RenderMode::Transparent)
+        if (material && material->IsGlassMaterial())
+            glassQueue_.push_back(item);
+        else if (material && material->GetRenderMode() == RenderMode::Transparent)
             transparentQueue_.push_back(item);
         else
             opaqueQueue_.push_back(item);
@@ -63,10 +67,11 @@ void RenderQueueBuilder::CollectRenderItems(GameObject* object, Camera* camera)
         CollectRenderItems(child.get(), camera);
 }
 
-void RenderQueueBuilder::SortTransparentQueue()
+void RenderQueueBuilder::SortBackToFront(std::vector<RenderItemDesc>& queue)
 {
-    std::sort(transparentQueue_.begin(), transparentQueue_.end(),
-        [](const RenderItemDesc& a, const RenderItemDesc& b) {
+    std::sort(queue.begin(), queue.end(),
+        [](const RenderItemDesc& a, const RenderItemDesc& b)
+        {
             return a.distanceToCamera > b.distanceToCamera;
         });
 }

@@ -41,6 +41,8 @@ public:
 
     bool UseEnvironmentReflection() const { return reflectionStrength_ > 0.0f; }
 
+    bool IsGlassMaterial() const;
+
 private:
     UINT materialCBIndex_ = UINT_MAX;
 

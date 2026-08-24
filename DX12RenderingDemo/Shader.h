@@ -32,6 +32,8 @@ public:
     virtual void OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode, RenderPass renderPass = RenderPass::Default);
     virtual void Render(ID3D12GraphicsCommandList* cmdList, Camera* camera, RenderMode renderMode, RenderPass renderPass = RenderPass::Default);
 
+    virtual bool IsGlassShader() const { return false; }
+
 protected:
     std::vector<ComPtr<ID3D12PipelineState>> pipelineStates_;
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
@@ -62,6 +64,8 @@ public:
     virtual void CreatePipelineStates(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
     
     virtual void OnPrepareRender(ID3D12GraphicsCommandList* cmdList, RenderMode renderMode, RenderPass renderPass = RenderPass::Default) override;
+
+    virtual bool IsGlassShader() const override { return true; }
 
 private:
     D3D12_SHADER_BYTECODE CreateAccumulationPixelShader(ComPtr<ID3DBlob>& shaderBlob);

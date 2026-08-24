@@ -40,7 +40,7 @@ private:
     std::unique_ptr<SkyboxRenderer> skyboxRenderer_;
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
 
-    RefractionMode refractionMode_ = RefractionMode::PerGlassCapture;
+    RefractionMode refractionMode_ = RefractionMode::AccumulationBuffer;
 
 public:
     Renderer();
@@ -90,7 +90,7 @@ private:
     void RenderItem(const RenderItemDesc& item, Camera* camera, RenderPass renderPass = RenderPass::Default);
     void RenderItems(const std::vector<RenderItemDesc>& queue, Camera* camera, RenderPass renderPass = RenderPass::Default);
 
-    void RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
+    void RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera);

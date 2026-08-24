@@ -379,23 +379,10 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
         skyboxRenderer_->Render(cmdList, camera, scene->GetSkybox());
 
     renderQueueBuilder_.Build(scene, camera);
-
-    //RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
-
-    //if (postProcessRenderer_)
-    //{
-    //    postProcessRenderer_->CaptureRefractionScene(cmdList);
-
-    //    cmdList->SetGraphicsRootDescriptorTable(
-    //        static_cast<UINT>(RootParam::SceneColorTexture),
-    //        postProcessRenderer_->GetRefractionSceneSrv());
-    //}
-
-    //RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
     
     RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
-
-    RenderTransparentItems(renderQueueBuilder_.GetTransparentQueue(), camera);
+    RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
+    RenderGlassItems(renderQueueBuilder_.GetGlassQueue(), camera);
 
     if (postProcessRenderer_)
         postProcessRenderer_->EndSceneRender(cmdList);
@@ -468,7 +455,7 @@ void Renderer::RenderItems(const std::vector<RenderItemDesc>& queue, Camera* cam
         RenderItem(item, camera, renderPass);
 }
 
-void Renderer::RenderTransparentItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
+void Renderer::RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera* camera)
 {
     switch (refractionMode_)
     {
