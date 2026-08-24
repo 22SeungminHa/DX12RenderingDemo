@@ -89,6 +89,20 @@ public:
         D3D12_HEAP_TYPE heapType,
         D3D12_RESOURCE_STATES finalState,
         ComPtr<ID3D12Resource>& uploadBuffer);
+
+    static void InitCbv(
+        D3D12_ROOT_PARAMETER& parameter,
+        UINT shaderRegister,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL,
+        UINT registerSpace = 0);
+
+    static void InitSrvTable(
+        D3D12_ROOT_PARAMETER& parameter,
+        D3D12_DESCRIPTOR_RANGE& range,
+        UINT baseShaderRegister,
+        UINT descriptorCount = 1,
+        D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_PIXEL,
+        UINT registerSpace = 0);
 };
 
 class DxException

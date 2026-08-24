@@ -156,3 +156,42 @@ ComPtr<ID3DBlob> D3DUtil::CompileShader(
 
     return byteCode;
 }
+
+void D3DUtil::InitCbv(
+    D3D12_ROOT_PARAMETER& parameter,
+    UINT shaderRegister,
+    D3D12_SHADER_VISIBILITY visibility,
+    UINT registerSpace)
+{
+    parameter = {};
+
+    parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    parameter.Descriptor.ShaderRegister = shaderRegister;
+    parameter.Descriptor.RegisterSpace = registerSpace;
+    parameter.ShaderVisibility = visibility;
+}
+
+void D3DUtil::InitSrvTable(
+    D3D12_ROOT_PARAMETER& parameter,
+    D3D12_DESCRIPTOR_RANGE& range,
+    UINT baseShaderRegister,
+    UINT descriptorCount,
+    D3D12_SHADER_VISIBILITY visibility,
+    UINT registerSpace)
+{
+    range = {};
+
+    range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range.NumDescriptors = descriptorCount;
+    range.BaseShaderRegister = baseShaderRegister;
+    range.RegisterSpace = registerSpace;
+    range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    parameter = {};
+
+    parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+    parameter.DescriptorTable.NumDescriptorRanges = 1;
+    parameter.DescriptorTable.pDescriptorRanges = &range;
+    parameter.ShaderVisibility = visibility;
+}

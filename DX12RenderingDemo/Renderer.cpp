@@ -55,103 +55,26 @@ void Renderer::Shutdown()
 
 void Renderer::CreateRootSignature()
 {
-    D3D12_ROOT_PARAMETER rootParameters[9]{};
+    constexpr UINT rootParamCount = static_cast<UINT>(RootParam::End);
 
-    // b0 : ObjectCB
-    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[0].Descriptor.ShaderRegister = 0;
-    rootParameters[0].Descriptor.RegisterSpace = 0;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    std::array<D3D12_ROOT_PARAMETER, rootParamCount> rootParameters{};
 
-    // b1 : PassCB
-    rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[1].Descriptor.ShaderRegister = 1;
-    rootParameters[1].Descriptor.RegisterSpace = 0;
-    rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    // b2 : MaterialCB
-    rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameters[2].Descriptor.ShaderRegister = 2;
-    rootParameters[2].Descriptor.RegisterSpace = 0;
-    rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    // t0 ~ TextureType::end - 1 : Material textures
     D3D12_DESCRIPTOR_RANGE materialTextureSrvRange{};
-    materialTextureSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    materialTextureSrvRange.NumDescriptors = static_cast<UINT>(TextureType::End);
-    materialTextureSrvRange.BaseShaderRegister = 0;
-    materialTextureSrvRange.RegisterSpace = 0;
-    materialTextureSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[3].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[3].DescriptorTable.pDescriptorRanges = &materialTextureSrvRange;
-    rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    // t2 : Skybox cubemap
     D3D12_DESCRIPTOR_RANGE skyboxSrvRange{};
-    skyboxSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    skyboxSrvRange.NumDescriptors = 1;
-    skyboxSrvRange.BaseShaderRegister = 2;
-    skyboxSrvRange.RegisterSpace = 0;
-    skyboxSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[4].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[4].DescriptorTable.pDescriptorRanges = &skyboxSrvRange;
-    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    // t3 : Bloom texture
     D3D12_DESCRIPTOR_RANGE bloomSrvRange{};
-    bloomSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    bloomSrvRange.NumDescriptors = 1;
-    bloomSrvRange.BaseShaderRegister = 3;
-    bloomSrvRange.RegisterSpace = 0;
-    bloomSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[5].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[5].DescriptorTable.pDescriptorRanges = &bloomSrvRange;
-    rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    // t4 : Scene color texture for refraction
     D3D12_DESCRIPTOR_RANGE sceneColorSrvRange{};
-    sceneColorSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    sceneColorSrvRange.NumDescriptors = 1;
-    sceneColorSrvRange.BaseShaderRegister = 4;
-    sceneColorSrvRange.RegisterSpace = 0;
-    sceneColorSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[6].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[6].DescriptorTable.pDescriptorRanges = &sceneColorSrvRange;
-    rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    // t5 : Glass accumulation color
     D3D12_DESCRIPTOR_RANGE glassAccumSrvRange{};
-    glassAccumSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    glassAccumSrvRange.NumDescriptors = 1;
-    glassAccumSrvRange.BaseShaderRegister = 5;
-    glassAccumSrvRange.RegisterSpace = 0;
-    glassAccumSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[7].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[7].DescriptorTable.pDescriptorRanges = &glassAccumSrvRange;
-    rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    // t6 : Glass revealage
     D3D12_DESCRIPTOR_RANGE glassRevealageSrvRange{};
-    glassRevealageSrvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    glassRevealageSrvRange.NumDescriptors = 1;
-    glassRevealageSrvRange.BaseShaderRegister = 6;
-    glassRevealageSrvRange.RegisterSpace = 0;
-    glassRevealageSrvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    rootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[8].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameters[8].DescriptorTable.pDescriptorRanges = &glassRevealageSrvRange;
-    rootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    D3DUtil::InitCbv(rootParameters[static_cast<UINT>(RootParam::ObjectCB)], 0);
+    D3DUtil::InitCbv(rootParameters[static_cast<UINT>(RootParam::PassCB)], 1);
+    D3DUtil::InitCbv(rootParameters[static_cast<UINT>(RootParam::MaterialCB)], 2);
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::MaterialTextures)], materialTextureSrvRange, 0, static_cast<UINT>(TextureType::End));
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::SkyboxTexture)], skyboxSrvRange, 2);
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::PostProcessTexture)], bloomSrvRange, 3);
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::SceneColorTexture)], sceneColorSrvRange, 4);
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::GlassAccumTexture)], glassAccumSrvRange, 5);
+    D3DUtil::InitSrvTable(rootParameters[static_cast<UINT>(RootParam::GlassRevealageTexture)], glassRevealageSrvRange, 6);
 
     D3D12_STATIC_SAMPLER_DESC sampler{};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -175,8 +98,9 @@ void Renderer::CreateRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-    rootSignatureDesc.NumParameters = _countof(rootParameters);
-    rootSignatureDesc.pParameters = rootParameters;
+    rootSignatureDesc.NumParameters = static_cast<UINT>(rootParameters.size());
+    rootSignatureDesc.pParameters = rootParameters.data();
+
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = &sampler;
     rootSignatureDesc.Flags = rootSignatureFlags;
@@ -190,7 +114,7 @@ void Renderer::CreateRootSignature()
             D3D_ROOT_SIGNATURE_VERSION_1,
             signatureBlob.GetAddressOf(),
             errorBlob.GetAddressOf()),
-            errorBlob.Get());
+        errorBlob.Get());
 
     ThrowIfFailed(
         d3dCore_.GetDevice()->CreateRootSignature(
