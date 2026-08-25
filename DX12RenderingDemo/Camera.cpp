@@ -140,3 +140,39 @@ void Camera::Resize(UINT width, UINT height)
     SetScissorRect(0, 0, width, height);
     SetProjection(desc_.nearZ, desc_.farZ, aspect, desc_.fovY);
 }
+
+void Camera::ScreenPointToRay(float screenX, float screenY, Vector3& rayOrigin, Vector3& rayDirection) const
+{
+    const XMMATRIX view = XMLoadFloat4x4(&view_);
+    const XMMATRIX projection = XMLoadFloat4x4(&projection_);
+    const XMMATRIX world = XMMatrixIdentity();
+
+    const XMVECTOR screenNear = XMVectorSet(screenX, screenY, 0.0f, 1.0f);
+    const XMVECTOR screenFar = XMVectorSet(screenX, screenY, 1.0f, 1.0f);
+
+    const XMVECTOR worldNear = XMVector3Unproject(
+        screenNear,
+        viewport_.TopLeftX,
+        viewport_.TopLeftY,
+        viewport_.Width,
+        viewport_.Height,
+        viewport_.MinDepth,
+        viewport_.MaxDepth,
+        projection,
+        view,
+        world);
+    const XMVECTOR worldFar = XMVector3Unproject(
+        screenFar,
+        viewport_.TopLeftX,
+        viewport_.TopLeftY,
+        viewport_.Width,
+        viewport_.Height,
+        viewport_.MinDepth,
+        viewport_.MaxDepth,
+        projection,
+        view,
+        world);
+
+    XMStoreFloat3(&rayOrigin, worldNear);
+    XMStoreFloat3(&rayDirection, XMVector3Normalize(XMVectorSubtract(worldFar, worldNear)));
+}

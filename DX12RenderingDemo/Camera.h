@@ -41,6 +41,8 @@ public:
     void Initialize(UINT width, UINT height);
     void Resize(UINT width, UINT height);
 
+    void ScreenPointToRay(float screenX, float screenY, Vector3& rayOrigin, Vector3& rayDirection) const;
+
 protected:
     void UpdateViewMatrix();
 

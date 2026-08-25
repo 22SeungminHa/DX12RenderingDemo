@@ -74,7 +74,7 @@ void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 	if (input.IsKeyDown('A'))
 		activeCamera_->MoveRight(moveDistance);
 
-	if (input.IsLeftMouseDown())
+	if (input.IsRightMouseDown())
 	{
 		POINT delta = input.GetMouseDelta();
 
@@ -148,6 +148,41 @@ GameObject* Scene::CreateObject(
 	object->SetMaterial(material);
 
 	return object;
+}
+
+GameObject* Scene::CreateChildGameObject(GameObject* parent)
+{
+	if (!parent)
+		return nullptr;
+
+	auto child = std::make_unique<GameObject>();
+
+	GameObject* ptr = child.get();
+	ptr->SetObjectCBIndex(nextObjectCBIndex_++);
+
+	parent->AddChild(std::move(child));
+
+	return ptr;
+}
+
+GameObject* Scene::CreateChildObject(
+	GameObject* parent,
+	const std::shared_ptr<Mesh>& mesh,
+	const std::shared_ptr<Material>& material,
+	const Vector3& position,
+	const Vector3& scale)
+{
+	GameObject* child = CreateChildGameObject(parent);
+
+	if (!child)
+		return nullptr;
+
+	child->SetPosition(position);
+	child->SetScale(scale);
+	child->SetMesh(mesh);
+	child->SetMaterial(material);
+
+	return child;
 }
 
 GameObject* Scene::CreateFBXObject(

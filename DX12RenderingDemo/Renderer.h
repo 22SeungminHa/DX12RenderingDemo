@@ -44,7 +44,7 @@ private:
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
     std::unique_ptr<GlassRenderer> glassRenderer_;
 
-    RefractionMode refractionMode_ = RefractionMode::AccumulationBuffer;
+    RefractionMode refractionMode_ = RefractionMode::SingleCapture;
 
 public:
     Renderer();

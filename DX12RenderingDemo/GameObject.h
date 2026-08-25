@@ -71,6 +71,8 @@ public:
         ptr->SetOwner(this);
         components_.push_back(std::move(component));
 
+        ptr->Awake();
+
         return ptr;
     }
 

@@ -12,6 +12,12 @@ void InputSystem::Update()
     ::memcpy(previousKeys_, currentKeys_, sizeof(currentKeys_));
     ::GetKeyboardState(currentKeys_);
 
+    leftMousePressed_ = leftMouseDown_ && !previousLeftMouseDown_;
+    rightMousePressed_ = rightMouseDown_ && !previousRightMouseDown_;
+
+    previousLeftMouseDown_ = leftMouseDown_;
+    previousRightMouseDown_ = rightMouseDown_;
+
     mouseDelta_.x = mousePosition_.x - previousMousePosition_.x;
     mouseDelta_.y = mousePosition_.y - previousMousePosition_.y;
     previousMousePosition_ = mousePosition_;
