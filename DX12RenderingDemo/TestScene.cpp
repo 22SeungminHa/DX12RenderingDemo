@@ -85,11 +85,12 @@ void TestScene::OnProcessInput(
     if (!input.WasKeyPressed(VK_SPACE))
         return;
 
-    auto fragments = GlassFracture::GenerateRadialFragments(
+    auto fragments = GlassFracture::GenerateRingFragments(
         glassWidth_,
         glassHeight_,
         Vector2(0.0f, 0.0f),
-        8
+        8,
+        4
     );
 
     LOG("Glass fracture generated: " << fragments.size());

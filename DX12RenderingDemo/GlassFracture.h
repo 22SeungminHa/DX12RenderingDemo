@@ -24,6 +24,13 @@ public:
         const Vector2& impactPoint,
         UINT randomRayCount = 8);
 
+    static std::vector<GlassFragmentData> GenerateRingFragments(
+        float width,
+        float height,
+        const Vector2& impactPoint,
+        UINT randomRayCount = 8,
+        UINT ringCount = 4);
+
     static GlassFragmentGeometry BuildFragmentGeometry(
         const GlassFragmentData& fragment,
         float glassWidth,

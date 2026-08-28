@@ -229,6 +229,251 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRadialFragments(
     return fragments;
 }
 
+std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
+    float width,
+    float height,
+    const Vector2& impactPoint,
+    UINT randomRayCount,
+    UINT ringCount)
+{
+    std::vector<GlassFragmentData> fragments;
+
+    if (width <= 0.0f ||
+        height <= 0.0f ||
+        ringCount == 0)
+    {
+        return fragments;
+    }
+
+    const float halfWidth = width * 0.5f;
+    const float halfHeight = height * 0.5f;
+
+    if (impactPoint.x < -halfWidth ||
+        impactPoint.x > halfWidth ||
+        impactPoint.y < -halfHeight ||
+        impactPoint.y > halfHeight)
+    {
+        return fragments;
+    }
+
+    std::vector<float> angles;
+    angles.reserve(randomRayCount + 4);
+
+    const Vector2 corners[4] =
+    {
+        { -halfWidth, -halfHeight },
+        { -halfWidth,  halfHeight },
+        {  halfWidth,  halfHeight },
+        {  halfWidth, -halfHeight }
+    };
+
+    for (const Vector2& corner : corners)
+    {
+        const Vector2 direction =
+            corner - impactPoint;
+
+        angles.push_back(
+            atan2f(direction.y, direction.x)
+        );
+    }
+
+    static std::mt19937 randomEngine{
+        std::random_device{}()
+    };
+
+    std::uniform_real_distribution<float> angleDistribution(
+        -XM_PI,
+        XM_PI
+    );
+
+    for (UINT i = 0; i < randomRayCount; ++i)
+    {
+        angles.push_back(
+            angleDistribution(randomEngine)
+        );
+    }
+
+    std::sort(
+        angles.begin(),
+        angles.end()
+    );
+
+    constexpr float minAngleDifference =
+        XMConvertToRadians(1.0f);
+
+    angles.erase(
+        std::unique(
+            angles.begin(),
+            angles.end(),
+            [minAngleDifference](float a, float b)
+            {
+                return fabsf(a - b)
+                    < minAngleDifference;
+            }),
+        angles.end()
+    );
+
+    if (angles.size() < 3)
+        return fragments;
+
+    const size_t rayCount = angles.size();
+
+    // 각 ray가 직사각형 외곽과 만나는 점
+    std::vector<Vector2> boundaryPoints;
+    boundaryPoints.reserve(rayCount);
+
+    for (float angle : angles)
+    {
+        const Vector2 direction(
+            cosf(angle),
+            sinf(angle)
+        );
+
+        boundaryPoints.push_back(
+            FindBoundaryIntersection(
+                halfWidth,
+                halfHeight,
+                impactPoint,
+                direction
+            )
+        );
+    }
+
+    // rings[ring][ray]
+    std::vector<std::vector<Vector2>> rings(
+        ringCount,
+        std::vector<Vector2>(rayCount)
+    );
+
+    std::uniform_real_distribution<float> radiusJitter(
+        -0.025f,
+        0.025f
+    );
+
+    for (size_t ray = 0; ray < rayCount; ++ray)
+    {
+        const Vector2 radialVector =
+            boundaryPoints[ray] - impactPoint;
+
+        float previousFraction = 0.0f;
+
+        for (UINT ring = 0; ring < ringCount; ++ring)
+        {
+            float fraction = 1.0f;
+
+            if (ring + 1 < ringCount)
+            {
+                const float normalizedRing =
+                    static_cast<float>(ring + 1) /
+                    static_cast<float>(ringCount);
+
+                // 충돌점 주변 Ring 간격을 더 좁게 만든다.
+                fraction =
+                    powf(normalizedRing, 1.6f);
+
+                fraction +=
+                    radiusJitter(randomEngine);
+
+                const float minFraction =
+                    previousFraction + 0.03f;
+
+                fraction = std::max(
+                    fraction,
+                    minFraction
+                );
+
+                fraction = std::min(
+                    fraction,
+                    0.95f
+                );
+            }
+
+            rings[ring][ray] =
+                impactPoint +
+                radialVector * fraction;
+
+            previousFraction = fraction;
+        }
+    }
+
+    fragments.reserve(
+        rayCount * ringCount
+    );
+
+    // --------------------------------
+    // 충돌점 중심의 작은 삼각형
+    // --------------------------------
+
+    for (size_t ray = 0; ray < rayCount; ++ray)
+    {
+        const size_t next =
+            (ray + 1) % rayCount;
+
+        GlassFragmentData fragment;
+
+        fragment.polygon.reserve(3);
+
+        fragment.polygon.push_back(
+            impactPoint
+        );
+
+        fragment.polygon.push_back(
+            rings[0][ray]
+        );
+
+        fragment.polygon.push_back(
+            rings[0][next]
+        );
+
+        fragments.push_back(
+            std::move(fragment)
+        );
+    }
+
+    // --------------------------------
+    // Ring 사이의 사각형 파편
+    // --------------------------------
+
+    for (UINT ring = 0;
+        ring + 1 < ringCount;
+        ++ring)
+    {
+        for (size_t ray = 0;
+            ray < rayCount;
+            ++ray)
+        {
+            const size_t next =
+                (ray + 1) % rayCount;
+
+            GlassFragmentData fragment;
+
+            fragment.polygon.reserve(4);
+
+            fragment.polygon.push_back(
+                rings[ring][ray]
+            );
+
+            fragment.polygon.push_back(
+                rings[ring + 1][ray]
+            );
+
+            fragment.polygon.push_back(
+                rings[ring + 1][next]
+            );
+
+            fragment.polygon.push_back(
+                rings[ring][next]
+            );
+
+            fragments.push_back(
+                std::move(fragment)
+            );
+        }
+    }
+
+    return fragments;
+}
+
 GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
     const GlassFragmentData& fragment,
     float glassWidth,
