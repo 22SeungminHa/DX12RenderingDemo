@@ -24,6 +24,12 @@ public:
     std::shared_ptr<Mesh> LoadLitMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::string& key, const std::vector<LitVertex>& vertices, const std::vector<UINT>& indices);
 
     std::shared_ptr<Mesh> LoadCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, const std::string& key = "Primitive/Cube");
+    std::shared_ptr<Mesh> LoadGlassMesh(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        float width,
+        float height,
+        float depth);
     std::shared_ptr<Mesh> LoadSphereMesh(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,

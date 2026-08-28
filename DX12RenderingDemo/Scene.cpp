@@ -150,6 +150,29 @@ GameObject* Scene::CreateObject(
 	return object;
 }
 
+GameObject* Scene::CreateChildObject(
+	GameObject* parent,
+	const std::shared_ptr<Mesh>& mesh,
+	const std::shared_ptr<Material>& material,
+	const Vector3& localPosition)
+{
+	if (!parent)
+		return nullptr;
+
+	auto child = std::make_unique<GameObject>();
+
+	child->SetObjectCBIndex(nextObjectCBIndex_++);
+	child->SetPosition(localPosition);
+	child->SetMesh(mesh);
+	child->SetMaterial(material);
+
+	GameObject* ptr = child.get();
+
+	parent->AddChild(std::move(child));
+
+	return ptr;
+}
+
 GameObject* Scene::CreateFBXObject(
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,

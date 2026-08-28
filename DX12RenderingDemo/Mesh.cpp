@@ -69,6 +69,53 @@ LoadedMeshLit::LoadedMeshLit(
 	indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
 }
 
+RuntimeMeshLit::RuntimeMeshLit(
+    ID3D12Device* device,
+    const std::vector<LitVertex>& vertices,
+    const std::vector<UINT>& indices)
+    : Mesh(device, nullptr)
+{
+    if (!device || vertices.empty() || indices.empty())
+        return;
+
+    vertexCnt_ = static_cast<UINT>(vertices.size());
+    indexCnt_ = static_cast<UINT>(indices.size());
+    stride_ = sizeof(LitVertex);
+    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+    vertexBuffer_ = D3DUtil::CreateBufferResource(
+        device,
+        nullptr,
+        vertices.data(),
+        static_cast<UINT64>(stride_) * vertexCnt_,
+        D3D12_HEAP_TYPE_UPLOAD,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        vertexUploadBuffer_
+    );
+
+    vertexBufferView_.BufferLocation =
+        vertexBuffer_->GetGPUVirtualAddress();
+
+    vertexBufferView_.StrideInBytes = stride_;
+    vertexBufferView_.SizeInBytes = stride_ * vertexCnt_;
+
+    indexBuffer_ = D3DUtil::CreateBufferResource(
+        device,
+        nullptr,
+        indices.data(),
+        sizeof(UINT) * indexCnt_,
+        D3D12_HEAP_TYPE_UPLOAD,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        indexUploadBuffer_
+    );
+
+    indexBufferView_.BufferLocation =
+        indexBuffer_->GetGPUVirtualAddress();
+
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+    indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
+}
+
 SkyboxMesh::SkyboxMesh(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList)

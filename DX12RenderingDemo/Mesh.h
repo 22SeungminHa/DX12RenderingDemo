@@ -44,6 +44,17 @@ public:
 	virtual ~LoadedMeshLit() {}
 };
 
+class RuntimeMeshLit : public Mesh
+{
+public:
+	RuntimeMeshLit(
+		ID3D12Device* device,
+		const std::vector<LitVertex>& vertices,
+		const std::vector<UINT>& indices);
+
+	virtual ~RuntimeMeshLit() {}
+};
+
 class SkyboxMesh : public Mesh
 {
 public:

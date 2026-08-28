@@ -294,6 +294,36 @@ std::shared_ptr<Mesh> AssetManager::LoadCubeMesh(
     return mesh;
 }
 
+std::shared_ptr<Mesh> AssetManager::LoadGlassMesh(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    float width,
+    float height,
+    float depth)
+{
+    const std::string key =
+        "Primitive/Glass/" +
+        std::to_string(width) + "x" +
+        std::to_string(height) + "x" +
+        std::to_string(depth);
+
+    if (auto iter = meshes_.find(key); iter != meshes_.end())
+        return iter->second;
+
+    auto mesh = std::make_shared<GlassMesh>(
+        device,
+        cmdList,
+        width,
+        height,
+        depth
+    );
+
+    mesh->SetKey(key);
+    meshes_[key] = mesh;
+
+    return mesh;
+}
+
 std::shared_ptr<Mesh> AssetManager::LoadSphereMesh(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,

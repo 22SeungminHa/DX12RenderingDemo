@@ -41,6 +41,12 @@ public:
 		const Vector3& position = Vector3::Zero,
 		const Vector3& scale = Vector3::One
 	);
+	GameObject* CreateChildObject(
+		GameObject* parent,
+		const std::shared_ptr<Mesh>& mesh,
+		const std::shared_ptr<Material>& material,
+		const Vector3& localPosition = Vector3::Zero
+	);
 	GameObject* CreateFBXObject(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,

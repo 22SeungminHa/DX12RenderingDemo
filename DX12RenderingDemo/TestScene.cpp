@@ -6,6 +6,8 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "AssetManager.h"
+#include "InputSystem.h"
+#include "GlassFracture.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -13,6 +15,8 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
+    device_ = device;
+
     //auto object = FBXLoader::LoadLitModel(
     //    device,
     //    cmdList,
@@ -25,24 +29,29 @@ void TestScene::OnLoad(
     //if (object)
     //    objects_.push_back(std::move(object));
 
-    auto cubeMesh = assetManager.LoadCubeMesh(device, cmdList);
-    auto sphereMesh = assetManager.LoadSphereMesh(device, cmdList);
+    auto glassMesh = assetManager.LoadGlassMesh(
+        device,
+        cmdList,
+        glassWidth_,
+        glassHeight_,
+        glassDepth_
+    );
 
-    auto glassMaterial = assetManager.LoadMaterialFromFile(
+    glassMaterial_ = assetManager.LoadMaterialFromFile(
         device,
         cmdList,
         rootSignature,
         AssetPath::Material(L"Default_Glass")
     );
 
-    if (!cubeMesh || !sphereMesh || !glassMaterial)
+    if (!glassMesh || !glassMaterial_)
         return;
 
-    CreateObject(
-        cubeMesh,
-        glassMaterial,
-        Vector3(0.0f, 3.0f, 0.0f),
-        Vector3(5.0f, 5.0f, 5.0f)
+    glassObject_ = CreateObject(
+        glassMesh,
+        glassMaterial_,
+        Vector3(0.0f, 4.0f, 0.0f),
+        Vector3::One
     );
 
     //CreateFBXObject(
@@ -64,4 +73,57 @@ CameraDesc TestScene::SetupCameraDesc() const
     desc.farZ = 500.0f;
     desc.fovY = 60.0f;
     return desc;
+}
+
+void TestScene::OnProcessInput(
+    const InputSystem& input,
+    float deltaTime)
+{
+    if (isBroken_)
+        return;
+
+    if (!input.WasKeyPressed(VK_SPACE))
+        return;
+
+    auto fragments = GlassFracture::GenerateRadialFragments(
+        glassWidth_,
+        glassHeight_,
+        Vector2(0.0f, 0.0f),
+        8
+    );
+
+    LOG("Glass fracture generated: " << fragments.size());
+
+    for (size_t i = 0; i < fragments.size(); ++i)
+    {
+        GlassFragmentGeometry geometry =
+            GlassFracture::BuildFragmentGeometry(
+                fragments[i],
+                glassWidth_,
+                glassHeight_,
+                glassDepth_
+            );
+
+        if (geometry.vertices.empty() ||
+            geometry.indices.empty())
+        {
+            continue;
+        }
+
+        auto fragmentMesh =
+            std::make_shared<RuntimeMeshLit>(
+                device_,
+                geometry.vertices,
+                geometry.indices
+            );
+
+        CreateChildObject(
+            glassObject_,
+            fragmentMesh,
+            glassMaterial_,
+            geometry.localPosition
+        );
+    }
+
+    isBroken_ = true;
 }

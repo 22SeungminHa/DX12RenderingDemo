@@ -15,4 +15,22 @@ public:
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager) override;
     virtual CameraDesc SetupCameraDesc() const override;
+
+protected:
+    virtual void OnProcessInput(
+        const InputSystem& input,
+        float deltaTime) override;
+
+private:
+    ID3D12Device* device_ = nullptr;
+
+    std::shared_ptr<Material> glassMaterial_;
+
+    GameObject* glassObject_ = nullptr;
+
+    float glassWidth_ = 10.0f;
+    float glassHeight_ = 8.0f;
+    float glassDepth_ = 1.0f;
+
+    bool isBroken_ = false;
 };

@@ -43,21 +43,6 @@ void InputSystem::HandleMouseMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void InputSystem::HandleKeyboardMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    switch (msg)
-    {
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-        currentKeys_[wParam & 0xff] = 0x80;
-        break;
-
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-        currentKeys_[wParam & 0xff] = 0x00;
-        break;
-
-    default:
-        break;
-    }
 }
 
 bool InputSystem::IsKeyDown(int vk) const
