@@ -58,6 +58,24 @@ public:
 	virtual ~CubeMesh() {}
 };
 
+class GlassMesh : public Mesh
+{
+public:
+	GlassMesh(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		float width,
+		float height,
+		float depth);
+
+	virtual ~GlassMesh() {}
+
+	const Vector3& GetSize() const { return size_; }
+
+private:
+	Vector3 size_ = Vector3::One;
+};
+
 class SphereMesh : public Mesh
 {
 public:

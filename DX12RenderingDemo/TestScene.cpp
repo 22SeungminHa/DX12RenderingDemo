@@ -45,13 +45,6 @@ void TestScene::OnLoad(
         Vector3(5.0f, 5.0f, 5.0f)
     );
 
-    CreateObject(
-        sphereMesh,
-        glassMaterial,
-        Vector3(15.0f, 3.0f, 0.0f),
-        Vector3(5.0f, 5.0f, 5.0f)
-    );
-
     //CreateFBXObject(
     //    device, cmdList, rootSignature, assetManager,
     //    AssetPath::FBX(L"MicroSub"),
