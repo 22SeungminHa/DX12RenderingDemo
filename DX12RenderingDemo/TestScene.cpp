@@ -8,6 +8,8 @@
 #include "AssetManager.h"
 #include "InputSystem.h"
 #include "GlassFracture.h"
+#include "GlassFragmentComponent.h"
+#include <random>
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -94,6 +96,12 @@ void TestScene::OnProcessInput(
 
     LOG("Glass fracture generated: " << fragments.size());
 
+    static std::mt19937 randomEngine{ std::random_device{}() };
+
+    std::uniform_real_distribution<float> speedDistribution(4.0f, 7.0f);
+    std::uniform_real_distribution<float> zDistribution(1.0f, 2.5f);
+    std::uniform_real_distribution<float> angularDistribution(-4.0f, 4.0f);
+
     for (size_t i = 0; i < fragments.size(); ++i)
     {
         GlassFragmentGeometry geometry =
@@ -117,13 +125,42 @@ void TestScene::OnProcessInput(
                 geometry.indices
             );
 
-        CreateChildObject(
-            glassObject_,
-            fragmentMesh,
-            glassMaterial_,
-            geometry.localPosition
+        GameObject* fragmentObject =
+            CreateChildObject(
+                glassObject_,
+                fragmentMesh,
+                glassMaterial_,
+                geometry.localPosition
+            );
+
+        if (!fragmentObject)
+            continue;
+
+        Vector3 direction(
+            geometry.localPosition.x,
+            geometry.localPosition.y,
+            zDistribution(randomEngine)
+        );
+
+        direction.Normalize();
+
+        auto* fragmentMotion =
+            fragmentObject->AddComponent<GlassFragmentComponent>();
+
+        fragmentMotion->SetVelocity(
+            direction * speedDistribution(randomEngine)
+        );
+
+        fragmentMotion->SetAngularVelocity(
+            Vector3(
+                angularDistribution(randomEngine),
+                angularDistribution(randomEngine),
+                angularDistribution(randomEngine)
+            )
         );
     }
+
+    glassObject_->SetMesh(std::shared_ptr<Mesh>{});
 
     isBroken_ = true;
 }

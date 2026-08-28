@@ -156,6 +156,7 @@
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlassFracture.h" />
+    <ClInclude Include="GlassFragmentComponent.h" />
     <ClInclude Include="GlassRenderer.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="Material.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GlassFracture.cpp" />
+    <ClCompile Include="GlassFragmentComponent.cpp" />
     <ClCompile Include="GlassRenderer.cpp" />
     <ClCompile Include="GlassShader.cpp" />
     <ClCompile Include="InputSystem.cpp" />

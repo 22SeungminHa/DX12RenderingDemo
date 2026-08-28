@@ -14,6 +14,11 @@ GameObject::~GameObject()
 
 void GameObject::Animate(float deltaTime)
 {
+    for (auto& component : components_)
+    {
+        if (component)
+            component->Update(deltaTime);
+    }
 }
 
 void GameObject::OnPrepareRender()
