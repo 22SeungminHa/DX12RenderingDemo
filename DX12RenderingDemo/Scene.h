@@ -57,6 +57,11 @@ public:
 		const Vector3& scale);
 	void BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData);
 
+	void PrepareRenderResources(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources);
+
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
 	void SetSkybox(const std::wstring& name = L"Skybox") { skybox_.SetCubemap(name); }
 	const SkyboxDesc& GetSkybox() const { return skybox_; }
@@ -69,8 +74,13 @@ protected:
 		AssetManager& assetManager) = 0;
 	virtual void OnUnload() {}
 	virtual void OnResize(UINT width, UINT height) {}
+
 	virtual void OnReleaseUploadResources() {}
 	virtual void OnProcessInput(const InputSystem& input, float deltaTime) {};
+	virtual void OnPrepareRenderResources(
+		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
+		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources) {}
 
 	virtual CameraDesc SetupCameraDesc() const { return CameraDesc{}; }
 	void CreateCamera();

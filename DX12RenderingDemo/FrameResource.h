@@ -16,6 +16,8 @@ public:
     std::unique_ptr<UploadBuffer<ObjectCB>> objectCB_ = nullptr;
     std::unique_ptr<UploadBuffer<MaterialCB>> materialCB_ = nullptr;
 
+    std::vector<ComPtr<ID3D12Resource>> transientUploadResources_;
+
     UINT64 fenceValue_ = 0;
 };
 

@@ -17,8 +17,6 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
-    device_ = device;
-
     //auto object = FBXLoader::LoadLitModel(
     //    device,
     //    cmdList,
@@ -96,33 +94,53 @@ void TestScene::OnProcessInput(
 
     LOG("Glass fracture generated: " << fragments.size());
 
+    pendingFragmentGeometries_.clear();
+    pendingFragmentGeometries_.reserve(fragments.size());
+
+    for (const GlassFragmentData& fragment : fragments)
+    {
+        GlassFragmentGeometry geometry =
+            GlassFracture::BuildFragmentGeometry(
+                fragment,
+                glassWidth_,
+                glassHeight_,
+                glassDepth_
+            );
+
+        if (geometry.vertices.empty() || geometry.indices.empty())
+            continue;
+
+        pendingFragmentGeometries_.push_back(
+            std::move(geometry)
+        );
+    }
+
+    breakRequested_ = true;
+}
+
+void TestScene::OnPrepareRenderResources(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    std::vector<ComPtr<ID3D12Resource>>& transientUploadResources)
+{
+    if (!breakRequested_ || !glassObject_ || !glassMaterial_)
+        return;
+
     static std::mt19937 randomEngine{ std::random_device{}() };
 
     std::uniform_real_distribution<float> speedDistribution(4.0f, 7.0f);
     std::uniform_real_distribution<float> zDistribution(1.0f, 2.5f);
     std::uniform_real_distribution<float> angularDistribution(-4.0f, 4.0f);
 
-    for (size_t i = 0; i < fragments.size(); ++i)
+    for (const GlassFragmentGeometry& geometry : pendingFragmentGeometries_)
     {
-        GlassFragmentGeometry geometry =
-            GlassFracture::BuildFragmentGeometry(
-                fragments[i],
-                glassWidth_,
-                glassHeight_,
-                glassDepth_
-            );
-
-        if (geometry.vertices.empty() ||
-            geometry.indices.empty())
-        {
-            continue;
-        }
-
         auto fragmentMesh =
             std::make_shared<RuntimeMeshLit>(
-                device_,
+                device,
+                cmdList,
                 geometry.vertices,
-                geometry.indices
+                geometry.indices,
+                transientUploadResources
             );
 
         GameObject* fragmentObject =
@@ -148,7 +166,8 @@ void TestScene::OnProcessInput(
             fragmentObject->AddComponent<GlassFragmentComponent>();
 
         fragmentMotion->SetVelocity(
-            direction * speedDistribution(randomEngine)
+            direction *
+            speedDistribution(randomEngine)
         );
 
         fragmentMotion->SetAngularVelocity(
@@ -162,5 +181,8 @@ void TestScene::OnProcessInput(
 
     glassObject_->SetMesh(std::shared_ptr<Mesh>{});
 
+    pendingFragmentGeometries_.clear();
+
+    breakRequested_ = false;
     isBroken_ = true;
 }

@@ -49,8 +49,10 @@ class RuntimeMeshLit : public Mesh
 public:
 	RuntimeMeshLit(
 		ID3D12Device* device,
+		ID3D12GraphicsCommandList* cmdList,
 		const std::vector<LitVertex>& vertices,
-		const std::vector<UINT>& indices);
+		const std::vector<UINT>& indices,
+		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources);
 
 	virtual ~RuntimeMeshLit() {}
 };

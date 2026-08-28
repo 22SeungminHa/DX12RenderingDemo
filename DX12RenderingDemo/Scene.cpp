@@ -227,3 +227,15 @@ void Scene::BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData)
 		BuildFBXNode(childPtr, childNode);
 	}
 }
+
+void Scene::PrepareRenderResources(
+	ID3D12Device* device,
+	ID3D12GraphicsCommandList* cmdList,
+	std::vector<ComPtr<ID3D12Resource>>& transientUploadResources)
+{
+	OnPrepareRenderResources(
+		device,
+		cmdList,
+		transientUploadResources
+	);
+}

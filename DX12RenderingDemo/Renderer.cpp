@@ -301,7 +301,19 @@ Camera* Renderer::BeginFrame(Scene* scene)
     AdvanceFrameResource();
     WaitForCurrentFrameResource();
 
-    d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
+    // 이 FrameResource를 마지막으로 사용했던 GPU 작업은
+    // 위 Wait에서 완료되었으므로 이제 안전하게 해제 가능.
+    currentFrameResource_->transientUploadResources_.clear();
+
+    d3dCore_.ResetCommandList(
+        currentFrameResource_->cmdAllocator_.Get()
+    );
+
+    scene->PrepareRenderResources(
+        d3dCore_.GetDevice(),
+        d3dCore_.GetRenderCommandList(),
+        currentFrameResource_->transientUploadResources_
+    );
 
     return camera;
 }
