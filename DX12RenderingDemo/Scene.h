@@ -3,11 +3,11 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "FBXLoader.h"
+#include "GameObject.h"
 
 class Renderer;
 class InputSystem;
 class AssetManager;
-class GameObject;
 class Camera;
 
 class Scene
@@ -97,4 +97,26 @@ protected:
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;
+
+public:
+	template<typename T, typename Func>
+	void ForEachComponent(Func&& func)
+	{
+		for (auto& object : objects_)
+			ForEachComponentRecursive<T>(object.get(), func);
+	}
+
+private:
+	template<typename T, typename Func>
+	void ForEachComponentRecursive(GameObject* object, Func& func)
+	{
+		if (!object)
+			return;
+
+		if (auto* component = object->GetComponent<T>())
+			func(*component);
+
+		for (const auto& child : object->GetChildren())
+			ForEachComponentRecursive<T>(child.get(), func);
+	}
 };

@@ -4,8 +4,7 @@
 
 namespace
 {
-    float CalculateSignedAreaTwice(
-        const std::vector<Vector2>& polygon)
+    float CalculateSignedAreaTwice(const std::vector<Vector2>& polygon)
     {
         float area = 0.0f;
 
@@ -20,15 +19,12 @@ namespace
         return area;
     }
 
-    Vector2 CalculateCentroid(
-        const std::vector<Vector2>& polygon)
+    Vector2 CalculateCentroid(const std::vector<Vector2>& polygon)
     {
         if (polygon.empty())
             return Vector2::Zero;
 
-        const float signedAreaTwice =
-            CalculateSignedAreaTwice(polygon);
-
+        const float signedAreaTwice = CalculateSignedAreaTwice(polygon);
         constexpr float epsilon = 0.000001f;
 
         if (fabsf(signedAreaTwice) < epsilon)
@@ -44,25 +40,19 @@ namespace
         float cx = 0.0f;
         float cy = 0.0f;
 
-        for (size_t i = 0; i < polygon.size(); ++i)
-        {
+        for (size_t i = 0; i < polygon.size(); ++i) {
             const Vector2& a = polygon[i];
             const Vector2& b = polygon[(i + 1) % polygon.size()];
 
-            const float cross =
-                a.x * b.y - b.x * a.y;
+            const float cross = a.x * b.y - b.x * a.y;
 
             cx += (a.x + b.x) * cross;
             cy += (a.y + b.y) * cross;
         }
 
-        const float factor =
-            1.0f / (3.0f * signedAreaTwice);
+        const float factor = 1.0f / (3.0f * signedAreaTwice);
 
-        return Vector2(
-            cx * factor,
-            cy * factor
-        );
+        return Vector2(cx * factor, cy * factor);
     }
 }
 
@@ -77,34 +67,28 @@ Vector2 GlassFracture::FindBoundaryIntersection(
     float tx = FLT_MAX;
     float ty = FLT_MAX;
 
-    if (fabsf(direction.x) > epsilon)
-    {
-        const float boundaryX =
-            direction.x > 0.0f ? halfWidth : -halfWidth;
+    if (fabsf(direction.x) > epsilon) {
+        const float boundaryX = direction.x > 0.0f ? halfWidth : -halfWidth;
 
         tx = (boundaryX - origin.x) / direction.x;
     }
 
-    if (fabsf(direction.y) > epsilon)
-    {
-        const float boundaryY =
-            direction.y > 0.0f ? halfHeight : -halfHeight;
+    if (fabsf(direction.y) > epsilon) {
+        const float boundaryY = direction.y > 0.0f ? halfHeight : -halfHeight;
 
         ty = (boundaryY - origin.y) / direction.y;
     }
 
     float t = FLT_MAX;
 
-    if (tx > 0.0f)
-    {
+    if (tx > 0.0f) {
         const float y = origin.y + direction.y * tx;
 
         if (y >= -halfHeight && y <= halfHeight)
             t = std::min(t, tx);
     }
 
-    if (ty > 0.0f)
-    {
+    if (ty > 0.0f) {
         const float x = origin.x + direction.x * ty;
 
         if (x >= -halfWidth && x <= halfWidth)
@@ -131,13 +115,8 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRadialFragments(
     const float halfWidth = width * 0.5f;
     const float halfHeight = height * 0.5f;
 
-    if (impactPoint.x < -halfWidth ||
-        impactPoint.x > halfWidth ||
-        impactPoint.y < -halfHeight ||
-        impactPoint.y > halfHeight)
-    {
+    if (impactPoint.x < -halfWidth || impactPoint.x > halfWidth || impactPoint.y < -halfHeight || impactPoint.y > halfHeight)
         return fragments;
-    }
 
     std::vector<float> angles;
 
@@ -152,37 +131,26 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRadialFragments(
         {  halfWidth, -halfHeight }
     };
 
-    for (const Vector2& corner : corners)
-    {
+    for (const Vector2& corner : corners) {
         const Vector2 direction = corner - impactPoint;
 
-        angles.push_back(
-            atan2f(direction.y, direction.x)
-        );
+        angles.push_back(atan2f(direction.y, direction.x));
     }
 
     static std::mt19937 randomEngine{ std::random_device{}() };
 
-    std::uniform_real_distribution<float> angleDistribution(
-        -XM_PI,
-        XM_PI
-    );
+    std::uniform_real_distribution<float> angleDistribution(-XM_PI, XM_PI);
 
     for (UINT i = 0; i < randomRayCount; ++i)
-    {
         angles.push_back(angleDistribution(randomEngine));
-    }
 
     std::sort(angles.begin(), angles.end());
 
     constexpr float minAngleDifference = XMConvertToRadians(1.0f);
 
     angles.erase(
-        std::unique(
-            angles.begin(),
-            angles.end(),
-            [minAngleDifference](float a, float b)
-            {
+        std::unique(angles.begin(), angles.end(),
+            [minAngleDifference](float a, float b) {
                 return fabsf(a - b) < minAngleDifference;
             }),
         angles.end()
@@ -193,18 +161,10 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRadialFragments(
 
     for (float angle : angles)
     {
-        const Vector2 direction(
-            cosf(angle),
-            sinf(angle)
-        );
+        const Vector2 direction(cosf(angle), sinf(angle));
 
         boundaryPoints.push_back(
-            FindBoundaryIntersection(
-                halfWidth,
-                halfHeight,
-                impactPoint,
-                direction
-            )
+            FindBoundaryIntersection(halfWidth, halfHeight, impactPoint, direction)
         );
     }
 
@@ -212,8 +172,7 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRadialFragments(
 
     for (size_t i = 0; i < boundaryPoints.size(); ++i)
     {
-        const size_t next =
-            (i + 1) % boundaryPoints.size();
+        const size_t next = (i + 1) % boundaryPoints.size();
 
         GlassFragmentData fragment;
 
@@ -238,23 +197,14 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
 {
     std::vector<GlassFragmentData> fragments;
 
-    if (width <= 0.0f ||
-        height <= 0.0f ||
-        ringCount == 0)
-    {
+    if (width <= 0.0f || height <= 0.0f || ringCount == 0)
         return fragments;
-    }
 
     const float halfWidth = width * 0.5f;
     const float halfHeight = height * 0.5f;
 
-    if (impactPoint.x < -halfWidth ||
-        impactPoint.x > halfWidth ||
-        impactPoint.y < -halfHeight ||
-        impactPoint.y > halfHeight)
-    {
+    if (impactPoint.x < -halfWidth || impactPoint.x > halfWidth || impactPoint.y < -halfHeight || impactPoint.y > halfHeight)
         return fragments;
-    }
 
     std::vector<float> angles;
     angles.reserve(randomRayCount + 4);
@@ -267,48 +217,28 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
         {  halfWidth, -halfHeight }
     };
 
-    for (const Vector2& corner : corners)
+    for (const Vector2& corner : corners) 
     {
-        const Vector2 direction =
-            corner - impactPoint;
+        const Vector2 direction = corner - impactPoint;
 
-        angles.push_back(
-            atan2f(direction.y, direction.x)
-        );
+        angles.push_back(atan2f(direction.y, direction.x));
     }
 
-    static std::mt19937 randomEngine{
-        std::random_device{}()
-    };
+    static std::mt19937 randomEngine{ std::random_device{}() };
 
-    std::uniform_real_distribution<float> angleDistribution(
-        -XM_PI,
-        XM_PI
-    );
+    std::uniform_real_distribution<float> angleDistribution(-XM_PI, XM_PI);
 
     for (UINT i = 0; i < randomRayCount; ++i)
-    {
-        angles.push_back(
-            angleDistribution(randomEngine)
-        );
-    }
+        angles.push_back(angleDistribution(randomEngine));
 
-    std::sort(
-        angles.begin(),
-        angles.end()
-    );
+    std::sort(angles.begin(), angles.end());
 
-    constexpr float minAngleDifference =
-        XMConvertToRadians(1.0f);
+    constexpr float minAngleDifference = XMConvertToRadians(1.0f);
 
     angles.erase(
-        std::unique(
-            angles.begin(),
-            angles.end(),
-            [minAngleDifference](float a, float b)
-            {
-                return fabsf(a - b)
-                    < minAngleDifference;
+        std::unique(angles.begin(), angles.end(),
+            [minAngleDifference](float a, float b) {
+                return fabsf(a - b) < minAngleDifference;
             }),
         angles.end()
     );
@@ -324,37 +254,21 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
 
     for (float angle : angles)
     {
-        const Vector2 direction(
-            cosf(angle),
-            sinf(angle)
-        );
+        const Vector2 direction(cosf(angle), sinf(angle));
 
         boundaryPoints.push_back(
-            FindBoundaryIntersection(
-                halfWidth,
-                halfHeight,
-                impactPoint,
-                direction
-            )
+            FindBoundaryIntersection(halfWidth, halfHeight, impactPoint, direction)
         );
     }
 
     // rings[ring][ray]
-    std::vector<std::vector<Vector2>> rings(
-        ringCount,
-        std::vector<Vector2>(rayCount)
-    );
+    std::vector<std::vector<Vector2>> rings(ringCount, std::vector<Vector2>(rayCount));
 
-    std::uniform_real_distribution<float> radiusJitter(
-        -0.025f,
-        0.025f
-    );
+    std::uniform_real_distribution<float> radiusJitter(-0.025f, 0.025f);
 
     for (size_t ray = 0; ray < rayCount; ++ray)
     {
-        const Vector2 radialVector =
-            boundaryPoints[ray] - impactPoint;
-
+        const Vector2 radialVector = boundaryPoints[ray] - impactPoint;
         float previousFraction = 0.0f;
 
         for (UINT ring = 0; ring < ringCount; ++ring)
@@ -363,42 +277,24 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
 
             if (ring + 1 < ringCount)
             {
-                const float normalizedRing =
-                    static_cast<float>(ring + 1) /
-                    static_cast<float>(ringCount);
+                const float normalizedRing = static_cast<float>(ring + 1) / static_cast<float>(ringCount);
 
                 // 충돌점 주변 Ring 간격을 더 좁게 만든다.
-                fraction =
-                    powf(normalizedRing, 1.6f);
+                fraction = powf(normalizedRing, 1.6f);
+                fraction += radiusJitter(randomEngine);
 
-                fraction +=
-                    radiusJitter(randomEngine);
+                const float minFraction = previousFraction + 0.03f;
 
-                const float minFraction =
-                    previousFraction + 0.03f;
-
-                fraction = std::max(
-                    fraction,
-                    minFraction
-                );
-
-                fraction = std::min(
-                    fraction,
-                    0.95f
-                );
+                fraction = std::max(fraction, minFraction);
+                fraction = std::min(fraction, 0.95f);
             }
 
-            rings[ring][ray] =
-                impactPoint +
-                radialVector * fraction;
-
+            rings[ring][ray] = impactPoint + radialVector * fraction;
             previousFraction = fraction;
         }
     }
 
-    fragments.reserve(
-        rayCount * ringCount
-    );
+    fragments.reserve(rayCount * ringCount);
 
     // --------------------------------
     // 충돌점 중심의 작은 삼각형
@@ -406,68 +302,38 @@ std::vector<GlassFragmentData> GlassFracture::GenerateRingFragments(
 
     for (size_t ray = 0; ray < rayCount; ++ray)
     {
-        const size_t next =
-            (ray + 1) % rayCount;
+        const size_t next = (ray + 1) % rayCount;
 
         GlassFragmentData fragment;
 
         fragment.polygon.reserve(3);
 
-        fragment.polygon.push_back(
-            impactPoint
-        );
+        fragment.polygon.push_back(impactPoint);
+        fragment.polygon.push_back(rings[0][ray]);
+        fragment.polygon.push_back(rings[0][next]);
 
-        fragment.polygon.push_back(
-            rings[0][ray]
-        );
-
-        fragment.polygon.push_back(
-            rings[0][next]
-        );
-
-        fragments.push_back(
-            std::move(fragment)
-        );
+        fragments.push_back(std::move(fragment));
     }
 
     // --------------------------------
     // Ring 사이의 사각형 파편
     // --------------------------------
 
-    for (UINT ring = 0;
-        ring + 1 < ringCount;
-        ++ring)
+    for (UINT ring = 0; ring + 1 < ringCount; ++ring)
     {
-        for (size_t ray = 0;
-            ray < rayCount;
-            ++ray)
+        for (size_t ray = 0; ray < rayCount; ++ray)
         {
-            const size_t next =
-                (ray + 1) % rayCount;
-
+            const size_t next = (ray + 1) % rayCount;
             GlassFragmentData fragment;
 
             fragment.polygon.reserve(4);
 
-            fragment.polygon.push_back(
-                rings[ring][ray]
-            );
+            fragment.polygon.push_back(rings[ring][ray]);
+            fragment.polygon.push_back(rings[ring + 1][ray]);
+            fragment.polygon.push_back(rings[ring + 1][next]);
+            fragment.polygon.push_back(rings[ring][next]);
 
-            fragment.polygon.push_back(
-                rings[ring + 1][ray]
-            );
-
-            fragment.polygon.push_back(
-                rings[ring + 1][next]
-            );
-
-            fragment.polygon.push_back(
-                rings[ring][next]
-            );
-
-            fragments.push_back(
-                std::move(fragment)
-            );
+            fragments.push_back(std::move(fragment));
         }
     }
 
@@ -482,13 +348,8 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
 {
     GlassFragmentGeometry geometry;
 
-    if (fragment.polygon.size() < 3 ||
-        glassWidth <= 0.0f ||
-        glassHeight <= 0.0f ||
-        depth <= 0.0f)
-    {
+    if (fragment.polygon.size() < 3 || glassWidth <= 0.0f || glassHeight <= 0.0f || depth <= 0.0f)
         return geometry;
-    }
 
     std::vector<Vector2> polygon = fragment.polygon;
 
@@ -497,50 +358,34 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
     if (CalculateSignedAreaTwice(polygon) < 0.0f)
         std::reverse(polygon.begin(), polygon.end());
 
-    const Vector2 centroid =
-        CalculateCentroid(polygon);
+    const Vector2 centroid = CalculateCentroid(polygon);
 
-    geometry.localPosition =
-        Vector3(centroid.x, centroid.y, 0.0f);
+    geometry.localPosition = Vector3(centroid.x, centroid.y, 0.0f);
 
     const float frontZ = -depth * 0.5f;
     const float backZ = depth * 0.5f;
 
-    const UINT polygonCount =
-        static_cast<UINT>(polygon.size());
+    const UINT polygonCount = static_cast<UINT>(polygon.size());
 
     auto frontUV =
-        [glassWidth, glassHeight](const Vector2& point)
-        {
-            return Vector2(
-                point.x / glassWidth + 0.5f,
-                0.5f - point.y / glassHeight
-            );
+        [glassWidth, glassHeight](const Vector2& point) {
+            return Vector2(point.x / glassWidth + 0.5f, 0.5f - point.y / glassHeight);
         };
 
     auto backUV =
-        [glassWidth, glassHeight](const Vector2& point)
-        {
-            return Vector2(
-                0.5f - point.x / glassWidth,
-                0.5f - point.y / glassHeight
-            );
+        [glassWidth, glassHeight](const Vector2& point) {
+            return Vector2(0.5f - point.x / glassWidth, 0.5f - point.y / glassHeight);
         };
 
     // -----------------------
     // Front (-Z)
     // -----------------------
 
-    const UINT frontBase =
-        static_cast<UINT>(geometry.vertices.size());
+    const UINT frontBase = static_cast<UINT>(geometry.vertices.size());
 
     for (const Vector2& point : polygon)
     {
-        const Vector3 position(
-            point.x - centroid.x,
-            point.y - centroid.y,
-            frontZ
-        );
+        const Vector3 position(point.x - centroid.x, point.y - centroid.y, frontZ);
 
         geometry.vertices.emplace_back(
             position,
@@ -555,16 +400,11 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
     // Back (+Z)
     // -----------------------
 
-    const UINT backBase =
-        static_cast<UINT>(geometry.vertices.size());
+    const UINT backBase = static_cast<UINT>(geometry.vertices.size());
 
     for (const Vector2& point : polygon)
     {
-        const Vector3 position(
-            point.x - centroid.x,
-            point.y - centroid.y,
-            backZ
-        );
+        const Vector3 position(point.x - centroid.x, point.y - centroid.y, backZ);
 
         geometry.vertices.emplace_back(
             position,
@@ -598,36 +438,22 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
 
     for (UINT i = 0; i < polygonCount; ++i)
     {
-        const UINT next =
-            (i + 1) % polygonCount;
-
+        const UINT next = (i + 1) % polygonCount;
         const Vector2& a = polygon[i];
         const Vector2& b = polygon[next];
 
-        Vector3 tangent(
-            b.x - a.x,
-            b.y - a.y,
-            0.0f
-        );
+        Vector3 tangent(b.x - a.x, b.y - a.y, 0.0f);
 
         tangent.Normalize();
 
         // polygon이 CCW이므로
         // edge의 오른쪽이 바깥 방향
-        Vector3 normal(
-            tangent.y,
-            -tangent.x,
-            0.0f
-        );
+        Vector3 normal(tangent.y, -tangent.x, 0.0f);
 
-        const UINT sideBase =
-            static_cast<UINT>(geometry.vertices.size());
+        const UINT sideBase = static_cast<UINT>(geometry.vertices.size());
 
         geometry.vertices.emplace_back(
-            Vector3(
-                a.x - centroid.x,
-                a.y - centroid.y,
-                frontZ),
+            Vector3(a.x - centroid.x, a.y - centroid.y, frontZ),
             Vector4::One,
             normal,
             tangent,
@@ -635,10 +461,7 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
         );
 
         geometry.vertices.emplace_back(
-            Vector3(
-                b.x - centroid.x,
-                b.y - centroid.y,
-                frontZ),
+            Vector3(b.x - centroid.x, b.y - centroid.y, frontZ),
             Vector4::One,
             normal,
             tangent,
@@ -646,10 +469,7 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
         );
 
         geometry.vertices.emplace_back(
-            Vector3(
-                b.x - centroid.x,
-                b.y - centroid.y,
-                backZ),
+            Vector3(b.x - centroid.x, b.y - centroid.y, backZ),
             Vector4::One,
             normal,
             tangent,
@@ -657,10 +477,7 @@ GlassFragmentGeometry GlassFracture::BuildFragmentGeometry(
         );
 
         geometry.vertices.emplace_back(
-            Vector3(
-                a.x - centroid.x,
-                a.y - centroid.y,
-                backZ),
+            Vector3(a.x - centroid.x, a.y - centroid.y, backZ),
             Vector4::One,
             normal,
             tangent,

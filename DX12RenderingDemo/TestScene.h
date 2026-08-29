@@ -1,6 +1,5 @@
 #pragma once
 #include "Scene.h"
-#include "GlassFracture.h"
 
 class AssetManager;
 
@@ -26,19 +25,4 @@ protected:
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         std::vector<ComPtr<ID3D12Resource>>& transientUploadResources) override;
-
-private:
-    std::shared_ptr<Material> glassMaterial_;
-
-    GameObject* glassObject_ = nullptr;
-
-    float glassWidth_ = 10.0f;
-    float glassHeight_ = 8.0f;
-    float glassDepth_ = 1.0f;
-
-    std::vector<GlassFragmentGeometry> pendingFragmentGeometries_;
-
-    bool breakRequested_ = false;
-
-    bool isBroken_ = false;
 };

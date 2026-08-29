@@ -1,5 +1,4 @@
 #include "GlassFragmentComponent.h"
-#include "GlassFragmentComponent.h"
 #include "GameObject.h"
 
 void GlassFragmentComponent::Update(float deltaTime)
@@ -11,12 +10,6 @@ void GlassFragmentComponent::Update(float deltaTime)
 
     velocity_ += gravity_ * deltaTime;
 
-    owner->Translate(
-        velocity_ * deltaTime
-    );
-
-    owner->SetRotation(
-        owner->GetRotation() +
-        angularVelocity_ * deltaTime
-    );
+    owner->Translate(velocity_ * deltaTime);
+    owner->SetRotation(owner->GetRotation() + angularVelocity_ * deltaTime);
 }
