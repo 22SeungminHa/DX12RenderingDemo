@@ -30,15 +30,8 @@ bool GlassDestructionComponent::Break(
     UINT randomRayCount,
     UINT ringCount)
 {
-    if (isBroken_ ||
-        breakRequested_ ||
-        !material_ ||
-        width_ <= 0.0f ||
-        height_ <= 0.0f ||
-        depth_ <= 0.0f)
-    {
+    if (isBroken_ || breakRequested_ || !material_ || width_ <= 0.0f || height_ <= 0.0f || depth_ <= 0.0f)
         return false;
-    }
 
     auto fragments = GlassFracture::GenerateRingFragments(
         width_,
@@ -53,30 +46,18 @@ bool GlassDestructionComponent::Break(
 
     for (const GlassFragmentData& fragment : fragments)
     {
-        GlassFragmentGeometry geometry =
-            GlassFracture::BuildFragmentGeometry(
-                fragment,
-                width_,
-                height_,
-                depth_
-            );
+        GlassFragmentGeometry geometry = GlassFracture::BuildFragmentGeometry(fragment, width_, height_, depth_);
 
-        if (geometry.vertices.empty() ||
-            geometry.indices.empty())
-        {
+        if (geometry.vertices.empty() || geometry.indices.empty())
             continue;
-        }
 
-        pendingFragments_.push_back(
-            std::move(geometry)
-        );
+        pendingFragments_.push_back(std::move(geometry));
     }
 
     if (pendingFragments_.empty())
         return false;
 
-    LOG("Glass fracture generated: "
-        << pendingFragments_.size());
+    LOG("Glass fracture generated: " << pendingFragments_.size());
 
     breakRequested_ = true;
 
@@ -89,80 +70,52 @@ void GlassDestructionComponent::PrepareRenderResources(
     ID3D12GraphicsCommandList* cmdList,
     std::vector<ComPtr<ID3D12Resource>>& transientUploadResources)
 {
-    if (!breakRequested_ ||
-        isBroken_ ||
-        !owner_ ||
-        !material_ ||
-        !device ||
-        !cmdList)
-    {
+    if (!breakRequested_ || isBroken_ || !owner_ || !material_ || !device || !cmdList)
         return;
-    }
 
-    static std::mt19937 randomEngine{
-        std::random_device{}()
+    struct FragmentMeshSlice
+    {
+        UINT vertexOffset = 0;
+        UINT vertexCount = 0;
+
+        UINT indexOffset = 0;
+        UINT indexCount = 0;
     };
 
-    std::uniform_real_distribution<float> speedDistribution(
-        4.0f,
-        7.0f
-    );
-
-    std::uniform_real_distribution<float> zDistribution(
-        1.0f,
-        2.5f
-    );
-
-    std::uniform_real_distribution<float> angularDistribution(
-        -4.0f,
-        4.0f
-    );
+    size_t totalVertexCount = 0;
+    size_t totalIndexCount = 0;
 
     for (const GlassFragmentGeometry& geometry : pendingFragments_)
     {
-        auto fragmentMesh =
-            std::make_shared<RuntimeMeshLit>(
-                device,
-                cmdList,
-                geometry.vertices,
-                geometry.indices,
-                transientUploadResources
-            );
+        totalVertexCount += geometry.vertices.size();
+        totalIndexCount += geometry.indices.size();
+    }
 
-        GameObject* fragmentObject =
-            scene.CreateChildObject(
-                owner_,
-                fragmentMesh,
-                material_,
-                geometry.localPosition
-            );
+    if (totalVertexCount == 0 || totalIndexCount == 0)
+        return;
 
-        if (!fragmentObject)
-            continue;
+    std::vector<LitVertex> combinedVertices;
+    std::vector<UINT> combinedIndices;
+    std::vector<FragmentMeshSlice> slices;
 
-        Vector3 direction(
-            geometry.localPosition.x,
-            geometry.localPosition.y,
-            zDistribution(randomEngine)
-        );
+    combinedVertices.reserve(totalVertexCount);
+    combinedIndices.reserve(totalIndexCount);
+    slices.reserve(pendingFragments_.size());
 
-        direction.Normalize();
+    for (const GlassFragmentGeometry& geometry : pendingFragments_)
+    {
+        FragmentMeshSlice slice{};
 
-        auto* fragmentMotion =
-            fragmentObject->AddComponent<GlassFragmentComponent>();
+        slice.vertexOffset = static_cast<UINT>(combinedVertices.size());
+        slice.vertexCount = static_cast<UINT>(geometry.vertices.size());
 
-        fragmentMotion->SetVelocity(
-            direction *
-            speedDistribution(randomEngine)
-        );
+        slice.indexOffset = static_cast<UINT>(combinedIndices.size());
+        slice.indexCount = static_cast<UINT>(geometry.indices.size());
 
-        fragmentMotion->SetAngularVelocity(
-            Vector3(
-                angularDistribution(randomEngine),
-                angularDistribution(randomEngine),
-                angularDistribution(randomEngine)
-            )
-        );
+        combinedVertices.insert(combinedVertices.end(), geometry.vertices.begin(), geometry.vertices.end());
+        combinedIndices.insert(combinedIndices.end(), geometry.indices.begin(), geometry.indices.end());
+
+        slices.push_back(slice);
     }
 
     owner_->SetMesh(std::shared_ptr<Mesh>{});

@@ -5,6 +5,7 @@
 class Mesh : public Asset
 {
 public:
+	Mesh() = default;
 	Mesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual ~Mesh();
 
@@ -44,15 +45,37 @@ public:
 	virtual ~LoadedMeshLit() {}
 };
 
-class RuntimeMeshLit : public Mesh
+class RuntimeMeshBufferLit
 {
 public:
-	RuntimeMeshLit(
+	RuntimeMeshBufferLit(
 		ID3D12Device* device,
 		ID3D12GraphicsCommandList* cmdList,
 		const std::vector<LitVertex>& vertices,
 		const std::vector<UINT>& indices,
-		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources);
+		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources
+	);
+
+	bool IsValid() const { return vertexBuffer_ && indexBuffer_; }
+
+	const ComPtr<ID3D12Resource>& GetVertexBuffer() const { return vertexBuffer_; }
+	const ComPtr<ID3D12Resource>& GetIndexBuffer() const { return indexBuffer_; }
+
+private:
+	ComPtr<ID3D12Resource> vertexBuffer_;
+	ComPtr<ID3D12Resource> indexBuffer_;
+};
+
+class RuntimeMeshLit : public Mesh
+{
+public:
+	RuntimeMeshLit(
+		const std::shared_ptr<RuntimeMeshBufferLit>& buffer,
+		UINT vertexOffset,
+		UINT vertexCount,
+		UINT indexOffset,
+		UINT indexCount
+	);
 
 	virtual ~RuntimeMeshLit() {}
 };

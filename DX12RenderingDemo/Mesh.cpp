@@ -69,75 +69,80 @@ LoadedMeshLit::LoadedMeshLit(
 	indexBufferView_.SizeInBytes = sizeof(UINT) * indexCnt_;
 }
 
-RuntimeMeshLit::RuntimeMeshLit(
+RuntimeMeshBufferLit::RuntimeMeshBufferLit(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const std::vector<LitVertex>& vertices,
     const std::vector<UINT>& indices,
     std::vector<ComPtr<ID3D12Resource>>& transientUploadResources)
-    : Mesh(device, cmdList)
 {
-    if (!device ||
-        !cmdList ||
-        vertices.empty() ||
-        indices.empty())
-    {
+    if (!device || !cmdList || vertices.empty() || indices.empty())
         return;
-    }
 
-    vertexCnt_ = static_cast<UINT>(vertices.size());
-    indexCnt_ = static_cast<UINT>(indices.size());
-    stride_ = sizeof(LitVertex);
-    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    ComPtr<ID3D12Resource> vertexUploadBuffer;
+    ComPtr<ID3D12Resource> indexUploadBuffer;
 
     vertexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         vertices.data(),
-        static_cast<UINT64>(stride_) * vertexCnt_,
+        static_cast<UINT64>(sizeof(LitVertex)) * vertices.size(),
         D3D12_HEAP_TYPE_DEFAULT,
         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-        vertexUploadBuffer_
+        vertexUploadBuffer
     );
 
     indexBuffer_ = D3DUtil::CreateBufferResource(
         device,
         cmdList,
         indices.data(),
-        static_cast<UINT64>(sizeof(UINT)) * indexCnt_,
+        static_cast<UINT64>(sizeof(UINT)) * indices.size(),
         D3D12_HEAP_TYPE_DEFAULT,
         D3D12_RESOURCE_STATE_INDEX_BUFFER,
-        indexUploadBuffer_
+        indexUploadBuffer
     );
 
     if (!vertexBuffer_ || !indexBuffer_)
         return;
 
-    vertexBufferView_.BufferLocation =
-        vertexBuffer_->GetGPUVirtualAddress();
+    if (vertexUploadBuffer)
+        transientUploadResources.push_back(vertexUploadBuffer);
 
-    vertexBufferView_.StrideInBytes = stride_;
+    if (indexUploadBuffer)
+        transientUploadResources.push_back(indexUploadBuffer);
+}
 
-    vertexBufferView_.SizeInBytes =
-        stride_ * vertexCnt_;
+RuntimeMeshLit::RuntimeMeshLit(
+    const std::shared_ptr<RuntimeMeshBufferLit>& buffer,
+    UINT vertexOffset,
+    UINT vertexCount,
+    UINT indexOffset,
+    UINT indexCount)
+    : Mesh()
+{
+    if (!buffer || !buffer->IsValid() || vertexCount == 0 || indexCount == 0)
+        return;
 
-    indexBufferView_.BufferLocation =
-        indexBuffer_->GetGPUVirtualAddress();
+    // 같은 GPU Resource의 ComPtr를 공유한다.
+    vertexBuffer_ = buffer->GetVertexBuffer();
+    indexBuffer_ = buffer->GetIndexBuffer();
 
-    indexBufferView_.Format =
-        DXGI_FORMAT_R32_UINT;
+    vertexCnt_ = vertexCount;
+    indexCnt_ = indexCount;
 
-    indexBufferView_.SizeInBytes =
-        sizeof(UINT) * indexCnt_;
+    stride_ = sizeof(LitVertex);
+    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-    if (vertexUploadBuffer_)
-        transientUploadResources.push_back(vertexUploadBuffer_);
+    const UINT64 vertexOffsetBytes = static_cast<UINT64>(vertexOffset) * sizeof(LitVertex);
+    const UINT64 indexOffsetBytes = static_cast<UINT64>(indexOffset) * sizeof(UINT);
 
-    if (indexUploadBuffer_)
-        transientUploadResources.push_back(indexUploadBuffer_);
+    vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress() + vertexOffsetBytes;
+    vertexBufferView_.StrideInBytes = sizeof(LitVertex);
+    vertexBufferView_.SizeInBytes = sizeof(LitVertex) * vertexCount;
 
-    vertexUploadBuffer_.Reset();
-    indexUploadBuffer_.Reset();
+    indexBufferView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress() + indexOffsetBytes;
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+    indexBufferView_.SizeInBytes = sizeof(UINT) * indexCount;
 }
 
 SkyboxMesh::SkyboxMesh(
