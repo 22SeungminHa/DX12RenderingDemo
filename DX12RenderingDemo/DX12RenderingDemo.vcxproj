@@ -155,7 +155,7 @@
     <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="GlassDestructionComponent.h" />
+    <ClInclude Include="GlassComponent.h" />
     <ClInclude Include="GlassFracture.h" />
     <ClInclude Include="GlassFragmentComponent.h" />
     <ClInclude Include="GlassRenderer.h" />
@@ -200,7 +200,7 @@
     <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="GlassDestructionComponent.cpp" />
+    <ClCompile Include="GlassComponent.cpp" />
     <ClCompile Include="GlassFracture.cpp" />
     <ClCompile Include="GlassFragmentComponent.cpp" />
     <ClCompile Include="GlassRenderer.cpp" />

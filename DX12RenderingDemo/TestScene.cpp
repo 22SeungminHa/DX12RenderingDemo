@@ -7,7 +7,7 @@
 #include "Texture.h"
 #include "AssetManager.h"
 #include "InputSystem.h"
-#include "GlassDestructionComponent.h"
+#include "GlassComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -29,7 +29,7 @@ void TestScene::OnLoad(
 
     constexpr float glassWidth = 10.0f;
     constexpr float glassHeight = 8.0f;
-    constexpr float glassDepth = 1.0f;
+    constexpr float glassDepth = 0.5f;
 
     auto glassMesh = assetManager.LoadGlassMesh(
         device,
@@ -56,7 +56,7 @@ void TestScene::OnLoad(
         Vector3::One
     );
 
-    auto* glassDestruction = glassObject->AddComponent<GlassDestructionComponent>();
+    auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
 
     glassDestruction->Initialize(
         glassMaterial,
@@ -93,8 +93,8 @@ void TestScene::OnProcessInput(
     if (!input.WasKeyPressed(VK_SPACE))
         return;
 
-    ForEachComponent<GlassDestructionComponent>(
-        [](GlassDestructionComponent& destruction)
+    ForEachComponent<GlassComponent>(
+        [](GlassComponent& destruction)
         {
             destruction.Break(Vector2(0.0f, 0.0f), 8, 4);
         });
@@ -105,8 +105,8 @@ void TestScene::OnPrepareRenderResources(
     ID3D12GraphicsCommandList* cmdList,
     std::vector<ComPtr<ID3D12Resource>>& transientUploadResources)
 {
-    ForEachComponent<GlassDestructionComponent>(
-        [&](GlassDestructionComponent& destruction)
+    ForEachComponent<GlassComponent>(
+        [&](GlassComponent& destruction)
         {
             destruction.PrepareRenderResources(
                 *this,
