@@ -30,7 +30,8 @@ public:
     void SetSpecularStrength(float strength) { specularStrength_ = strength; }
     void SetReflectionStrength(float strength) { reflectionStrength_ = strength; }
     void SetRefractionStrength(float strength) { refractionStrength_ = strength; }
-    
+    void SetTiling(const Vector2& tiling) { tiling_ = tiling; }
+
     RenderMode GetRenderMode() const { return renderMode_; }
     const Vector4& GetBaseColorTint() const { return baseColorTint_; }
     float GetAlpha() const { return alpha_; }
@@ -38,6 +39,7 @@ public:
     float GetSpecularStrength() const { return specularStrength_; }
     float GetReflectionStrength() const { return reflectionStrength_; }
     float GetRefractionStrength() const { return refractionStrength_; }
+    const Vector2& GetTiling() const { return tiling_; }
 
     bool UseEnvironmentReflection() const { return reflectionStrength_ > 0.0f; }
 
@@ -52,6 +54,7 @@ private:
     RenderMode renderMode_ = RenderMode::Opaque;
 
     Vector4 baseColorTint_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    Vector2 tiling_ = Vector2::One;
 
     float alpha_ = 1.0f;
     float fresnelPower_ = 5.0f;

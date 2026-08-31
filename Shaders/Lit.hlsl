@@ -23,7 +23,9 @@ VS_OUTPUT VSLit(VS_INPUT input)
 
 float4 PSLit(VS_OUTPUT input) : SV_TARGET
 {
-    float4 texColor = gDiffuseMap.Sample(gSampler, input.texCoord);
+    float2 tiledUV = input.texCoord * gTiling;
+
+    float4 texColor = gDiffuseMap.Sample(gSampler, tiledUV);
     float4 baseColor = texColor * input.color * gBaseColorTint;
 
     float3 normalW = normalize(input.normalW);
@@ -32,7 +34,7 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
     tangentW = normalize(tangentW - dot(tangentW, normalW) * normalW);
     float3 bitangentW = normalize(cross(normalW, tangentW));
 
-    float2 normalXY = gNormalMap.Sample(gSampler, input.texCoord).rg;
+    float2 normalXY = gNormalMap.Sample(gSampler, tiledUV).rg;
     normalXY = normalXY * 2.0f - 1.0f;
 
     float normalZ = sqrt(saturate(1.0f - dot(normalXY, normalXY)));

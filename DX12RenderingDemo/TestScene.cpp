@@ -73,8 +73,8 @@ void TestScene::OnLoad(
 CameraDesc TestScene::SetupCameraDesc() const
 {
     CameraDesc desc{};
-    desc.eye = { -0.12562f, 5.15715f, -34.2166f };
-    desc.target = { -0.170477f, 5.0818f, -33.2204f };
+    desc.eye = { 0.0f, 5.15715f, -34.2166f };
+    desc.target = { 0.0f, 5.0818f, -33.2204f };
     desc.nearZ = 1.0f;
     desc.farZ = 500.0f;
     desc.fovY = 60.0f;

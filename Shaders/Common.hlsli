@@ -34,7 +34,8 @@ cbuffer cbMaterialInfo : register(b2)
     float gSpecularStrength;
     float gReflectionStrength;
     float gRefractionStrength;
-    float3 gMaterialPad0;
+    float2 gTiling;
+    float gMaterialPad0;
 };
 
 Texture2D gDiffuseMap : register(t0);

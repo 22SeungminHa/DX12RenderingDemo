@@ -125,6 +125,8 @@ struct MaterialCB
     float fresnelPower = 5.0f;
     float specularStrength = 0.5f;
     float reflectionStrength = 0.0f;
+
     float refractionStrength = 0.0f;
-    Vector3 pad0 = Vector3::Zero;
+    Vector2 tiling = Vector2::One;
+    float pad0 = 0.0f;
 };

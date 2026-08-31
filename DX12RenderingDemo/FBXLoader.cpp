@@ -176,8 +176,8 @@ FBXNodeData FBXLoader::ProcessNode(
     int depth)
 {
     std::string indent(depth * 2, ' ');
-    LOG(indent << "Node: " << node->mName.C_Str());
-    LOG(indent << "MeshCount: " << node->mNumMeshes);
+    //LOG(indent << "Node: " << node->mName.C_Str());
+    //LOG(indent << "MeshCount: " << node->mNumMeshes);
 
     FBXNodeData nodeData{};
     nodeData.name = node->mName.C_Str();
@@ -188,7 +188,7 @@ FBXNodeData FBXLoader::ProcessNode(
         const UINT meshIndex = node->mMeshes[i];
         aiMesh* aiMesh = scene->mMeshes[meshIndex];
 
-        LOG(indent << "  Mesh[" << i << "] Index: " << meshIndex);
+        //LOG(indent << "  Mesh[" << i << "] Index: " << meshIndex);
 
         auto mesh = CreateLitMesh(
             device,
@@ -208,7 +208,7 @@ FBXNodeData FBXLoader::ProcessNode(
         else if (!materials.empty())
             meshMaterial = materials[0];
 
-        LOG(indent << "  MaterialIndex: " << materialIndex);
+        //LOG(indent << "  MaterialIndex: " << materialIndex);
 
         nodeData.meshes.push_back(
             FBXMeshData{

@@ -1,0 +1,10 @@
+Name=_6x6x6
+Shader=LitShader
+RenderMode=Opaque
+
+BaseColorMap=Tile.dds
+NormalMap=Default_Normal.dds
+
+BaseColorTint=1.0,1.0,1.0,1.0
+SpecularStrength=0.0
+Tiling=6,6
