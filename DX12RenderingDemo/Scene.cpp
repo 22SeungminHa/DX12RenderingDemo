@@ -193,11 +193,20 @@ GameObject* Scene::CreateFBXObject(
 	if (!modelData)
 		return nullptr;
 
+	// 사용자가 위치와 크기를 조절하는 배치용 루트
 	GameObject* root = CreateGameObject();
 	root->SetPosition(position);
 	root->SetScale(scale);
 
-	BuildFBXNode(root, *modelData);
+	// FBX 파일 자체의 루트 transform
+	auto fbxRoot = std::make_unique<GameObject>();
+	fbxRoot->SetObjectCBIndex(nextObjectCBIndex_++);
+	fbxRoot->GetTransform()->SetLocalMatrix(modelData->localMatrix);
+
+	GameObject* fbxRootPtr = fbxRoot.get();
+	root->AddChild(std::move(fbxRoot));
+
+	BuildFBXNode(fbxRootPtr, *modelData);
 
 	return root;
 }

@@ -8,6 +8,7 @@
 #include "AssetManager.h"
 #include "InputSystem.h"
 #include "GlassComponent.h"
+#include "Camera.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -15,62 +16,56 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
-    //auto object = FBXLoader::LoadLitModel(
+    //constexpr float glassWidth = 10.0f;
+    //constexpr float glassHeight = 10.0f;
+    //constexpr float glassDepth = 10.0f;
+
+    //auto glassMesh = assetManager.LoadGlassMesh(
+    //    device,
+    //    cmdList,
+    //    glassWidth,
+    //    glassHeight,
+    //    glassDepth
+    //);
+
+    //auto glassMaterial = assetManager.LoadMaterialFromFile(
     //    device,
     //    cmdList,
     //    rootSignature,
-    //    assetManager,
-    //    "../Assets/Meshes/MicroSub.fbx",
-    //    objectCBIndex
+    //    AssetPath::Material(L"Default_Glass")
     //);
-    //
-    //if (object)
-    //    objects_.push_back(std::move(object));
 
-    constexpr float glassWidth = 10.0f;
-    constexpr float glassHeight = 8.0f;
-    constexpr float glassDepth = 0.5f;
+    //if (!glassMesh || !glassMaterial)
+    //    return;
 
-    auto glassMesh = assetManager.LoadGlassMesh(
-        device,
-        cmdList,
-        glassWidth,
-        glassHeight,
-        glassDepth
-    );
+    //GameObject* glassObject = CreateObject(
+    //    glassMesh,
+    //    glassMaterial,
+    //    Vector3(0.0f, 10.0f, 0.0f),
+    //    Vector3::One
+    //);
 
-    auto glassMaterial = assetManager.LoadMaterialFromFile(
+    //auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
+
+    //glassDestruction->Initialize(
+    //    glassMaterial,
+    //    glassWidth,
+    //    glassHeight,
+    //    glassDepth
+    //);
+
+    GameObject* map = CreateFBXObject(
         device,
         cmdList,
         rootSignature,
-        AssetPath::Material(L"Default_Glass")
+        assetManager,
+        AssetPath::FBX(L"Map"),
+        Vector3::Zero,
+        Vector3(0.01f, 0.01f, 0.01f)
     );
 
-    if (!glassMesh || !glassMaterial)
-        return;
-
-    GameObject* glassObject = CreateObject(
-        glassMesh,
-        glassMaterial,
-        Vector3(0.0f, 4.0f, 0.0f),
-        Vector3::One
-    );
-
-    auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
-
-    glassDestruction->Initialize(
-        glassMaterial,
-        glassWidth,
-        glassHeight,
-        glassDepth
-    );
-
-    //CreateFBXObject(
-    //    device, cmdList, rootSignature, assetManager,
-    //    AssetPath::FBX(L"MicroSub"),
-    //    Vector3(0.0f, 0.0f, 0.0f),
-    //    Vector3(1.0f, 1.0f, 1.0f)
-    //);
+    if (!map)
+        LOG("Map.fbx load failed");
 
     SetSkybox();
 }
@@ -78,8 +73,8 @@ void TestScene::OnLoad(
 CameraDesc TestScene::SetupCameraDesc() const
 {
     CameraDesc desc{};
-    desc.eye = { 0.0f, 15.0f, -25.0f };
-    desc.target = { 0.0f, 0.0f, 0.0f };
+    desc.eye = { -0.12562f, 5.15715f, -34.2166f };
+    desc.target = { -0.170477f, 5.0818f, -33.2204f };
     desc.nearZ = 1.0f;
     desc.farZ = 500.0f;
     desc.fovY = 60.0f;
@@ -90,14 +85,28 @@ void TestScene::OnProcessInput(
     const InputSystem& input,
     float deltaTime)
 {
-    if (!input.WasKeyPressed(VK_SPACE))
-        return;
+    if (input.WasKeyPressed('P'))
+    {
+        Camera* camera = GetActiveCamera();
 
-    ForEachComponent<GlassComponent>(
-        [](GlassComponent& destruction)
+        if (camera)
         {
-            destruction.Break(Vector2(0.0f, 0.0f), 8, 4);
-        });
+            const Vector3 position = camera->GetPosition();
+            const Vector3 target = position + camera->GetForward();
+
+            LOG("desc.eye = { " << position.x << "f, " << position.y << "f, " << position.z << "f };");
+            LOG("desc.target = { " << target.x << "f, " << target.y << "f, " << target.z << "f };");
+        }
+    }
+
+    if (input.WasKeyPressed(VK_SPACE))
+    {
+        ForEachComponent<GlassComponent>(
+            [](GlassComponent& destruction)
+            {
+                destruction.Break(Vector2(0.0f, 0.0f), 8, 4);
+            });
+    }
 }
 
 void TestScene::OnPrepareRenderResources(

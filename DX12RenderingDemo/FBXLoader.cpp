@@ -134,7 +134,7 @@ std::optional<FBXNodeData> FBXLoader::LoadLitModel(
         modelPath,
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_FlipUVs |
+        aiProcess_ConvertToLeftHanded |
         aiProcess_CalcTangentSpace
     );
 
