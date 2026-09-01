@@ -9,6 +9,7 @@
 #include "InputSystem.h"
 #include "GlassComponent.h"
 #include "Camera.h"
+#include "MapObjectLoader.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -74,7 +75,7 @@ void TestScene::OnLoad(
         cmdList,
         rootSignature,
         assetManager,
-        AssetPath::FBX(L"Map"),
+        AssetPath::FBX(L"Map1"),
         Vector3::Zero,
         Vector3(0.01f, 0.01f, 0.01f)
     );
@@ -82,7 +83,84 @@ void TestScene::OnLoad(
     if (!map)
         LOG("Map.fbx load failed");
 
+    LoadObstacles(
+        device,
+        cmdList,
+        rootSignature,
+        assetManager
+    );
+
     SetSkybox();
+}
+
+void TestScene::LoadObstacles(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    ID3D12RootSignature* rootSignature,
+    AssetManager& assetManager)
+{
+    std::vector<MapObstacleData> obstacles;
+
+    if (!MapObjectLoader::LoadObstacles(AssetPath::Data(L"MapObjects"), obstacles))
+    {
+        LOG("MapObjects.json load failed");
+        return;
+    }
+
+    auto glassMaterial = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, AssetPath::Material(L"Default_Glass"));
+
+    if (!glassMaterial)
+    {
+        LOG("Default_Glass material load failed");
+        return;
+    }
+
+    UINT loadedCount = 0;
+
+    for (const MapObstacleData& obstacle : obstacles)
+    {
+        const float width = obstacle.scale.x;
+        const float height = obstacle.scale.y;
+        const float depth = obstacle.scale.z;
+
+        if (width <= 0.0f || height <= 0.0f || depth <= 0.0f)
+        {
+            LOG("Invalid obstacle size: " << obstacle.name);
+            continue;
+        }
+
+        auto glassMesh = assetManager.LoadGlassMesh(device, cmdList, width, height, depth);
+
+        if (!glassMesh)
+        {
+            LOG("Glass mesh load failed: " << obstacle.name);
+            continue;
+        }
+
+        GameObject* glassObject = CreateObject(glassMesh, glassMaterial, obstacle.position, Vector3::One);
+
+        if (!glassObject)
+            continue;
+
+        auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
+
+        glassDestruction->Initialize(glassMaterial, width, height, depth);
+
+        ++loadedCount;
+
+        LOG(
+            obstacle.name
+            << " / Position: ("
+            << obstacle.position.x << ", "
+            << obstacle.position.y << ", "
+            << obstacle.position.z << ") / Size: ("
+            << width << ", "
+            << height << ", "
+            << depth << ")"
+        );
+    }
+
+    LOG("Obstacle load complete: " << loadedCount);
 }
 
 CameraDesc TestScene::SetupCameraDesc() const

@@ -27,4 +27,11 @@ protected:
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         std::vector<ComPtr<ID3D12Resource>>& transientUploadResources) override;
+
+private:
+    void LoadObstacles(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        ID3D12RootSignature* rootSignature,
+        AssetManager& assetManager);
 };
