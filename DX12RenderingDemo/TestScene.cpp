@@ -10,6 +10,7 @@
 #include "GlassComponent.h"
 #include "Camera.h"
 #include "MapObjectLoader.h"
+#include "CrystalGlassComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -32,53 +33,14 @@ void TestScene::OnLoad(
     rimLight->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     rimLight->SetIntensity(0.13f);
 
-    //constexpr float glassWidth = 10.0f;
-    //constexpr float glassHeight = 10.0f;
-    //constexpr float glassDepth = 10.0f;
-
-    //auto glassMesh = assetManager.LoadGlassMesh(
-    //    device,
-    //    cmdList,
-    //    glassWidth,
-    //    glassHeight,
-    //    glassDepth
-    //);
-
-    //auto glassMaterial = assetManager.LoadMaterialFromFile(
-    //    device,
-    //    cmdList,
-    //    rootSignature,
-    //    AssetPath::Material(L"Default_Glass")
-    //);
-
-    //if (!glassMesh || !glassMaterial)
-    //    return;
-
-    //GameObject* glassObject = CreateObject(
-    //    glassMesh,
-    //    glassMaterial,
-    //    Vector3(0.0f, 10.0f, 0.0f),
-    //    Vector3::One
-    //);
-
-    //auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
-
-    //glassDestruction->Initialize(
-    //    glassMaterial,
-    //    glassWidth,
-    //    glassHeight,
-    //    glassDepth
-    //);
-
     GameObject* map = CreateFBXObject(
         device,
         cmdList,
         rootSignature,
         assetManager,
-        AssetPath::FBX(L"Map1"),
+        AssetPath::FBX(L"Map"),
         Vector3::Zero,
-        Vector3(0.01f, 0.01f, 0.01f)
-    );
+        Vector3(0.01f));
 
     if (!map)
         LOG("Map.fbx load failed");
@@ -99,9 +61,14 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
         return;
     }
 
-    auto glassMaterial = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, AssetPath::Material(L"Default_Glass"));
+    auto obstacleMaterial =
+        assetManager.LoadMaterialFromFile(
+            device,
+            cmdList,
+            rootSignature,
+            AssetPath::Material(L"Obstacle_Glass"));
 
-    if (!glassMaterial)
+    if (!obstacleMaterial)
     {
         LOG("Default_Glass material load failed");
         return;
@@ -129,14 +96,14 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
             continue;
         }
 
-        GameObject* glassObject = CreateObject(glassMesh, glassMaterial, obstacle.position, Vector3::One);
+        GameObject* glassObject = CreateObject(glassMesh, obstacleMaterial, obstacle.position, Vector3::One);
 
         if (!glassObject)
             continue;
 
         auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
 
-        glassDestruction->Initialize(glassMaterial, width, height, depth);
+        glassDestruction->Initialize(obstacleMaterial, width, height, depth);
 
         ++loadedCount;
 
@@ -170,24 +137,46 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
             device,
             cmdList,
             assetManager,
-            AssetPath::OBJ(L"Crystal"));
+            AssetPath::FBX(L"Crystal")
+        );
 
     if (!crystalMesh)
     {
-        LOG("Crystal.obj load failed");
+        LOG("Crystal.fbx load failed");
         return;
     }
 
-    auto glassMaterial =
+    auto crashedModelData =
+        FBXLoader::LoadLitModel(
+            device,
+            cmdList,
+            rootSignature,
+            assetManager,
+            AssetPath::FBX(L"CrashedCrystal")
+        );
+
+    if (!crashedModelData)
+    {
+        LOG("CrashedCrystal.fbx load failed");
+        return;
+    }
+
+    auto crashedCrystalModel =
+        std::make_shared<FBXNodeData>(
+            std::move(*crashedModelData)
+        );
+
+    auto crystalMaterial =
         assetManager.LoadMaterialFromFile(
             device,
             cmdList,
             rootSignature,
-            AssetPath::Material(L"Default_Glass"));
+            AssetPath::Material(L"Crystal_Glass")
+        );
 
-    if (!glassMaterial)
+    if (!crystalMaterial)
     {
-        LOG("Default_Glass material load failed");
+        LOG("Crystal_Glass material load failed");
         return;
     }
 
@@ -198,12 +187,21 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
         GameObject* crystalObject =
             CreateObject(
                 crystalMesh,
-                glassMaterial,
+                crystalMaterial,
                 crystal.position,
-                Vector3::Vector3(1.2f));
+                Vector3(0.013f)
+            );
 
         if (!crystalObject)
             continue;
+
+        auto* crystalGlass =
+            crystalObject->AddComponent<CrystalGlassComponent>();
+
+        crystalGlass->Initialize(
+            crystalMaterial,
+            crashedCrystalModel
+        );
 
         ++loadedCount;
 
@@ -256,15 +254,6 @@ void TestScene::OnProcessInput(
             LOG("desc.eye = { " << position.x << "f, " << position.y << "f, " << position.z << "f };");
             LOG("desc.target = { " << target.x << "f, " << target.y << "f, " << target.z << "f };");
         }
-    }
-
-    if (input.WasKeyPressed(VK_SPACE))
-    {
-        ForEachComponent<GlassComponent>(
-            [](GlassComponent& destruction)
-            {
-                destruction.Break(Vector2(0.0f, 0.0f), 8, 4);
-            });
     }
 }
 

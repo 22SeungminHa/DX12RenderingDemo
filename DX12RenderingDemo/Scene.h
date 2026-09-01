@@ -57,7 +57,20 @@ public:
 		const std::filesystem::path& filePath,
 		const Vector3& position,
 		const Vector3& scale);
-	void BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData);
+
+	GameObject* CreateFBXChildObject(
+		GameObject* parent,
+		const FBXNodeData& modelData,
+		const std::shared_ptr<Material>& materialOverride = nullptr,
+		std::vector<GameObject*>* outMeshObjects = nullptr
+	);
+
+	void BuildFBXNode(
+		GameObject* parent,
+		const FBXNodeData& nodeData,
+		const std::shared_ptr<Material>& materialOverride = nullptr,
+		std::vector<GameObject*>* outMeshObjects = nullptr
+	);
 
 	void PrepareRenderResources(
 		ID3D12Device* device,

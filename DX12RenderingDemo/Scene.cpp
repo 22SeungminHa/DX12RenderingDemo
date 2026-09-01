@@ -197,47 +197,89 @@ GameObject* Scene::CreateFBXObject(
 	if (!modelData)
 		return nullptr;
 
-	// 사용자가 위치와 크기를 조절하는 배치용 루트
 	GameObject* root = CreateGameObject();
 	root->SetPosition(position);
 	root->SetScale(scale);
 
-	// FBX 파일 자체의 루트 transform
-	auto fbxRoot = std::make_unique<GameObject>();
-	fbxRoot->SetObjectCBIndex(nextObjectCBIndex_++);
-	fbxRoot->GetTransform()->SetLocalMatrix(modelData->localMatrix);
-
-	GameObject* fbxRootPtr = fbxRoot.get();
-	root->AddChild(std::move(fbxRoot));
-
-	BuildFBXNode(fbxRootPtr, *modelData);
+	CreateFBXChildObject(
+		root,
+		*modelData
+	);
 
 	return root;
 }
 
-void Scene::BuildFBXNode(GameObject* parent, const FBXNodeData& nodeData)
+GameObject* Scene::CreateFBXChildObject(
+	GameObject* parent,
+	const FBXNodeData& modelData,
+	const std::shared_ptr<Material>& materialOverride,
+	std::vector<GameObject*>* outMeshObjects)
+{
+	if (!parent)
+		return nullptr;
+
+	auto fbxRoot = std::make_unique<GameObject>();
+
+	fbxRoot->SetObjectCBIndex(nextObjectCBIndex_++);
+	fbxRoot->GetTransform()->SetLocalMatrix(modelData.localMatrix);
+
+	GameObject* fbxRootPtr = fbxRoot.get();
+
+	parent->AddChild(std::move(fbxRoot));
+
+	BuildFBXNode(
+		fbxRootPtr,
+		modelData,
+		materialOverride,
+		outMeshObjects
+	);
+
+	return fbxRootPtr;
+}
+
+void Scene::BuildFBXNode(
+	GameObject* parent,
+	const FBXNodeData& nodeData,
+	const std::shared_ptr<Material>& materialOverride,
+	std::vector<GameObject*>* outMeshObjects)
 {
 	for (const auto& meshData : nodeData.meshes)
 	{
 		auto child = std::make_unique<GameObject>();
-		child->SetObjectCBIndex(nextObjectCBIndex_++);
 
+		child->SetObjectCBIndex(nextObjectCBIndex_++);
 		child->SetMesh(meshData.mesh);
-		child->SetMaterial(meshData.material);
+		child->SetMaterial(
+			materialOverride
+			? materialOverride
+			: meshData.material
+		);
+
+		GameObject* childPtr = child.get();
 
 		parent->AddChild(std::move(child));
+
+		if (outMeshObjects)
+			outMeshObjects->push_back(childPtr);
 	}
 
 	for (const auto& childNode : nodeData.children)
 	{
 		auto child = std::make_unique<GameObject>();
+
 		child->SetObjectCBIndex(nextObjectCBIndex_++);
 		child->GetTransform()->SetLocalMatrix(childNode.localMatrix);
 
 		GameObject* childPtr = child.get();
+
 		parent->AddChild(std::move(child));
 
-		BuildFBXNode(childPtr, childNode);
+		BuildFBXNode(
+			childPtr,
+			childNode,
+			materialOverride,
+			outMeshObjects
+		);
 	}
 }
 

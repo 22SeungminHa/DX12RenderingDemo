@@ -64,7 +64,6 @@ class AssetPath
 {
 public:
     static std::filesystem::path FBX(const std::wstring& name) { return std::filesystem::path(L"../Assets/Meshes") / (name + L".fbx"); }
-    static std::filesystem::path OBJ(const std::wstring& name) { return std::filesystem::path(L"../Assets/Meshes") / (name + L".obj"); }
     static std::filesystem::path Texture(const std::wstring& name) { return std::filesystem::path(L"../Assets/Textures") / (name + L".dds"); }
     static std::filesystem::path Material(const std::wstring& name) { return std::filesystem::path(L"../Assets/Materials") / (name + L".mat"); }
     static std::filesystem::path Data(const std::wstring& name) { return std::filesystem::path(L"../Assets/Data") / (name + L".json"); }
