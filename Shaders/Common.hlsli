@@ -7,6 +7,14 @@ cbuffer cbGameObjectInfo : register(b0)
     matrix gmtxWorldInvTranspose;
 };
 
+struct DirectionalLight
+{
+    float3 direction;
+    float pad;
+
+    float4 color;
+};
+
 cbuffer cbCameraInfo : register(b1)
 {
     matrix gmtxView;
@@ -15,13 +23,12 @@ cbuffer cbCameraInfo : register(b1)
     float3 gEyePosW;
     float gPad0;
 
-    float3 gLightDir;
-    float gPad1;
+    DirectionalLight gDirectionalLights[3];
 
-    float4 gLightColor;
     float4 gAmbientColor;
 
     float gSpecularPower;
+    uint gDirectionalLightCount;
     float2 gPad2;
 };
 

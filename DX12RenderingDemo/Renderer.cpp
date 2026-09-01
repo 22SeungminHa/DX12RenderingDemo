@@ -169,9 +169,7 @@ void Renderer::ReleaseSrvDescriptorHeap()
 
 void Renderer::CreateRtvDescriptorHeap()
 {
-    rtvDescriptorAllocator_.Initialize(
-        d3dCore_.GetDevice(),
-        kMaxRtvDescriptorCount);
+    rtvDescriptorAllocator_.Initialize(d3dCore_.GetDevice(), kMaxRtvDescriptorCount);
 }
 
 void Renderer::ReleaseRtvDescriptorHeap()
@@ -211,10 +209,24 @@ void Renderer::BindCameraData(Scene* scene, Camera* camera)
 
     const SceneLightDesc& lightDesc = scene->GetLightDesc();
 
-    passCB.mainLight.direction = lightDesc.direction;
-    passCB.mainLight.color = lightDesc.color;
     passCB.ambientColor = lightDesc.ambientColor;
     passCB.specularPower = lightDesc.specularPower;
+
+    UINT lightCount = 0;
+
+    for (const auto& light : scene->GetDirectionalLights())
+    {
+        if (!light || !light->IsEnabled())
+            continue;
+
+        if (lightCount >= kMaxDirectionalLights)
+            break;
+
+        passCB.directionalLights[lightCount] = light->GetLightData();
+        ++lightCount;
+    }
+
+    passCB.directionalLightCount = lightCount;
 
     currentFrameResource_->passCB_->CopyData(0, passCB);
 
@@ -313,9 +325,7 @@ Camera* Renderer::BeginFrame(Scene* scene)
     // 위 Wait에서 완료되었으므로 이제 안전하게 해제 가능.
     currentFrameResource_->transientUploadResources_.clear();
 
-    d3dCore_.ResetCommandList(
-        currentFrameResource_->cmdAllocator_.Get()
-    );
+    d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
 
     scene->PrepareRenderResources(
         d3dCore_.GetDevice(),

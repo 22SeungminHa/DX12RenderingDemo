@@ -26,22 +26,32 @@ float4 EvaluateGlass(VS_OUTPUT input)
     float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
     normalW = normalize(mul(normalT, TBN));
 
-    float3 lightDir = normalize(-gLightDir);
     float3 viewDir = normalize(gEyePosW - input.positionW);
-    float3 halfDir = normalize(lightDir + viewDir);
-
-    float ndotl = saturate(dot(normalW, lightDir));
-    float ndoth = saturate(dot(normalW, halfDir));
     float ndotv = saturate(dot(normalW, viewDir));
 
     float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.12f;
-    float3 diffuse = baseColor.rgb * gLightColor.rgb * ndotl * 0.06f;
 
-    float broadSpec = pow(ndoth, 32.0f) * 0.18f;
-    float sharpSpec = pow(ndoth, 256.0f) * 1.15f;
+    float3 diffuse = 0.0f;
+    float3 specular = 0.0f;
 
-    float3 specular = float3(1.0f, 1.0f, 1.0f) * (broadSpec + sharpSpec) * gSpecularStrength;
+    for (uint i = 0; i < gDirectionalLightCount; ++i)
+    {
+        DirectionalLight light = gDirectionalLights[i];
 
+        float3 lightDir = normalize(-light.direction);
+        float3 halfDir = normalize(lightDir + viewDir);
+
+        float ndotl = saturate(dot(normalW, lightDir));
+        float ndoth = saturate(dot(normalW, halfDir));
+
+        diffuse += baseColor.rgb * light.color.rgb * ndotl * 0.06f;
+
+        float broadSpec = pow(ndoth, 32.0f) * 0.18f;
+        float sharpSpec = pow(ndoth, 256.0f) * 1.15f;
+
+        specular += float3(1.0f, 1.0f, 1.0f) * light.color.rgb * (broadSpec + sharpSpec) * gSpecularStrength;
+    }
+    
     float fresnel = pow(1.0f - ndotv, max(gFresnelPower, 1.0f));
     fresnel = smoothstep(0.0f, 1.0f, fresnel);
 

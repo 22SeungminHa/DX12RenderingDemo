@@ -150,6 +150,7 @@
       </ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="DescriptorAllocator.h" />
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="DX12RenderingDemo.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="FBXLoader.h" />
@@ -195,6 +196,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="DescriptorAllocator.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="DX12RenderingDemo.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="FBXLoader.cpp" />

@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "FBXLoader.h"
 #include "GameObject.h"
+#include "DirectionalLight.h"
 
 class Renderer;
 class InputSystem;
@@ -99,6 +100,7 @@ protected:
 	SkyboxDesc skybox_;
 
 	SceneLightDesc lightDesc_;
+	std::vector<std::unique_ptr<DirectionalLight>> directionalLights_;
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;
@@ -109,6 +111,21 @@ public:
 	{
 		for (auto& object : objects_)
 			ForEachComponentRecursive<T>(object.get(), func);
+	}
+
+	DirectionalLight* AddDirectionalLight()
+	{
+		auto light = std::make_unique<DirectionalLight>();
+
+		DirectionalLight* ptr = light.get();
+		directionalLights_.push_back(std::move(light));
+
+		return ptr;
+	}
+
+	const std::vector<std::unique_ptr<DirectionalLight>>& GetDirectionalLights() const
+	{
+		return directionalLights_;
 	}
 
 private:

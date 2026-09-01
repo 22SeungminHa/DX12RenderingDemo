@@ -168,6 +168,9 @@
     <ClInclude Include="GlassFracture.h">
       <Filter>소스 파일\Object\Component</Filter>
     </ClInclude>
+    <ClInclude Include="DirectionalLight.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shader.cpp">
@@ -286,6 +289,9 @@
     </ClCompile>
     <ClCompile Include="GlassFracture.cpp">
       <Filter>소스 파일\Object\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionalLight.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

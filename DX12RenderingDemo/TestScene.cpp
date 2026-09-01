@@ -16,6 +16,21 @@ void TestScene::OnLoad(
     ID3D12RootSignature* rootSignature,
     AssetManager& assetManager)
 {
+    DirectionalLight* mainLight = AddDirectionalLight();
+    mainLight->SetDirection({ 0.0f, -0.916f, 0.40f });
+    mainLight->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+    mainLight->SetIntensity(1.0f);
+
+    DirectionalLight* fillLight = AddDirectionalLight();
+    fillLight->SetDirection({ -0.12f, 0.96f, -0.25f });
+    fillLight->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+    fillLight->SetIntensity(0.13f);
+
+    DirectionalLight* rimLight = AddDirectionalLight();
+    rimLight->SetDirection({ 0.12f, 0.96f, -0.25f });
+    rimLight->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+    rimLight->SetIntensity(0.13f);
+
     //constexpr float glassWidth = 10.0f;
     //constexpr float glassHeight = 10.0f;
     //constexpr float glassDepth = 10.0f;
@@ -85,10 +100,7 @@ SceneLightDesc TestScene::SetupLightDesc() const
 {
     SceneLightDesc desc{};
 
-    desc.direction = { 0.0f, 0.0f, -1.0f };
-    desc.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-    desc.ambientColor = { 0.15f, 0.15f, 0.15f, 1.0f };
+    desc.ambientColor = { 0.0f, 0.0f, 0.0f, 1.0f };
     desc.specularPower = 32.0f;
 
     return desc;

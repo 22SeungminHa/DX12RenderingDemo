@@ -35,6 +35,8 @@ void Scene::Unload()
 
 	objects_.clear();
 	cameras_.clear();
+	directionalLights_.clear();
+
 	activeCamera_ = nullptr;
 }
 
@@ -76,13 +78,13 @@ void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 	if (input.IsKeyDown('A'))
 		activeCamera_->MoveRight(moveDistance);
 
-	if (input.IsLeftMouseDown())
+	if (input.IsRightMouseDown())
 	{
 		POINT delta = input.GetMouseDelta();
 
 		activeCamera_->Rotate(
-			delta.x * mouseSensitivity,
-			delta.y * mouseSensitivity
+			delta.x * -mouseSensitivity,
+			delta.y * -mouseSensitivity
 		);
 	}
 }

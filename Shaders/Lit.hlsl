@@ -43,27 +43,31 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
     float3x3 TBN = float3x3(tangentW, bitangentW, normalW);
     normalW = normalize(mul(normalT, TBN));
 
-    float3 lightDir = normalize(-gLightDir);
     float3 viewDir = normalize(gEyePosW - input.positionW);
-    float3 halfDir = normalize(lightDir + viewDir);
-
-    float ndotlRaw = dot(normalW, lightDir);
-    float wrappedNdotL = saturate(ndotlRaw * 0.5f + 0.5f);
-    float diffuseFactor = lerp(0.2f, 1.0f, wrappedNdotL);
 
     float3 ambient = baseColor.rgb * gAmbientColor.rgb * 0.45f;
-    float3 diffuse = baseColor.rgb * gLightColor.rgb * diffuseFactor * 0.85f;
 
-    float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
+    float3 diffuse = 0.0f;
+    float3 specular = 0.0f;
 
-    float3 specular =
-        float3(1.0f, 1.0f, 1.0f) *
-        gLightColor.rgb *
-        specFactor *
-        gSpecularStrength *
-        0.35f;
+    for (uint i = 0; i < gDirectionalLightCount; ++i)
+    {
+        DirectionalLight light = gDirectionalLights[i];
+
+        float3 lightDir = normalize(-light.direction);
+        float3 halfDir = normalize(lightDir + viewDir);
+
+        float ndotlRaw = dot(normalW, lightDir);
+        float wrappedNdotL = saturate(ndotlRaw * 0.5f + 0.5f);
+        float diffuseFactor = lerp(0.05f, 1.0f, wrappedNdotL * wrappedNdotL);
+        diffuse += baseColor.rgb * light.color.rgb * diffuseFactor * 0.85f;
+
+        float specFactor = pow(saturate(dot(normalW, halfDir)), gSpecularPower);
+
+        specular += float3(1.0f, 1.0f, 1.0f) * light.color.rgb * specFactor * gSpecularStrength * 0.35f;
+    }
 
     float3 finalColor = ambient + diffuse + specular;
-
+    
     return float4(finalColor, baseColor.a * gAlpha);
 }

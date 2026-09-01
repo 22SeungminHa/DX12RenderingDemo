@@ -2,7 +2,7 @@ Name=_1x1
 Shader=LitShader
 RenderMode=Opaque
 
-BaseColorMap=Tile.dds
+BaseColorMap=Tile3.dds
 NormalMap=Default_Normal.dds
 
 BaseColorTint=1.0,1.0,1.0,1.0

@@ -41,7 +41,7 @@ float4 PSCopy(VS_FULLSCREEN_OUTPUT input) : SV_TARGET
     float exposure = 1.15f;
     color *= exposure;
 
-    float contrast = 1.08f;
+    float contrast = 1.0f;
     color = (color - 0.5f) * contrast + 0.5f;
 
     float saturation = 1.1f;

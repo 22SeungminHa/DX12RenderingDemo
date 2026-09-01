@@ -87,16 +87,15 @@ struct CameraDesc
     float fovY = 90.0f;
 };
 
+constexpr UINT kMaxDirectionalLights = 3;
+
 struct SceneLightDesc
 {
-    Vector3 direction = { 0.0f, 0.0f, -1.0f };
-    Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
     Vector4 ambientColor = { 0.15f, 0.15f, 0.15f, 1.0f };
     float specularPower = 32.0f;
 };
 
-struct Light
+struct DirectionalLightData
 {
     Vector3 direction;
     float pad0 = 0.0f;
@@ -118,11 +117,12 @@ struct PassCB
     Vector3 eyePosW;
     float pad0 = 0.0f;
 
-    Light mainLight;
+    std::array<DirectionalLightData, kMaxDirectionalLights> directionalLights{};
 
     Vector4 ambientColor = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
 
     float specularPower = 128.0f;
+    UINT directionalLightCount = 0;
     Vector2 pad1 = Vector2::Zero;
 };
 
