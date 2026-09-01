@@ -177,6 +177,18 @@
     <ClInclude Include="CrystalGlassComponent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="ColliderComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="BoxColliderComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SphereColliderComponent.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shader.cpp">
@@ -305,6 +317,18 @@
     <ClCompile Include="CrystalGlassComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="ColliderComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="BoxColliderComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SphereColliderComponent.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugRenderer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX12RenderingDemo.rc">
@@ -338,6 +362,9 @@
       <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
     <FxCompile Include="..\Shaders\Skybox.hlsl">
+      <Filter>소스 파일\HLSL</Filter>
+    </FxCompile>
+    <FxCompile Include="Debug.hlsl">
       <Filter>소스 파일\HLSL</Filter>
     </FxCompile>
   </ItemGroup>

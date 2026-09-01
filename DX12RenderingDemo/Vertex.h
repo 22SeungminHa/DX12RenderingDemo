@@ -9,6 +9,8 @@ public:
 	Vertex() { position_ = Vector3::Zero; }
 	Vertex(const Vector3& position) { position_ = position; }
 	~Vertex() {}
+
+    const Vector3& GetPosition() const { return position_; }
 };
 
 class LitVertex : public Vertex

@@ -13,6 +13,9 @@ public:
 	void ReleaseUploadResources();
 	virtual void Render(ID3D12GraphicsCommandList* cmdList);
 
+	const BoundingBox& GetLocalBounds() const { return localBounds_; }
+	bool HasLocalBounds() const { return hasLocalBounds_; }
+
 protected:
 	ComPtr<ID3D12Resource> vertexBuffer_;
 	ComPtr<ID3D12Resource> vertexUploadBuffer_;
@@ -31,6 +34,12 @@ protected:
 	UINT indexCnt_ = 0;
 	UINT startIndex_ = 0;
 	int baseVertex_ = 0;
+
+protected:
+	void BuildLocalBounds(const std::vector<LitVertex>& vertices);
+
+	BoundingBox localBounds_{};
+	bool hasLocalBounds_ = false;
 };
 
 class LoadedMeshLit : public Mesh

@@ -30,6 +30,55 @@ void Mesh::Render(ID3D12GraphicsCommandList* pd3dCommandList)
 	}
 }
 
+void Mesh::BuildLocalBounds(
+    const std::vector<LitVertex>& vertices)
+{
+    if (vertices.empty())
+    {
+        localBounds_ = BoundingBox{};
+        hasLocalBounds_ = false;
+        return;
+    }
+
+    Vector3 minPosition = vertices[0].GetPosition();
+    Vector3 maxPosition = vertices[0].GetPosition();
+
+    for (const LitVertex& vertex : vertices)
+    {
+        const Vector3& position = vertex.GetPosition();
+
+        minPosition.x = std::min(minPosition.x, position.x);
+        minPosition.y = std::min(minPosition.y, position.y);
+        minPosition.z = std::min(minPosition.z, position.z);
+
+        maxPosition.x = std::max(maxPosition.x, position.x);
+        maxPosition.y = std::max(maxPosition.y, position.y);
+        maxPosition.z = std::max(maxPosition.z, position.z);
+    }
+
+    const Vector3 center =
+        (minPosition + maxPosition) * 0.5f;
+
+    const Vector3 extents =
+        (maxPosition - minPosition) * 0.5f;
+
+    localBounds_.Center =
+    {
+        center.x,
+        center.y,
+        center.z
+    };
+
+    localBounds_.Extents =
+    {
+        extents.x,
+        extents.y,
+        extents.z
+    };
+
+    hasLocalBounds_ = true;
+}
+
 LoadedMeshLit::LoadedMeshLit(
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,
@@ -37,8 +86,10 @@ LoadedMeshLit::LoadedMeshLit(
 	const std::vector<UINT>& indices)
 	: Mesh(device, cmdList)
 {
-	vertexCnt_ = static_cast<UINT>(vertices.size());
-	indexCnt_ = static_cast<UINT>(indices.size());
+    BuildLocalBounds(vertices);
+
+    vertexCnt_ = static_cast<UINT>(vertices.size());
+    indexCnt_ = static_cast<UINT>(indices.size());
 	stride_ = sizeof(LitVertex);
 	primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 

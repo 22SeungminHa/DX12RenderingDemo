@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "MapObjectLoader.h"
 #include "CrystalGlassComponent.h"
+#include "BoxColliderComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -105,6 +106,10 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
         glassDestruction->Initialize(obstacleMaterial, width, height, depth);
 
+        auto* collider = glassObject->AddComponent<BoxColliderComponent>();
+
+        collider->SetSize(Vector3(width, height, depth));
+
         ++loadedCount;
 
         LOG(
@@ -161,10 +166,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
         return;
     }
 
-    auto crashedCrystalModel =
-        std::make_shared<FBXNodeData>(
-            std::move(*crashedModelData)
-        );
+    auto crashedCrystalModel = std::make_shared<FBXNodeData>(std::move(*crashedModelData));
 
     auto crystalMaterial =
         assetManager.LoadMaterialFromFile(
@@ -202,6 +204,16 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
             crystalMaterial,
             crashedCrystalModel
         );
+
+        auto* collider =
+            crystalObject->AddComponent<BoxColliderComponent>();
+
+        if (crystalMesh->HasLocalBounds())
+        {
+            collider->SetLocalBounds(
+                crystalMesh->GetLocalBounds()
+            );
+        }
 
         ++loadedCount;
 
