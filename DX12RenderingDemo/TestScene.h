@@ -34,4 +34,10 @@ private:
         ID3D12GraphicsCommandList* cmdList,
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager);
+
+    void LoadCrystals(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        ID3D12RootSignature* rootSignature,
+        AssetManager& assetManager);
 };

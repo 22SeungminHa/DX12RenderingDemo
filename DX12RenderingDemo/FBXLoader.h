@@ -48,6 +48,12 @@ public:
         AssetManager& assetManager,
         const std::filesystem::path& filePath);
 
+    static std::shared_ptr<Mesh> LoadLitMeshFromFile(
+        ID3D12Device* device,
+        ID3D12GraphicsCommandList* cmdList,
+        AssetManager& assetManager,
+        const std::filesystem::path& filePath);
+
     static FBXNodeData ProcessNode(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,

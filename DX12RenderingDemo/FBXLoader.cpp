@@ -165,6 +165,44 @@ std::optional<FBXNodeData> FBXLoader::LoadLitModel(
     );
 }
 
+std::shared_ptr<Mesh> FBXLoader::LoadLitMeshFromFile(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    AssetManager& assetManager,
+    const std::filesystem::path& filePath)
+{
+    Assimp::Importer importer;
+
+    const std::string modelPath = filePath.string();
+
+    const aiScene* scene = importer.ReadFile(
+        modelPath,
+        aiProcess_Triangulate |
+        aiProcess_JoinIdenticalVertices |
+        aiProcess_ConvertToLeftHanded |
+        aiProcess_CalcTangentSpace
+    );
+
+    if (!scene || scene->mNumMeshes == 0)
+    {
+        LOG("Mesh Load Failed: "
+            << filePath.string()
+            << " / "
+            << importer.GetErrorString());
+
+        return nullptr;
+    }
+
+    return CreateLitMesh(
+        device,
+        cmdList,
+        assetManager,
+        modelPath,
+        0,
+        scene->mMeshes[0]
+    );
+}
+
 FBXNodeData FBXLoader::ProcessNode(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,

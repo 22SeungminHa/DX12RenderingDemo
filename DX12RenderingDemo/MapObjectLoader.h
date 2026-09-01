@@ -9,8 +9,20 @@ struct MapObstacleData
     Vector3 scale = Vector3::One;
 };
 
+struct MapCrystalData
+{
+    std::string name;
+    Vector3 position = Vector3::Zero;
+};
+
 class MapObjectLoader
 {
 public:
-    static bool LoadObstacles(const std::filesystem::path& filePath, std::vector<MapObstacleData>& outObstacles);
+    static bool LoadObstacles(
+        const std::filesystem::path& filePath,
+        std::vector<MapObstacleData>& outObstacles);
+
+    static bool LoadCrystals(
+        const std::filesystem::path& filePath,
+        std::vector<MapCrystalData>& outCrystals);
 };

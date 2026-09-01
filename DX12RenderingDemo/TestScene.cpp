@@ -83,21 +83,13 @@ void TestScene::OnLoad(
     if (!map)
         LOG("Map.fbx load failed");
 
-    LoadObstacles(
-        device,
-        cmdList,
-        rootSignature,
-        assetManager
-    );
+    LoadObstacles(device, cmdList, rootSignature, assetManager);
+    LoadCrystals(device, cmdList, rootSignature, assetManager);
 
     SetSkybox();
 }
 
-void TestScene::LoadObstacles(
-    ID3D12Device* device,
-    ID3D12GraphicsCommandList* cmdList,
-    ID3D12RootSignature* rootSignature,
-    AssetManager& assetManager)
+void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
 {
     std::vector<MapObstacleData> obstacles;
 
@@ -161,6 +153,70 @@ void TestScene::LoadObstacles(
     }
 
     LOG("Obstacle load complete: " << loadedCount);
+}
+
+void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
+{
+    std::vector<MapCrystalData> crystals;
+
+    if (!MapObjectLoader::LoadCrystals(AssetPath::Data(L"MapObjects"), crystals))
+    {
+        LOG("Crystal data load failed");
+        return;
+    }
+
+    auto crystalMesh =
+        FBXLoader::LoadLitMeshFromFile(
+            device,
+            cmdList,
+            assetManager,
+            AssetPath::OBJ(L"Crystal"));
+
+    if (!crystalMesh)
+    {
+        LOG("Crystal.obj load failed");
+        return;
+    }
+
+    auto glassMaterial =
+        assetManager.LoadMaterialFromFile(
+            device,
+            cmdList,
+            rootSignature,
+            AssetPath::Material(L"Default_Glass"));
+
+    if (!glassMaterial)
+    {
+        LOG("Default_Glass material load failed");
+        return;
+    }
+
+    UINT loadedCount = 0;
+
+    for (const MapCrystalData& crystal : crystals)
+    {
+        GameObject* crystalObject =
+            CreateObject(
+                crystalMesh,
+                glassMaterial,
+                crystal.position,
+                Vector3::Vector3(1.2f));
+
+        if (!crystalObject)
+            continue;
+
+        ++loadedCount;
+
+        LOG(
+            crystal.name
+            << " / Position: ("
+            << crystal.position.x << ", "
+            << crystal.position.y << ", "
+            << crystal.position.z << ")"
+        );
+    }
+
+    LOG("Crystal load complete: " << loadedCount);
 }
 
 CameraDesc TestScene::SetupCameraDesc() const
