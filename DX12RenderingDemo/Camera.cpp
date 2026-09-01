@@ -52,17 +52,10 @@ void Camera::SetScissorRect(LONG left, LONG top, LONG right, LONG bottom)
 PassCB Camera::BuildPassCB() const
 {
     PassCB passCB{};
+
     passCB.view = view_.Transpose();
     passCB.proj = projection_.Transpose();
-
     passCB.eyePosW = position_;
-
-    passCB.mainLight.direction = Vector3(0.0f, 0.0f, -1.0f);
-    passCB.mainLight.direction.Normalize();
-    passCB.mainLight.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    passCB.ambientColor = Vector4(0.15f, 0.15f, 0.15f, 1.0f);
-    passCB.specularPower = 32.0f;
 
     return passCB;
 }

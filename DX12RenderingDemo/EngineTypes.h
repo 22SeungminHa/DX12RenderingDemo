@@ -87,6 +87,15 @@ struct CameraDesc
     float fovY = 90.0f;
 };
 
+struct SceneLightDesc
+{
+    Vector3 direction = { 0.0f, 0.0f, -1.0f };
+    Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    Vector4 ambientColor = { 0.15f, 0.15f, 0.15f, 1.0f };
+    float specularPower = 32.0f;
+};
+
 struct Light
 {
     Vector3 direction;

@@ -14,7 +14,9 @@ public:
         ID3D12GraphicsCommandList* cmdList,
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager) override;
+
     virtual CameraDesc SetupCameraDesc() const override;
+    virtual SceneLightDesc SetupLightDesc() const override;
 
 protected:
     virtual void OnProcessInput(

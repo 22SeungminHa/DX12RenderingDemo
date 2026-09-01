@@ -102,7 +102,7 @@ private:
     void RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera);
 
     // GPU Binding
-    void BindCameraData(Camera* camera);
+    void BindCameraData(Scene* scene, Camera* camera);
     void BindObjectData(const GameObject* object);
 
     // Draw

@@ -20,6 +20,7 @@ public:
 
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
+	const SceneLightDesc& GetLightDesc() const { return lightDesc_; }
 
 	void Load(
 		ID3D12Device* device,
@@ -83,6 +84,8 @@ protected:
 		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources) {}
 
 	virtual CameraDesc SetupCameraDesc() const { return CameraDesc{}; }
+	virtual SceneLightDesc SetupLightDesc() const { return SceneLightDesc{}; }
+
 	void CreateCamera();
 	void ResizeCamera(UINT width, UINT height);
 
@@ -94,6 +97,8 @@ protected:
 	Camera* activeCamera_ = nullptr;
 
 	SkyboxDesc skybox_;
+
+	SceneLightDesc lightDesc_;
 
 	UINT clientWidth_ = 0;
 	UINT clientHeight_ = 0;

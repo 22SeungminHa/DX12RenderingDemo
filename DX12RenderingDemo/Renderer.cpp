@@ -194,9 +194,9 @@ void Renderer::WaitForCurrentFrameResource()
     d3dCore_.WaitForFrameFence(currentFrameResource_->fenceValue_);
 }
 
-void Renderer::BindCameraData(Camera* camera)
+void Renderer::BindCameraData(Scene* scene, Camera* camera)
 {
-    if (!camera || !currentFrameResource_ || !currentFrameResource_->passCB_)
+    if (!scene || !camera || !currentFrameResource_ || !currentFrameResource_->passCB_)
         return;
 
     auto* cmdList = d3dCore_.GetRenderCommandList();
@@ -208,6 +208,14 @@ void Renderer::BindCameraData(Camera* camera)
     cmdList->RSSetScissorRects(1, &scissor);
 
     PassCB passCB = camera->BuildPassCB();
+
+    const SceneLightDesc& lightDesc = scene->GetLightDesc();
+
+    passCB.mainLight.direction = lightDesc.direction;
+    passCB.mainLight.color = lightDesc.color;
+    passCB.ambientColor = lightDesc.ambientColor;
+    passCB.specularPower = lightDesc.specularPower;
+
     currentFrameResource_->passCB_->CopyData(0, passCB);
 
     cmdList->SetGraphicsRootConstantBufferView(
@@ -330,7 +338,7 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
 
     cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 
-    BindCameraData(camera);
+    BindCameraData(scene, camera);
 
     if (skyboxRenderer_)
         skyboxRenderer_->Render(cmdList, camera, scene->GetSkybox());

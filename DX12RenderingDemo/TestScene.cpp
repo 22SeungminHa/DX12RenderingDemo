@@ -81,6 +81,19 @@ CameraDesc TestScene::SetupCameraDesc() const
     return desc;
 }
 
+SceneLightDesc TestScene::SetupLightDesc() const
+{
+    SceneLightDesc desc{};
+
+    desc.direction = { 0.0f, 0.0f, -1.0f };
+    desc.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    desc.ambientColor = { 0.15f, 0.15f, 0.15f, 1.0f };
+    desc.specularPower = 32.0f;
+
+    return desc;
+}
+
 void TestScene::OnProcessInput(
     const InputSystem& input,
     float deltaTime)

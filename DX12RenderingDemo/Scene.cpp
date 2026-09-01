@@ -22,6 +22,8 @@ void Scene::Load(
 	objects_.clear();
 	nextObjectCBIndex_ = 0;
 
+	lightDesc_ = SetupLightDesc();
+
 	CreateCamera();
 
 	OnLoad(device, cmdList, rootSignature, assetManager);
