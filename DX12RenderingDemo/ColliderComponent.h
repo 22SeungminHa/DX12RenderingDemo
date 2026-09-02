@@ -46,6 +46,10 @@ private:
     Vector3 center_ = Vector3::Zero;
 };
 
+class MapColliderComponent : public BoxColliderComponent
+{
+};
+
 class CollisionSystem
 {
 public:

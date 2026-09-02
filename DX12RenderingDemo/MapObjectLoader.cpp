@@ -118,7 +118,7 @@ namespace
 
 bool MapObjectLoader::LoadObstacles(
     const std::filesystem::path& filePath,
-    std::vector<MapObstacleData>& outObstacles)
+    std::vector<CubeData>& outObstacles)
 {
     outObstacles.clear();
 
@@ -126,7 +126,7 @@ bool MapObjectLoader::LoadObstacles(
 
     if (!file.is_open())
     {
-        LOG("Map object file open failed: " << filePath.string());
+        LOG("Obstacle file open failed: " << filePath.string());
         return false;
     }
 
@@ -169,7 +169,7 @@ bool MapObjectLoader::LoadObstacles(
 
         const std::string object = json.substr(objectBegin, objectEnd - objectBegin + 1);
 
-        MapObstacleData obstacle{};
+        CubeData obstacle{};
 
         if (!ExtractString(object, "name", obstacle.name) ||
             !ExtractVector3(object, "position", obstacle.position) ||
@@ -189,7 +189,7 @@ bool MapObjectLoader::LoadObstacles(
     return true;
 }
 
-bool MapObjectLoader::LoadCrystals(const std::filesystem::path& filePath, std::vector<MapCrystalData>& outCrystals)
+bool MapObjectLoader::LoadCrystals(const std::filesystem::path& filePath, std::vector<CrystalData>& outCrystals)
 {
     outCrystals.clear();
 
@@ -197,7 +197,7 @@ bool MapObjectLoader::LoadCrystals(const std::filesystem::path& filePath, std::v
 
     if (!file.is_open())
     {
-        LOG("Map object file open failed: " << filePath.string());
+        LOG("Crystal file open failed: " << filePath.string());
         return false;
     }
 
@@ -240,7 +240,7 @@ bool MapObjectLoader::LoadCrystals(const std::filesystem::path& filePath, std::v
 
         const std::string object = json.substr(objectBegin, objectEnd - objectBegin + 1);
 
-        MapCrystalData crystal{};
+        CrystalData crystal{};
 
         if (!ExtractString(object, "name", crystal.name) ||
             !ExtractVector3(object, "position", crystal.position))
@@ -252,6 +252,90 @@ bool MapObjectLoader::LoadCrystals(const std::filesystem::path& filePath, std::v
         crystal.position = ConvertUnityPosition(crystal.position);
 
         outCrystals.push_back(crystal);
+
+        position = objectEnd + 1;
+    }
+
+    return true;
+}
+
+bool MapObjectLoader::LoadMapCubes(
+    const std::filesystem::path& filePath,
+    std::vector<CubeData>& outCubes)
+{
+    outCubes.clear();
+
+    std::ifstream file(filePath);
+
+    if (!file.is_open())
+    {
+        LOG("Map cube file open failed: " << filePath.string());
+        return false;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+
+    const std::string json = buffer.str();
+
+    const size_t cubesKey = json.find("\"cubes\"");
+
+    if (cubesKey == std::string::npos)
+    {
+        LOG("Cubes array not found");
+        return false;
+    }
+
+    const size_t arrayBegin = json.find('[', cubesKey);
+
+    if (arrayBegin == std::string::npos)
+        return false;
+
+    size_t arrayEnd = std::string::npos;
+
+    if (!FindMatching(json, arrayBegin, '[', ']', arrayEnd))
+        return false;
+
+    size_t position = arrayBegin + 1;
+
+    while (position < arrayEnd)
+    {
+        const size_t objectBegin = json.find('{', position);
+
+        if (objectBegin == std::string::npos ||
+            objectBegin >= arrayEnd)
+        {
+            break;
+        }
+
+        size_t objectEnd = std::string::npos;
+
+        if (!FindMatching(
+            json,
+            objectBegin,
+            '{',
+            '}',
+            objectEnd))
+        {
+            return false;
+        }
+
+        const std::string object =
+            json.substr(
+                objectBegin,
+                objectEnd - objectBegin + 1);
+
+        CubeData cube{};
+
+        if (!ExtractString(object, "name", cube.name) ||
+            !ExtractVector3(object, "position", cube.position) ||
+            !ExtractVector3(object, "scale", cube.scale))
+        {
+            LOG("Invalid map cube data");
+            return false;
+        }
+
+        outCubes.push_back(cube);
 
         position = objectEnd + 1;
     }

@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 
-struct MapObstacleData
+struct CubeData
 {
     std::string name;
 
@@ -9,7 +9,7 @@ struct MapObstacleData
     Vector3 scale = Vector3::One;
 };
 
-struct MapCrystalData
+struct CrystalData
 {
     std::string name;
     Vector3 position = Vector3::Zero;
@@ -20,9 +20,13 @@ class MapObjectLoader
 public:
     static bool LoadObstacles(
         const std::filesystem::path& filePath,
-        std::vector<MapObstacleData>& outObstacles);
+        std::vector<CubeData>& outObstacles);
 
     static bool LoadCrystals(
         const std::filesystem::path& filePath,
-        std::vector<MapCrystalData>& outCrystals);
+        std::vector<CrystalData>& outCrystals);
+
+    static bool LoadMapCubes(
+        const std::filesystem::path& filePath,
+        std::vector<CubeData>& outCubes);
 };

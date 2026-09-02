@@ -36,18 +36,7 @@ void TestScene::OnLoad(
     rimLight->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
     rimLight->SetIntensity(0.13f);
 
-    GameObject* map = CreateFBXObject(
-        device,
-        cmdList,
-        rootSignature,
-        assetManager,
-        AssetPath::FBX(L"Map"),
-        Vector3::Zero,
-        Vector3(0.01f));
-
-    if (!map)
-        LOG("Map.fbx load failed");
-
+    LoadMap(device, cmdList, rootSignature, assetManager);
     LoadObstacles(device, cmdList, rootSignature, assetManager);
     LoadCrystals(device, cmdList, rootSignature, assetManager);
 
@@ -74,13 +63,148 @@ void TestScene::OnLoad(
     }
 }
 
+void TestScene::LoadMap(
+    ID3D12Device* device,
+    ID3D12GraphicsCommandList* cmdList,
+    ID3D12RootSignature* rootSignature,
+    AssetManager& assetManager)
+{
+    GameObject* mapRoot = CreateGameObject();
+
+    if (!mapRoot)
+        return;
+
+    auto visualRoot =
+        std::make_unique<GameObject>();
+
+    visualRoot->SetScale(Vector3(0.01f));
+
+    GameObject* visualRootPtr =
+        visualRoot.get();
+
+    mapRoot->AddChild(
+        std::move(visualRoot));
+
+
+    auto collisionRoot =
+        std::make_unique<GameObject>();
+
+    GameObject* collisionRootPtr =
+        collisionRoot.get();
+
+    mapRoot->AddChild(
+        std::move(collisionRoot));
+
+
+    constexpr UINT mapCount = 7;
+
+    UINT loadedMapCount = 0;
+    UINT loadedColliderCount = 0;
+
+    for (UINT i = 1; i <= mapCount; ++i)
+    {
+        wchar_t mapName[16]{};
+
+        swprintf_s(
+            mapName,
+            L"Map_%02u",
+            i);
+
+
+        // -------------------------
+        // Visual
+        // -------------------------
+
+        auto modelData =
+            FBXLoader::LoadLitModel(
+                device,
+                cmdList,
+                rootSignature,
+                assetManager,
+                AssetPath::FBX(mapName));
+
+        if (modelData)
+        {
+            if (CreateFBXChildObject(
+                visualRootPtr,
+                *modelData))
+            {
+                ++loadedMapCount;
+            }
+        }
+        else
+        {
+            LOG(
+                "Map FBX load failed: "
+                << AssetPath::FBX(mapName).string());
+        }
+
+
+        // -------------------------
+        // Collision
+        // -------------------------
+
+        std::vector<CubeData> cubes;
+
+        if (!MapObjectLoader::LoadMapCubes(
+            AssetPath::Data(mapName),
+            cubes))
+        {
+            LOG(
+                "Map collision data load failed: "
+                << AssetPath::Data(mapName).string());
+
+            continue;
+        }
+
+        for (const CubeData& cube : cubes)
+        {
+            if (cube.scale.x <= 0.0f ||
+                cube.scale.y <= 0.0f ||
+                cube.scale.z <= 0.0f)
+            {
+                LOG(
+                    "Invalid map collider: "
+                    << cube.name);
+
+                continue;
+            }
+
+            auto colliderObject =
+                std::make_unique<GameObject>();
+
+            colliderObject->SetPosition(
+                cube.position);
+
+            auto* collider =
+                colliderObject->AddComponent<MapColliderComponent>();
+
+            collider->SetLocalSize(
+                cube.scale);
+
+            collisionRootPtr->AddChild(
+                std::move(colliderObject));
+
+            ++loadedColliderCount;
+        }
+    }
+
+    LOG(
+        "Map load complete / Maps: "
+        << loadedMapCount
+        << " / Colliders: "
+        << loadedColliderCount);
+}
+
 void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
 {
-    std::vector<MapObstacleData> obstacles;
+    std::vector<CubeData> obstacles;
 
-    if (!MapObjectLoader::LoadObstacles(AssetPath::Data(L"MapObjects"), obstacles))
+    if (!MapObjectLoader::LoadObstacles(
+        AssetPath::Data(L"Obstacles"),
+        obstacles))
     {
-        LOG("MapObjects.json load failed");
+        LOG("Obstacles.json load failed");
         return;
     }
 
@@ -94,7 +218,7 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
     UINT loadedCount = 0;
 
-    for (const MapObstacleData& obstacle : obstacles)
+    for (const CubeData& obstacle : obstacles)
     {
         const float width = obstacle.scale.x;
         const float height = obstacle.scale.y;
@@ -144,11 +268,13 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
 void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
 {
-    std::vector<MapCrystalData> crystals;
+    std::vector<CrystalData> crystals;
 
-    if (!MapObjectLoader::LoadCrystals(AssetPath::Data(L"MapObjects"), crystals))
+    if (!MapObjectLoader::LoadCrystals(
+        AssetPath::Data(L"Crystals"),
+        crystals))
     {
-        LOG("Crystal data load failed");
+        LOG("Crystals.json load failed");
         return;
     }
 
@@ -180,7 +306,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
     UINT loadedCount = 0;
 
-    for (const MapCrystalData& crystal : crystals)
+    for (const CrystalData& crystal : crystals)
     {
         GameObject* crystalObject = CreateObject(crystalMesh, crystalMaterial, crystal.position, Vector3(0.013f));
 
@@ -342,6 +468,8 @@ void TestScene::CheckProjectileCollisions()
         {
             if (!boxCollider.IsEnabled())
                 return;
+            if (projectileObject->IsPendingDestroy())
+                return;
 
             float hitT = 0.0f;
             Vector3 hitCenter = Vector3::Zero;
@@ -393,6 +521,17 @@ void TestScene::CheckProjectileCollisions()
                     boxCollider.SetEnabled(false);
                     LOG("Projectile hit crystal");
                 }
+
+                return;
+            }
+
+            if (target->GetComponent<MapColliderComponent>())
+            {
+                sphereCollider->SetEnabled(false);
+
+                DestroyGameObject(projectileObject);
+
+                LOG("Projectile hit map");
 
                 return;
             }
