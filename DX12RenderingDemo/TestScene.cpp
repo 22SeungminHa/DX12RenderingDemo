@@ -12,6 +12,7 @@
 #include "MapObjectLoader.h"
 #include "CrystalGlassComponent.h"
 #include "ColliderComponent.h"
+#include "ProjectileComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -48,6 +49,26 @@ void TestScene::OnLoad(
 
     LoadObstacles(device, cmdList, rootSignature, assetManager);
     LoadCrystals(device, cmdList, rootSignature, assetManager);
+
+    projectileMesh_ =
+        assetManager.LoadSphereMesh(
+            device,
+            cmdList
+        );
+
+    projectileMaterial_ =
+        assetManager.LoadMaterialFromFile(
+            device,
+            cmdList,
+            rootSignature,
+            AssetPath::Material(L"Default_Marble")
+        );
+
+    if (!projectileMesh_)
+        LOG("Projectile sphere mesh load failed");
+
+    if (!projectileMaterial_)
+        LOG("Projectile material load failed");
 
     SetSkybox();
 }
@@ -267,6 +288,19 @@ void TestScene::OnProcessInput(
             LOG("desc.target = { " << target.x << "f, " << target.y << "f, " << target.z << "f };");
         }
     }
+
+    if (input.WasLeftMousePressed())
+    {
+        const POINT mousePosition =
+            input.GetMousePosition();
+
+        FireProjectile(
+            Vector2(
+                static_cast<float>(mousePosition.x),
+                static_cast<float>(mousePosition.y)
+            )
+        );
+    }
 }
 
 void TestScene::OnPrepareRenderResources(
@@ -284,4 +318,52 @@ void TestScene::OnPrepareRenderResources(
                 transientUploadResources
             );
         });
+}
+
+void TestScene::FireProjectile(
+    const Vector2& screenPosition)
+{
+    if (!projectileMesh_ || !projectileMaterial_)
+        return;
+
+    Camera* camera = GetActiveCamera();
+
+    if (!camera)
+        return;
+
+    constexpr float projectileRadius = 0.4f;
+    constexpr float spawnDistance = 1.5f;
+    constexpr float launchSpeed = 25.0f;
+
+    const Vector3 direction =
+        camera->ScreenPointToWorldDirection(
+            screenPosition
+        );
+
+    const Vector3 spawnPosition =
+        camera->GetPosition() +
+        direction * spawnDistance;
+
+    GameObject* projectile =
+        CreateObject(
+            projectileMesh_,
+            projectileMaterial_,
+            spawnPosition,
+            Vector3(projectileRadius)
+        );
+
+    if (!projectile)
+        return;
+
+    auto* projectileComponent =
+        projectile->AddComponent<ProjectileComponent>();
+
+    projectileComponent->Initialize(
+        direction * launchSpeed
+    );
+
+    auto* collider =
+        projectile->AddComponent<SphereColliderComponent>();
+
+    collider->SetLocalRadius(1.0f);
 }

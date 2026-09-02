@@ -133,3 +133,47 @@ void Camera::Resize(UINT width, UINT height)
     SetScissorRect(0, 0, width, height);
     SetProjection(desc_.nearZ, desc_.farZ, aspect, desc_.fovY);
 }
+
+Vector3 Camera::ScreenPointToWorldDirection(
+    const Vector2& screenPosition) const
+{
+    const XMVECTOR screenPoint =
+        XMVectorSet(
+            screenPosition.x,
+            screenPosition.y,
+            1.0f,
+            1.0f
+        );
+
+    const XMVECTOR worldPointVector =
+        XMVector3Unproject(
+            screenPoint,
+            viewport_.TopLeftX,
+            viewport_.TopLeftY,
+            viewport_.Width,
+            viewport_.Height,
+            viewport_.MinDepth,
+            viewport_.MaxDepth,
+            XMLoadFloat4x4(&projection_),
+            XMLoadFloat4x4(&view_),
+            XMMatrixIdentity()
+        );
+
+    XMFLOAT3 point{};
+    XMStoreFloat3(&point, worldPointVector);
+
+    Vector3 worldPoint(
+        point.x,
+        point.y,
+        point.z
+    );
+
+    Vector3 direction = worldPoint - position_;
+
+    if (direction.LengthSquared() > 0.000001f)
+        direction.Normalize();
+    else
+        direction = GetForward();
+
+    return direction;
+}

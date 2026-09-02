@@ -41,6 +41,8 @@ public:
     void Initialize(UINT width, UINT height);
     void Resize(UINT width, UINT height);
 
+    Vector3 ScreenPointToWorldDirection(const Vector2& screenPosition) const;
+
 protected:
     void UpdateViewMatrix();
 

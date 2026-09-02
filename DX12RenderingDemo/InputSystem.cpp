@@ -15,6 +15,9 @@ void InputSystem::Update()
     mouseDelta_.x = mousePosition_.x - previousMousePosition_.x;
     mouseDelta_.y = mousePosition_.y - previousMousePosition_.y;
     previousMousePosition_ = mousePosition_;
+
+    leftMousePressedThisFrame_ = leftMousePressedPending_;
+    leftMousePressedPending_ = false;
 }
 
 void InputSystem::HandleMouseMessage(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -25,6 +28,9 @@ void InputSystem::HandleMouseMessage(UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_LBUTTONDOWN:
+        if (!leftMouseDown_)
+            leftMousePressedPending_ = true;
+
         leftMouseDown_ = true;
         break;
     case WM_LBUTTONUP:

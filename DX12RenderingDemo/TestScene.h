@@ -2,6 +2,8 @@
 #include "Scene.h"
 
 class AssetManager;
+class Mesh;
+class Material;
 
 class TestScene : public Scene {
 public:
@@ -40,4 +42,11 @@ private:
         ID3D12GraphicsCommandList* cmdList,
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager);
+
+    void FireProjectile(
+        const Vector2& screenPosition
+    );
+
+    std::shared_ptr<Mesh> projectileMesh_;
+    std::shared_ptr<Material> projectileMaterial_;
 };

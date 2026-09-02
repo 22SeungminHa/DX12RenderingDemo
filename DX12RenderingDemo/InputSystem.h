@@ -20,6 +20,7 @@ public:
 
     bool IsLeftMouseDown() const { return leftMouseDown_; }
     bool IsRightMouseDown() const { return rightMouseDown_; }
+    bool WasLeftMousePressed() const { return leftMousePressedThisFrame_; }
 
     POINT GetMousePosition() const { return mousePosition_; }
     POINT GetMouseDelta() const { return mouseDelta_; }
@@ -36,4 +37,7 @@ private:
     POINT mousePosition_{};
     POINT previousMousePosition_{};
     POINT mouseDelta_{};
+
+    bool leftMousePressedPending_ = false;
+    bool leftMousePressedThisFrame_ = false;
 };

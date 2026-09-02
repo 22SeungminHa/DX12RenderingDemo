@@ -169,6 +169,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="PostProcessRenderer.h" />
+    <ClInclude Include="ProjectileComponent.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderQueueBuilder.h" />
     <ClInclude Include="RenderTexture.h" />
@@ -221,6 +222,7 @@
     <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="PostProcessRenderer.cpp" />
     <ClCompile Include="PostProcessShader.cpp" />
+    <ClCompile Include="ProjectileComponent.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderQueueBuilder.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
