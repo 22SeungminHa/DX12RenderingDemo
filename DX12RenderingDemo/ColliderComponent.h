@@ -60,4 +60,11 @@ public:
     static bool Intersects(
         const BoxColliderComponent& lhs,
         const BoxColliderComponent& rhs);
+
+    static bool SweepIntersects(
+        const Vector3& startCenter,
+        const SphereColliderComponent& sphere,
+        const BoxColliderComponent& box,
+        float& outHitT,
+        Vector3& outHitCenter);
 };

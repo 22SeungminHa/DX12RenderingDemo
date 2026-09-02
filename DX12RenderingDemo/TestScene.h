@@ -20,6 +20,8 @@ public:
     virtual CameraDesc SetupCameraDesc() const override;
     virtual SceneLightDesc SetupLightDesc() const override;
 
+    virtual void Animate(float deltaTime) override;
+
 protected:
     virtual void OnProcessInput(
         const InputSystem& input,
@@ -43,9 +45,9 @@ private:
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager);
 
-    void FireProjectile(
-        const Vector2& screenPosition
-    );
+    void FireProjectile(const Vector2& screenPosition);
+
+    void CheckProjectileCollisions();
 
     std::shared_ptr<Mesh> projectileMesh_;
     std::shared_ptr<Material> projectileMaterial_;

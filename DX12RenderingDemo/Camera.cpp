@@ -134,16 +134,9 @@ void Camera::Resize(UINT width, UINT height)
     SetProjection(desc_.nearZ, desc_.farZ, aspect, desc_.fovY);
 }
 
-Vector3 Camera::ScreenPointToWorldDirection(
-    const Vector2& screenPosition) const
+Vector3 Camera::ScreenPointToWorldDirection(const Vector2& screenPosition) const
 {
-    const XMVECTOR screenPoint =
-        XMVectorSet(
-            screenPosition.x,
-            screenPosition.y,
-            1.0f,
-            1.0f
-        );
+    const XMVECTOR screenPoint = XMVectorSet(screenPosition.x, screenPosition.y, 1.0f, 1.0f);
 
     const XMVECTOR worldPointVector =
         XMVector3Unproject(
@@ -162,11 +155,7 @@ Vector3 Camera::ScreenPointToWorldDirection(
     XMFLOAT3 point{};
     XMStoreFloat3(&point, worldPointVector);
 
-    Vector3 worldPoint(
-        point.x,
-        point.y,
-        point.z
-    );
+    Vector3 worldPoint(point.x, point.y, point.z);
 
     Vector3 direction = worldPoint - position_;
 

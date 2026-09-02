@@ -58,12 +58,10 @@ bool InputSystem::IsKeyDown(int vk) const
 
 bool InputSystem::WasKeyPressed(int vk) const
 {
-    return ((currentKeys_[vk] & 0x80) != 0) &&
-        ((previousKeys_[vk] & 0x80) == 0);
+    return ((currentKeys_[vk] & 0x80) != 0) && ((previousKeys_[vk] & 0x80) == 0);
 }
 
 bool InputSystem::WasKeyReleased(int vk) const
 {
-    return ((currentKeys_[vk] & 0x80) == 0) &&
-        ((previousKeys_[vk] & 0x80) != 0);
+    return ((currentKeys_[vk] & 0x80) == 0) && ((previousKeys_[vk] & 0x80) != 0);
 }

@@ -303,6 +303,13 @@ void TestScene::OnProcessInput(
     }
 }
 
+void TestScene::Animate(float deltaTime)
+{
+    Scene::Animate(deltaTime);
+
+    CheckProjectileCollisions();
+}
+
 void TestScene::OnPrepareRenderResources(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
@@ -366,4 +373,81 @@ void TestScene::FireProjectile(
         projectile->AddComponent<SphereColliderComponent>();
 
     collider->SetLocalRadius(1.0f);
+}
+
+void TestScene::CheckProjectileCollisions()
+{
+    ForEachComponent<ProjectileComponent>([&](ProjectileComponent& projectile)
+    {
+        GameObject* projectileObject = projectile.GetOwner();
+
+        if (!projectileObject)
+            return;
+
+        auto* sphereCollider = projectileObject->GetComponent<SphereColliderComponent>();
+
+        if (!sphereCollider || !sphereCollider->IsEnabled())
+            return;
+
+        ForEachComponent<BoxColliderComponent>([&](BoxColliderComponent& boxCollider)
+        {
+            if (!boxCollider.IsEnabled())
+                return;
+
+            float hitT = 0.0f;
+            Vector3 hitCenter = Vector3::Zero;
+
+            if (!CollisionSystem::SweepIntersects(
+                projectile.GetPreviousPosition(),
+                *sphereCollider,
+                boxCollider,
+                hitT,
+                hitCenter))
+            {
+                return;
+            }
+
+            GameObject* target = boxCollider.GetOwner();
+
+            if (!target)
+                return;
+
+            if (auto* glass = target->GetComponent<GlassComponent>())
+            {
+                const Vector3 worldImpactPoint = hitCenter;
+                const Matrix inverseWorld = target->GetWorldMatrix().Invert();
+                const Vector3 localImpactPoint = Vector3::Transform(worldImpactPoint, inverseWorld );
+                const Vector3 localSize = boxCollider.GetLocalSize();
+                const Vector2 impactPoint(
+                    std::clamp(localImpactPoint.x, -localSize.x * 0.5f, localSize.x * 0.5f),
+                    std::clamp(localImpactPoint.y, -localSize.y * 0.5f, localSize.y * 0.5f)
+                );
+
+                if (glass->Break(impactPoint))
+                {
+                    boxCollider.SetEnabled(false);
+
+                    LOG(
+                        "Projectile hit obstacle glass / Impact: ("
+                        << impactPoint.x << ", "
+                        << impactPoint.y << ")"
+                    );
+                }
+
+                return;
+            }
+
+            if (auto* crystal = target->GetComponent<CrystalGlassComponent>())
+            {
+                if (crystal->Break(*this))
+                {
+                    boxCollider.SetEnabled(false);
+
+                    LOG("Projectile hit crystal");
+                }
+
+                return;
+            }
+        });
+    });
 }
