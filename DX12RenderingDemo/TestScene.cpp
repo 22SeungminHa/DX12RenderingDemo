@@ -11,7 +11,7 @@
 #include "Camera.h"
 #include "MapObjectLoader.h"
 #include "CrystalGlassComponent.h"
-#include "BoxColliderComponent.h"
+#include "ColliderComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -108,7 +108,7 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
 
         auto* collider = glassObject->AddComponent<BoxColliderComponent>();
 
-        collider->SetSize(Vector3(width, height, depth));
+        collider->SetLocalSize(Vector3(width, height, depth));
 
         ++loadedCount;
 

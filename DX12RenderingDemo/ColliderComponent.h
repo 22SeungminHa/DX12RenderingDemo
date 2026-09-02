@@ -12,3 +12,52 @@ public:
 private:
     bool enabled_ = true;
 };
+
+class BoxColliderComponent : public ColliderComponent
+{
+public:
+    void SetLocalSize(const Vector3& size);
+    void SetLocalCenter(const Vector3& center) { center_ = center; }
+
+    const Vector3& GetLocalSize() const { return size_; }
+    const Vector3& GetLocalCenter() const { return center_; }
+
+    void SetLocalBounds(const BoundingBox& bounds);
+    BoundingBox GetWorldBounds() const;
+
+private:
+    Vector3 size_ = Vector3::One;
+    Vector3 center_ = Vector3::Zero;
+};
+
+class SphereColliderComponent : public ColliderComponent
+{
+public:
+    void SetLocalRadius(float radius);
+    void SetLocalCenter(const Vector3& center) { center_ = center; }
+
+    float GetLocalRadius() const { return radius_; }
+    const Vector3& GetLocalCenter() const { return center_; }
+
+    BoundingSphere GetWorldBounds() const;
+
+private:
+    float radius_ = 1.0f;
+    Vector3 center_ = Vector3::Zero;
+};
+
+class CollisionSystem
+{
+public:
+    static bool Intersects(
+        const SphereColliderComponent& sphere,
+        const BoxColliderComponent& box);
+
+    static bool Intersects(
+        const SphereColliderComponent& lhs,
+        const SphereColliderComponent& rhs);
+
+    static bool Intersects(
+        const BoxColliderComponent& lhs,
+        const BoxColliderComponent& rhs);
+};
