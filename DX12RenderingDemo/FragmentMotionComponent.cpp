@@ -13,19 +13,10 @@ void FragmentMotionComponent::Update(float deltaTime)
 
     velocity_ += gravity_ * deltaTime;
 
-    owner->TranslateWorld(
-        velocity_ * deltaTime
-    );
+    owner->TranslateWorld(velocity_ * deltaTime);
 
-    const Vector3 rotationStep =
-        angularVelocity_ * deltaTime;
-
-    const Quaternion deltaRotation =
-        Quaternion::CreateFromYawPitchRoll(
-            rotationStep.y,
-            rotationStep.x,
-            rotationStep.z
-        );
+    const Vector3 rotationStep = angularVelocity_ * deltaTime;
+    const Quaternion deltaRotation = Quaternion::CreateFromYawPitchRoll(rotationStep.y, rotationStep.x, rotationStep.z);
 
     owner->Rotate(deltaRotation);
 }

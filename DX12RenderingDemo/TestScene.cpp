@@ -76,6 +76,7 @@ void TestScene::LoadMap(
     GameObject* mapRoot = CreateGameObject();
     if (!mapRoot)
         return;
+
     mapRoot->SetScale(Vector3(0.01f));
 
     constexpr UINT mapCount = 7;
@@ -169,20 +170,7 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
         obstacleObject->Initialize(glassMesh, obstacleMaterial, obstacle.position, width, height, depth);
 
         ++loadedCount;
-
-        LOG(
-            obstacle.name
-            << " / Position: ("
-            << obstacle.position.x << ", "
-            << obstacle.position.y << ", "
-            << obstacle.position.z << ") / Size: ("
-            << width << ", "
-            << height << ", "
-            << depth << ")"
-        );
     }
-
-    LOG("Obstacle load complete: " << loadedCount);
 }
 
 void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
@@ -227,11 +215,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
         crystalObject->Initialize(crystalMesh, crystalMaterial, crashedCrystalModel, crystal.position, Vector3(0.013f));
 
         ++loadedCount;
-
-        LOG(crystal.name << " / Position: (" << crystal.position.x << ", " << crystal.position.y << ", " << crystal.position.z << ")");
     }
-
-    LOG("Crystal load complete: " << loadedCount);
 }
 
 CameraDesc TestScene::SetupCameraDesc() const
@@ -349,6 +333,7 @@ void TestScene::FireProjectile(const Vector2& screenPosition)
     ProjectileObject* projectile = CreateGameObject<ProjectileObject>();
     if (!projectile)
         return;
+
     projectile->Initialize(projectileMesh_, projectileMaterial_, spawnPosition, projectileRadius, direction * launchSpeed);
 }
 
@@ -356,20 +341,15 @@ void TestScene::CheckProjectileCollisions()
 {
     ForEachObject(ObjectType::Projectile, [&](GameObject& object)
         {
-            auto& projectile =
-                static_cast<ProjectileObject&>(object);
+            auto& projectile = static_cast<ProjectileObject&>(object);
 
             if (projectile.IsPendingDestroy())
                 return;
 
-            SphereColliderComponent* sphereCollider =
-                projectile.GetCollider();
+            SphereColliderComponent* sphereCollider = projectile.GetCollider();
 
-            if (!sphereCollider ||
-                !sphereCollider->IsEnabled())
-            {
+            if (!sphereCollider || !sphereCollider->IsEnabled())
                 return;
-            }
 
             struct ClosestHit
             {
@@ -390,15 +370,9 @@ void TestScene::CheckProjectileCollisions()
                     if (!boxCollider.IsEnabled())
                         return;
 
-                    GameObject* target =
-                        boxCollider.GetOwner();
-
-                    if (!target ||
-                        target == &projectile ||
-                        target->IsPendingDestroy())
-                    {
+                    GameObject* target = boxCollider.GetOwner();
+                    if (!target || target == &projectile || target->IsPendingDestroy())
                         return;
-                    }
 
                     float hitT = 0.0f;
                     Vector3 hitCenter = Vector3::Zero;
@@ -415,85 +389,44 @@ void TestScene::CheckProjectileCollisions()
                         return;
                     }
 
-                    if (hasHit &&
-                        hitT >= closestHit.hitT)
-                    {
+                    if (hasHit && hitT >= closestHit.hitT)
                         return;
-                    }
 
                     hasHit = true;
 
-                    closestHit.collider =
-                        &boxCollider;
-
-                    closestHit.target =
-                        target;
-
-                    closestHit.hitT =
-                        hitT;
-
-                    closestHit.hitCenter =
-                        hitCenter;
-
-                    closestHit.hitNormal =
-                        hitNormal;
+                    closestHit.collider = &boxCollider;
+                    closestHit.target = target;
+                    closestHit.hitT = hitT;
+                    closestHit.hitCenter = hitCenter;
+                    closestHit.hitNormal = hitNormal;
                 });
 
-            if (!hasHit ||
-                !closestHit.collider ||
-                !closestHit.target)
-            {
+            if (!hasHit || !closestHit.collider || !closestHit.target)
                 return;
-            }
 
             CollisionEvent projectileEvent{};
-
             projectileEvent.scene = this;
             projectileEvent.self = &projectile;
             projectileEvent.other = closestHit.target;
+            projectileEvent.selfCollider = sphereCollider;
+            projectileEvent.otherCollider = closestHit.collider;
+            projectileEvent.hitT = closestHit.hitT;
+            projectileEvent.hitPoint = closestHit.hitCenter;
+            projectileEvent.hitNormal = closestHit.hitNormal;
 
-            projectileEvent.selfCollider =
-                sphereCollider;
-
-            projectileEvent.otherCollider =
-                closestHit.collider;
-
-            projectileEvent.hitT =
-                closestHit.hitT;
-
-            projectileEvent.hitPoint =
-                closestHit.hitCenter;
-
-            projectileEvent.hitNormal =
-                closestHit.hitNormal;
-
-            projectile.OnCollision(
-                projectileEvent);
-
+            projectile.OnCollision(projectileEvent);
 
             CollisionEvent targetEvent{};
-
             targetEvent.scene = this;
             targetEvent.self = closestHit.target;
             targetEvent.other = &projectile;
+            targetEvent.selfCollider = closestHit.collider;
+            targetEvent.otherCollider = sphereCollider;
+            targetEvent.hitT = closestHit.hitT;
+            targetEvent.hitPoint = closestHit.hitCenter;
+            targetEvent.hitNormal = -closestHit.hitNormal;
 
-            targetEvent.selfCollider =
-                closestHit.collider;
-
-            targetEvent.otherCollider =
-                sphereCollider;
-
-            targetEvent.hitT =
-                closestHit.hitT;
-
-            targetEvent.hitPoint =
-                closestHit.hitCenter;
-
-            targetEvent.hitNormal =
-                -closestHit.hitNormal;
-
-            closestHit.target->OnCollision(
-                targetEvent);
+            closestHit.target->OnCollision(targetEvent);
         });
 }
 

@@ -56,7 +56,6 @@ void ProjectileObject::OnCollision(const CollisionEvent& event)
     {
     case ObjectType::Map:
         Bounce(event.hitPoint, event.hitNormal);
-        LOG("Projectile bounced on map");
         break;
 
     case ObjectType::Obstacle:

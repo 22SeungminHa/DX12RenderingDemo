@@ -68,3 +68,12 @@ private:
     bool breakRequested_ = false;
     bool isBroken_ = false;
 };
+
+class StaticGlassFragmentComponent : public Component
+{
+public:
+    void OnCollision(const CollisionEvent& event) override;
+
+private:
+    bool detached_ = false;
+};

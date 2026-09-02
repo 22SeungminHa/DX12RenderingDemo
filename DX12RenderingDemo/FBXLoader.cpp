@@ -112,8 +112,6 @@ std::vector<std::shared_ptr<Material>> FBXLoader::LoadMaterialsFromMatFiles(
             LOG("Material load failed: " << matPath.string());
 
         materials.push_back(material);
-
-        LOG("Loaded Material[" << i << "]: " << materialName);
     }
 
     return materials;
@@ -185,11 +183,7 @@ std::shared_ptr<Mesh> FBXLoader::LoadLitMeshFromFile(
 
     if (!scene || scene->mNumMeshes == 0)
     {
-        LOG("Mesh Load Failed: "
-            << filePath.string()
-            << " / "
-            << importer.GetErrorString());
-
+        LOG("Mesh Load Failed: " << filePath.string() << " / " << importer.GetErrorString());
         return nullptr;
     }
 

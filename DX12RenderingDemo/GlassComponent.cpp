@@ -11,156 +11,36 @@
 
 namespace
 {
-    BoundingBox CalculateFragmentBounds(
-        const GlassFragmentGeometry& geometry)
+    BoundingBox CalculateFragmentBounds(const GlassFragmentGeometry& geometry)
     {
         BoundingBox bounds{};
-
         if (geometry.vertices.empty())
             return bounds;
 
-        Vector3 minPosition =
-            geometry.vertices[0].GetPosition();
-
+        Vector3 minPosition = geometry.vertices[0].GetPosition();
         Vector3 maxPosition = minPosition;
 
         for (const LitVertex& vertex : geometry.vertices)
         {
-            const Vector3& position =
-                vertex.GetPosition();
+            const Vector3& position = vertex.GetPosition();
 
-            minPosition.x =
-                std::min(minPosition.x, position.x);
-            minPosition.y =
-                std::min(minPosition.y, position.y);
-            minPosition.z =
-                std::min(minPosition.z, position.z);
+            minPosition.x = std::min(minPosition.x, position.x);
+            minPosition.y = std::min(minPosition.y, position.y);
+            minPosition.z = std::min(minPosition.z, position.z);
 
-            maxPosition.x =
-                std::max(maxPosition.x, position.x);
-            maxPosition.y =
-                std::max(maxPosition.y, position.y);
-            maxPosition.z =
-                std::max(maxPosition.z, position.z);
+            maxPosition.x = std::max(maxPosition.x, position.x);
+            maxPosition.y = std::max(maxPosition.y, position.y);
+            maxPosition.z = std::max(maxPosition.z, position.z);
         }
 
-        const Vector3 center =
-            (minPosition + maxPosition) * 0.5f;
+        const Vector3 center = (minPosition + maxPosition) * 0.5f;
+        const Vector3 extents = (maxPosition - minPosition) * 0.5f;
 
-        const Vector3 extents =
-            (maxPosition - minPosition) * 0.5f;
-
-        bounds.Center =
-        {
-            center.x,
-            center.y,
-            center.z
-        };
-
-        bounds.Extents =
-        {
-            extents.x,
-            extents.y,
-            extents.z
-        };
+        bounds.Center = { center.x, center.y, center.z };
+        bounds.Extents = { extents.x, extents.y, extents.z };
 
         return bounds;
     }
-
-    class StaticGlassFragmentComponent
-        : public Component
-    {
-    public:
-        void OnCollision(
-            const CollisionEvent& event) override
-        {
-            if (detached_ ||
-                !owner_ ||
-                !event.other ||
-                event.other->GetObjectType() !=
-                ObjectType::Projectile)
-            {
-                return;
-            }
-
-            auto* projectile =
-                dynamic_cast<ProjectileObject*>(
-                    event.other);
-
-            auto* motion =
-                owner_->GetComponent<
-                FragmentMotionComponent>();
-
-            auto* collider =
-                dynamic_cast<BoxColliderComponent*>(
-                    event.selfCollider);
-
-            if (!projectile ||
-                !motion ||
-                !collider)
-            {
-                return;
-            }
-
-            Vector3 direction =
-                owner_->GetWorldPosition() -
-                projectile->GetWorldPosition();
-
-            // 기존 참고 코드처럼
-            // 약간 카메라 쪽/깊이 방향으로 떨어져 나오게 한다.
-            direction.z -= 0.5f;
-
-            if (direction.LengthSquared() >
-                0.000001f)
-            {
-                direction.Normalize();
-            }
-            else
-            {
-                direction =
-                    Vector3(0.0f, 0.0f, -1.0f);
-            }
-
-            static std::mt19937 randomEngine{
-                std::random_device{}()
-            };
-
-            std::uniform_real_distribution<float>
-                speedScale(0.5f, 0.8f);
-
-            std::uniform_real_distribution<float>
-                angularVelocity(-2.0f, 2.0f);
-
-            const float projectileSpeed =
-                projectile->GetVelocity().Length();
-
-            const float fragmentSpeed =
-                projectileSpeed /
-                30.0f *
-                speedScale(randomEngine);
-
-            motion->SetVelocity(
-                direction * fragmentSpeed
-            );
-
-            motion->SetAngularVelocity(
-                Vector3(
-                    angularVelocity(randomEngine),
-                    angularVelocity(randomEngine),
-                    angularVelocity(randomEngine)
-                )
-            );
-
-            motion->SetActive(true);
-
-            collider->SetEnabled(false);
-
-            detached_ = true;
-        }
-
-    private:
-        bool detached_ = false;
-    };
 }
 
 void GlassComponent::Initialize(const std::shared_ptr<Material>& material, float width, float height, float depth)
@@ -185,8 +65,6 @@ bool GlassComponent::Break(const Vector2& impactPoint, UINT randomRayCount, UINT
     if (!GeneratePendingFragments(impactPoint, randomRayCount, ringCount))
         return false;
 
-    LOG("Glass fracture generated: " << pendingFragments_.size());
-
     breakRequested_ = true;
 
     return true;
@@ -207,14 +85,9 @@ bool GlassComponent::GeneratePendingFragments(const Vector2& impactPoint, UINT r
 
     static std::mt19937 randomEngine{ std::random_device{}() };
 
-    std::uniform_real_distribution<float>
-        speedScaleDistribution(0.4f, 0.65f);
-
-    std::uniform_real_distribution<float>
-        angularVelocityDistribution(-2.5f, 2.5f);
-
-    std::uniform_real_distribution<float>
-        depthImpulseDistribution(0.1f, 0.25f);
+    std::uniform_real_distribution<float> speedScaleDistribution(0.4f, 0.65f);
+    std::uniform_real_distribution<float> angularVelocityDistribution(-2.5f, 2.5f);
+    std::uniform_real_distribution<float> depthImpulseDistribution(0.1f, 0.25f);
 
     constexpr float baseFragmentSpeed = 5.0f;
     const float moveRadius = std::min(width_, height_) * 0.25f;
@@ -340,35 +213,20 @@ bool GlassComponent::CommitPendingFragments(
         GameObject* fragmentObject = scene.CreateChildObject(owner_, fragmentMesh, material_, fragment.geometry.localPosition);
         if (!fragmentObject)
             continue;
+
         fragmentObject->SetObjectType(ObjectType::GlassFragment);
 
-        auto* fragmentComponent =
-            fragmentObject->AddComponent<
-            FragmentMotionComponent>();
-
-        fragmentComponent->SetVelocity(
-            fragment.velocity
-        );
-
-        fragmentComponent->SetAngularVelocity(
-            fragment.angularVelocity
-        );
+        auto* fragmentComponent = fragmentObject->AddComponent<FragmentMotionComponent>();
+        fragmentComponent->SetVelocity(fragment.velocity);
+        fragmentComponent->SetAngularVelocity(fragment.angularVelocity);
 
         if (!fragment.shouldMove)
         {
             fragmentComponent->SetActive(false);
 
-            auto* fragmentCollider =
-                fragmentObject->AddComponent<
-                BoxColliderComponent>();
-
-            fragmentCollider->SetLocalBounds(
-                CalculateFragmentBounds(
-                    fragment.geometry)
-            );
-
-            fragmentObject->AddComponent<
-                StaticGlassFragmentComponent>();
+            auto* fragmentCollider = fragmentObject->AddComponent<BoxColliderComponent>();
+            fragmentCollider->SetLocalBounds(CalculateFragmentBounds(fragment.geometry));
+            fragmentObject->AddComponent<StaticGlassFragmentComponent>();
         }
 
         ++createdFragmentCount;
@@ -403,4 +261,41 @@ void GlassComponent::OnCollision(const CollisionEvent& event)
         << impactPoint.x << ", "
         << impactPoint.y << ")"
     );
+}
+
+void StaticGlassFragmentComponent::OnCollision(const CollisionEvent& event)
+{
+    if (detached_ || !owner_ || !event.other || event.other->GetObjectType() != ObjectType::Projectile)
+        return;
+
+    auto* projectile = dynamic_cast<ProjectileObject*>(event.other);
+    auto* motion = owner_->GetComponent<FragmentMotionComponent>();
+    auto* collider = dynamic_cast<BoxColliderComponent*>(event.selfCollider);
+
+    if (!projectile || !motion || !collider)
+        return;
+
+    Vector3 direction = owner_->GetWorldPosition() - projectile->GetWorldPosition();
+    direction.z -= 0.5f;
+
+    if (direction.LengthSquared() > 0.000001f)
+        direction.Normalize();
+    else
+        direction = Vector3(0.0f, 0.0f, -1.0f);
+
+    static std::mt19937 randomEngine{ std::random_device{}() };
+
+    std::uniform_real_distribution<float> speedScale(0.5f, 0.8f);
+    std::uniform_real_distribution<float> angularVelocity(-2.0f, 2.0f);
+
+    const float projectileSpeed = projectile->GetVelocity().Length();
+    const float fragmentSpeed = projectileSpeed / 30.0f * speedScale(randomEngine);
+
+    motion->SetVelocity(direction * fragmentSpeed);
+    motion->SetAngularVelocity(Vector3(angularVelocity(randomEngine), angularVelocity(randomEngine), angularVelocity(randomEngine)));
+    motion->SetActive(true);
+
+    collider->SetEnabled(false);
+
+    detached_ = true;
 }

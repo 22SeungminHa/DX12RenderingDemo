@@ -45,13 +45,7 @@ bool CrystalObject::Break(Scene& scene, const Vector3& impactPoint)
         return false;
 
     std::vector<GameObject*> pieces;
-    GameObject* crashedRoot = scene.CreateFBXChildObject(
-        this,
-        *crashedModel_,
-        material_,
-        &pieces,
-        true
-    );
+    GameObject* crashedRoot = scene.CreateFBXChildObject(this, *crashedModel_, material_, &pieces, true);
 
     if (!crashedRoot || pieces.empty())
         return false;
@@ -60,19 +54,19 @@ bool CrystalObject::Break(Scene& scene, const Vector3& impactPoint)
 
     static std::mt19937 randomEngine{ std::random_device{}() };
 
-    std::uniform_real_distribution<float>
-        horizontalVelocity(-2.5f, 2.5f);
+    std::uniform_int_distribution<int> quarterTurnDistribution(0, 1);
 
-    std::uniform_real_distribution<float>
-        verticalVelocity(1.5f, 4.0f);
-
-    std::uniform_real_distribution<float>
-        angularVelocity(-3.0f, 3.0f);
+    std::uniform_real_distribution<float> horizontalVelocity(-2.5f, 2.5f);
+    std::uniform_real_distribution<float> verticalVelocity(1.5f, 4.0f);
+    std::uniform_real_distribution<float> angularVelocity(-3.0f, 3.0f);
 
     std::bernoulli_distribution remainRandom(0.5);
 
-    const float alwaysRemainOffset = 0.65f;
-    const float randomRemainOffset = 0.4f;
+    const int quarterTurn = quarterTurnDistribution(randomEngine);
+    crashedRoot->Rotate(Vector3::Up, static_cast<float>(quarterTurn * 180));
+
+    const float alwaysRemainOffset = 0.7f;
+    const float randomRemainOffset = 0.0f;
 
     for (GameObject* piece : pieces)
     {
@@ -86,15 +80,9 @@ bool CrystalObject::Break(Scene& scene, const Vector3& impactPoint)
         bool remain = false;
 
         if (pieceY < impactPoint.y - alwaysRemainOffset)
-        {
-            // 충돌점보다 충분히 아래쪽 조각은 항상 남긴다.
             remain = true;
-        }
         else if (pieceY < impactPoint.y - randomRemainOffset)
-        {
-            // 경계 영역의 조각은 50% 확률로 남긴다.
             remain = remainRandom(randomEngine);
-        }
 
         if (remain)
             continue;
@@ -122,6 +110,4 @@ void CrystalObject::OnCollision(const CollisionEvent& event)
 
     if (collider_)
         collider_->SetEnabled(false);
-
-    LOG("Projectile hit crystal");
 }
