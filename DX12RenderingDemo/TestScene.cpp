@@ -325,7 +325,7 @@ void TestScene::FireProjectile(const Vector2& screenPosition)
 
     constexpr float projectileRadius = 0.4f;
     constexpr float spawnDistance = 1.5f;
-    constexpr float launchSpeed = 25.0f;
+    constexpr float launchSpeed = 40.0f;
 
     const Vector3 direction = camera->ScreenPointToWorldDirection(screenPosition);
     const Vector3 spawnPosition = camera->GetPosition() + direction * spawnDistance;
@@ -339,53 +339,146 @@ void TestScene::FireProjectile(const Vector2& screenPosition)
 void TestScene::CheckProjectileCollisions()
 {
     ForEachObject(ObjectType::Projectile, [&](GameObject& object)
-    {
-        auto& projectile = static_cast<ProjectileObject&>(object);
-        if (projectile.IsPendingDestroy())
-            return;
-
-        SphereColliderComponent* sphereCollider = projectile.GetCollider();
-        if (!sphereCollider || !sphereCollider->IsEnabled())
-            return;
-
-        ForEachComponent<BoxColliderComponent>([&](BoxColliderComponent& boxCollider)
         {
-            if (!boxCollider.IsEnabled() || projectile.IsPendingDestroy())
+            auto& projectile =
+                static_cast<ProjectileObject&>(object);
+
+            if (projectile.IsPendingDestroy())
                 return;
 
-            GameObject* target = boxCollider.GetOwner();
-            if (!target || target == &projectile || target->IsPendingDestroy())
-                return;
+            SphereColliderComponent* sphereCollider =
+                projectile.GetCollider();
 
-            float hitT = 0.0f;
-            Vector3 hitCenter = Vector3::Zero;
-
-            if (!CollisionSystem::SweepIntersects(projectile.GetPreviousPosition(), *sphereCollider, boxCollider, hitT, hitCenter))
+            if (!sphereCollider ||
+                !sphereCollider->IsEnabled())
+            {
                 return;
+            }
+
+            struct ClosestHit
+            {
+                BoxColliderComponent* collider = nullptr;
+                GameObject* target = nullptr;
+
+                float hitT = 0.0f;
+                Vector3 hitCenter = Vector3::Zero;
+                Vector3 hitNormal = Vector3::Zero;
+            };
+
+            ClosestHit closestHit{};
+            bool hasHit = false;
+
+            ForEachComponent<BoxColliderComponent>(
+                [&](BoxColliderComponent& boxCollider)
+                {
+                    if (!boxCollider.IsEnabled())
+                        return;
+
+                    GameObject* target =
+                        boxCollider.GetOwner();
+
+                    if (!target ||
+                        target == &projectile ||
+                        target->IsPendingDestroy())
+                    {
+                        return;
+                    }
+
+                    float hitT = 0.0f;
+                    Vector3 hitCenter = Vector3::Zero;
+                    Vector3 hitNormal = Vector3::Zero;
+
+                    if (!CollisionSystem::SweepIntersects(
+                        projectile.GetPreviousPosition(),
+                        *sphereCollider,
+                        boxCollider,
+                        hitT,
+                        hitCenter,
+                        hitNormal))
+                    {
+                        return;
+                    }
+
+                    if (hasHit &&
+                        hitT >= closestHit.hitT)
+                    {
+                        return;
+                    }
+
+                    hasHit = true;
+
+                    closestHit.collider =
+                        &boxCollider;
+
+                    closestHit.target =
+                        target;
+
+                    closestHit.hitT =
+                        hitT;
+
+                    closestHit.hitCenter =
+                        hitCenter;
+
+                    closestHit.hitNormal =
+                        hitNormal;
+                });
+
+            if (!hasHit ||
+                !closestHit.collider ||
+                !closestHit.target)
+            {
+                return;
+            }
 
             CollisionEvent projectileEvent{};
+
             projectileEvent.scene = this;
             projectileEvent.self = &projectile;
-            projectileEvent.other = target;
-            projectileEvent.selfCollider = sphereCollider;
-            projectileEvent.otherCollider = &boxCollider;
-            projectileEvent.hitT = hitT;
-            projectileEvent.hitPoint = hitCenter;
+            projectileEvent.other = closestHit.target;
 
-            projectile.OnCollision(projectileEvent);
+            projectileEvent.selfCollider =
+                sphereCollider;
+
+            projectileEvent.otherCollider =
+                closestHit.collider;
+
+            projectileEvent.hitT =
+                closestHit.hitT;
+
+            projectileEvent.hitPoint =
+                closestHit.hitCenter;
+
+            projectileEvent.hitNormal =
+                closestHit.hitNormal;
+
+            projectile.OnCollision(
+                projectileEvent);
+
 
             CollisionEvent targetEvent{};
-            targetEvent.scene = this;
-            targetEvent.self = target;
-            targetEvent.other = &projectile;
-            targetEvent.selfCollider = &boxCollider;
-            targetEvent.otherCollider = sphereCollider;
-            targetEvent.hitT = hitT;
-            targetEvent.hitPoint = hitCenter;
 
-            target->OnCollision(targetEvent);
+            targetEvent.scene = this;
+            targetEvent.self = closestHit.target;
+            targetEvent.other = &projectile;
+
+            targetEvent.selfCollider =
+                closestHit.collider;
+
+            targetEvent.otherCollider =
+                sphereCollider;
+
+            targetEvent.hitT =
+                closestHit.hitT;
+
+            targetEvent.hitPoint =
+                closestHit.hitCenter;
+
+            targetEvent.hitNormal =
+                -closestHit.hitNormal;
+
+            closestHit.target->OnCollision(
+                targetEvent);
         });
-    });
 }
 
 void TestScene::RemoveObjectsBehindCamera()
@@ -464,6 +557,7 @@ void TestScene::RestoreAutoCamera()
 
     camera->SetLookAt(autoCameraPosition_, autoCameraPosition_ + autoCameraForward_);
 }
+
 void TestScene::UpdateAutoCamera(float deltaTime)
 {
     if (cameraMode_ != CameraControlMode::AutoForward)

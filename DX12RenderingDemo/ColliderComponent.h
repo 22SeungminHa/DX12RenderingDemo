@@ -58,7 +58,8 @@ public:
         const ColliderComponent& movingCollider,
         const ColliderComponent& targetCollider,
         float& outHitT,
-        Vector3& outHitCenter);
+        Vector3& outHitCenter,
+        Vector3& outHitNormal);
 
 private:
     static bool SweepSphereBox(
@@ -66,5 +67,6 @@ private:
         const SphereColliderComponent& sphere,
         const BoxColliderComponent& box,
         float& outHitT,
-        Vector3& outHitCenter);
+        Vector3& outHitCenter,
+        Vector3& outHitNormal);
 };

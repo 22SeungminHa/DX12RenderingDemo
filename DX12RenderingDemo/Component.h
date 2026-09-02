@@ -17,6 +17,7 @@ struct CollisionEvent
 
     float hitT = 0.0f;
     Vector3 hitPoint = Vector3::Zero;
+    Vector3 hitNormal = Vector3::Zero;
 };
 
 class Component

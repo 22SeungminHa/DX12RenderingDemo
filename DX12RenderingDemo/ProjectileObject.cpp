@@ -52,14 +52,57 @@ void ProjectileObject::OnCollision(const CollisionEvent& event)
     if (!event.other)
         return;
 
-    if (event.other->GetObjectType() != ObjectType::Map)
+    switch (event.other->GetObjectType())
+    {
+    case ObjectType::Map:
+        Bounce(event.hitPoint, event.hitNormal);
+        LOG("Projectile bounced on map");
+        break;
+
+    case ObjectType::Obstacle:
+        ReduceSpeed(bounceSpeedMultiplier_);
+        break;
+
+    case ObjectType::Crystal:
+        BounceUpOnCrystal();
+        break;
+
+    default:
+        break;
+    }
+}
+
+void ProjectileObject::Bounce(const Vector3& hitCenter, const Vector3& hitNormal)
+{
+    if (hitNormal.LengthSquared() < 0.000001f)
         return;
 
-    if (collider_)
-        collider_->SetEnabled(false);
+    Vector3 normal = hitNormal;
+    normal.Normalize();
 
-    if (event.scene)
-        event.scene->DestroyGameObject(this);
+    const float velocityAlongNormal = velocity_.Dot(normal);
 
-    LOG("Projectile hit map");
+    if (velocityAlongNormal >= 0.0f)
+        return;
+
+    velocity_ -= (1.0f + restitution_) * velocityAlongNormal * normal;
+
+    ReduceSpeed(bounceSpeedMultiplier_);
+
+    constexpr float collisionSkin = 0.01f;
+
+    SetPosition(hitCenter + normal * collisionSkin);
+}
+
+void ProjectileObject::BounceUpOnCrystal()
+{
+    ReduceSpeed(impactSpeedMultiplier_);
+    velocity_.y = std::max(velocity_.y, 0.0f) + crystalUpwardImpulse_;
+}
+
+void ProjectileObject::ReduceSpeed(float multiplier)
+{
+    velocity_.x *= multiplier * 0.5;
+    velocity_.y *= multiplier;
+    velocity_.z *= multiplier * 0.5;
 }
