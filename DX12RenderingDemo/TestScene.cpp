@@ -64,8 +64,13 @@ void TestScene::OnLoad(
 
     if (Camera* camera = GetActiveCamera())
     {
-        camera->SetMode(CameraMode::AutoForward);
-        camera->SetAutoForwardSpeed(5.0f);
+        cameraMode_ = CameraControlMode::AutoForward;
+        autoCameraSpeed_ = 5.0f;
+        autoCameraPosition_ = camera->GetPosition();
+        autoCameraForward_ = camera->GetForward();
+
+        if (autoCameraForward_.LengthSquared() < 0.000001f)
+            autoCameraForward_ = Vector3(0.0f, 0.0f, 1.0f);
     }
 }
 
@@ -208,11 +213,13 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 CameraDesc TestScene::SetupCameraDesc() const
 {
     CameraDesc desc{};
+
     desc.eye = { 0.0f, 5.0f, -35.0f };
     desc.target = { 0.0f, 5.0f, -35.0f };
     desc.nearZ = 1.0f;
     desc.farZ = 500.0f;
     desc.fovY = 60.0f;
+
     return desc;
 }
 
@@ -230,6 +237,11 @@ void TestScene::OnProcessInput(
     const InputSystem& input,
     float deltaTime)
 {
+    if (input.WasKeyPressed('C'))
+    {
+        ToggleCameraMode();
+    }
+
     if (input.WasKeyPressed('P'))
     {
         Camera* camera = GetActiveCamera();
@@ -253,6 +265,8 @@ void TestScene::OnProcessInput(
 
 void TestScene::Animate(float deltaTime)
 {
+    UpdateAutoCamera(deltaTime);
+
     Scene::Animate(deltaTime);
 
     CheckProjectileCollisions();
@@ -390,7 +404,7 @@ void TestScene::RemoveObjectsBehindCamera()
 {
     Camera* camera = GetActiveCamera();
 
-    if (!camera || camera->GetMode() != CameraMode::AutoForward)
+    if (!camera || cameraMode_ != CameraControlMode::AutoForward)
         return;
 
     const Vector3 cameraPosition = camera->GetPosition();
@@ -448,4 +462,53 @@ void TestScene::RemoveObjectsBehindCamera()
         if (forwardDistance < -removeDistanceBehind)
             DestroyGameObject(object);
     }
+}
+
+void TestScene::ToggleCameraMode()
+{
+    Camera* camera = GetActiveCamera();
+
+    if (!camera)
+        return;
+
+    if (cameraMode_ == CameraControlMode::AutoForward)
+    {
+        cameraMode_ = CameraControlMode::Free;
+        LOG("Camera Mode: Free");
+
+        return;
+    }
+
+    cameraMode_ = CameraControlMode::AutoForward;
+
+    RestoreAutoCamera();
+
+    LOG("Camera Mode: AutoForward");
+}
+
+void TestScene::RestoreAutoCamera()
+{
+    Camera* camera = GetActiveCamera();
+
+    if (!camera)
+        return;
+
+    camera->SetLookAt(autoCameraPosition_, autoCameraPosition_ + autoCameraForward_);
+}
+void TestScene::UpdateAutoCamera(float deltaTime)
+{
+    if (cameraMode_ != CameraControlMode::AutoForward)
+        return;
+
+    if (deltaTime <= 0.0f)
+        return;
+
+    Camera* camera = GetActiveCamera();
+
+    if (!camera)
+        return;
+
+    autoCameraPosition_ += autoCameraForward_ * (autoCameraSpeed_ * deltaTime);
+
+    camera->SetLookAt(autoCameraPosition_, autoCameraPosition_ + autoCameraForward_);
 }

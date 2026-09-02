@@ -63,26 +63,8 @@ void Scene::ProcessInput(
 	if (!activeCamera_)
 		return;
 
-	if (input.WasKeyPressed('C'))
-	{
-		activeCamera_->ToggleMode();
-
-		if (activeCamera_->GetMode() ==
-			CameraMode::AutoForward)
-		{
-			LOG("Camera Mode: AutoForward");
-		}
-		else
-		{
-			LOG("Camera Mode: Free");
-		}
-	}
-
-	if (activeCamera_->GetMode() !=
-		CameraMode::Free)
-	{
+	if (!IsFreeCameraControlEnabled())
 		return;
-	}
 
 	constexpr float moveSpeed = 20.0f;
 	constexpr float mouseSensitivity = 0.005f;
@@ -116,9 +98,6 @@ void Scene::ProcessInput(
 
 void Scene::Animate(float deltaTime)
 {
-	if (activeCamera_)
-		activeCamera_->Update(deltaTime);
-
 	for (auto& object : objects_)
 	{
 		AnimateObject(

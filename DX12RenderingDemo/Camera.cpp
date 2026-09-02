@@ -166,26 +166,3 @@ Vector3 Camera::ScreenPointToWorldDirection(const Vector2& screenPosition) const
 
     return direction;
 }
-
-void Camera::Update(float deltaTime)
-{
-    if (mode_ != CameraMode::AutoForward)
-        return;
-
-    if (deltaTime <= 0.0f)
-        return;
-
-    MoveForward(
-        autoForwardSpeed_ * deltaTime
-    );
-}
-
-void Camera::ToggleMode()
-{
-    mode_ = (mode_ == CameraMode::AutoForward) ? CameraMode::Free : CameraMode::AutoForward;
-}
-
-void Camera::SetAutoForwardSpeed(float speed)
-{
-    autoForwardSpeed_ = std::max(speed, 0.0f);
-}

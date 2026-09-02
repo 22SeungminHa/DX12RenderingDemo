@@ -5,6 +5,12 @@ class AssetManager;
 class Mesh;
 class Material;
 
+enum class CameraControlMode
+{
+    AutoForward,
+    Free
+};
+
 class TestScene : public Scene {
 public:
     TestScene(UINT width, UINT height) : Scene(width, height) {};
@@ -32,6 +38,11 @@ protected:
         ID3D12GraphicsCommandList* cmdList,
         std::vector<ComPtr<ID3D12Resource>>& transientUploadResources) override;
 
+    virtual bool IsFreeCameraControlEnabled() const override
+    {
+        return cameraMode_ == CameraControlMode::Free;
+    }
+
 private:
     void LoadObstacles(
         ID3D12Device* device,
@@ -51,6 +62,22 @@ private:
 
     void RemoveObjectsBehindCamera();
 
+    void ToggleCameraMode();
+    void UpdateAutoCamera(float deltaTime);
+    void RestoreAutoCamera();
+
+private:
     std::shared_ptr<Mesh> projectileMesh_;
     std::shared_ptr<Material> projectileMaterial_;
+
+    CameraControlMode cameraMode_ =
+        CameraControlMode::AutoForward;
+
+    float autoCameraSpeed_ = 5.0f;
+
+    Vector3 autoCameraPosition_ =
+        Vector3::Zero;
+
+    Vector3 autoCameraForward_ =
+        Vector3(0.0f, 0.0f, 1.0f);
 };

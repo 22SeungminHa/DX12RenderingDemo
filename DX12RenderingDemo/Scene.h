@@ -107,6 +107,11 @@ protected:
 
 	void FlushDestroyedGameObjects();
 
+	virtual bool IsFreeCameraControlEnabled() const
+	{
+		return true;
+	}
+
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;
 	UINT nextObjectCBIndex_ = 0;
