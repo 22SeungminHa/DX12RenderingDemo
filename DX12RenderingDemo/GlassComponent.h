@@ -30,6 +30,8 @@ public:
 
     bool IsBroken() const { return isBroken_; }
 
+    void OnCollision(const CollisionEvent& event) override;
+
 private:
     struct PendingFragment
     {

@@ -144,7 +144,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColliderComponent.h" />
     <ClInclude Include="Component.h" />
-    <ClInclude Include="CrystalGlassComponent.h" />
+    <ClInclude Include="CrystalObject.h" />
     <ClInclude Include="D3DCore.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader.h">
@@ -160,7 +160,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlassComponent.h" />
     <ClInclude Include="GlassFracture.h" />
-    <ClInclude Include="GlassFragmentComponent.h" />
+    <ClInclude Include="FragmentMotionComponent.h" />
     <ClInclude Include="GlassRenderer.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="MapObjectLoader.h" />
@@ -168,8 +168,9 @@
     <ClInclude Include="MaterialBinder.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshRenderer.h" />
+    <ClInclude Include="ObstacleObject.h" />
     <ClInclude Include="PostProcessRenderer.h" />
-    <ClInclude Include="ProjectileComponent.h" />
+    <ClInclude Include="ProjectileObject.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderQueueBuilder.h" />
     <ClInclude Include="RenderTexture.h" />
@@ -195,7 +196,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ColliderComponent.cpp" />
     <ClCompile Include="Component.cpp" />
-    <ClCompile Include="CrystalGlassComponent.cpp" />
+    <ClCompile Include="CrystalObject.cpp" />
     <ClCompile Include="D3DCore.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -210,7 +211,7 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GlassComponent.cpp" />
     <ClCompile Include="GlassFracture.cpp" />
-    <ClCompile Include="GlassFragmentComponent.cpp" />
+    <ClCompile Include="FragmentMotionComponent.cpp" />
     <ClCompile Include="GlassRenderer.cpp" />
     <ClCompile Include="GlassShader.cpp" />
     <ClCompile Include="InputSystem.cpp" />
@@ -220,9 +221,10 @@
     <ClCompile Include="MaterialBinder.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
+    <ClCompile Include="ObstacleObject.cpp" />
     <ClCompile Include="PostProcessRenderer.cpp" />
     <ClCompile Include="PostProcessShader.cpp" />
-    <ClCompile Include="ProjectileComponent.cpp" />
+    <ClCompile Include="ProjectileObject.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderQueueBuilder.cpp" />
     <ClCompile Include="RenderTexture.cpp" />

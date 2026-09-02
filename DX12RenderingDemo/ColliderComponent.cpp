@@ -11,7 +11,6 @@ void BoxColliderComponent::SetLocalSize(const Vector3& size)
 BoundingBox BoxColliderComponent::GetWorldBounds() const
 {
     BoundingBox localBounds{};
-
     localBounds.Center = { center_.x, center_.y, center_.z };
     localBounds.Extents = { size_.x * 0.5f, size_.y * 0.5f, size_.z * 0.5f };
 
@@ -19,7 +18,6 @@ BoundingBox BoxColliderComponent::GetWorldBounds() const
         return localBounds;
 
     BoundingBox worldBounds{};
-
     localBounds.Transform(worldBounds, owner_->GetWorldMatrix());
 
     return worldBounds;
@@ -39,65 +37,59 @@ void SphereColliderComponent::SetLocalRadius(float radius)
 BoundingSphere SphereColliderComponent::GetWorldBounds() const
 {
     BoundingSphere localBounds{};
-
     localBounds.Center = { center_.x, center_.y, center_.z };
-
     localBounds.Radius = radius_;
 
     if (!owner_)
         return localBounds;
 
     BoundingSphere worldBounds{};
-
     localBounds.Transform(worldBounds, owner_->GetWorldMatrix());
 
     return worldBounds;
 }
 
-bool CollisionSystem::Intersects(const SphereColliderComponent& sphere, const BoxColliderComponent& box)
-{
-    if (!sphere.IsEnabled() || !box.IsEnabled())
-        return false;
-
-    return sphere.GetWorldBounds().Intersects(box.GetWorldBounds());
-}
-
-bool CollisionSystem::Intersects(const SphereColliderComponent& lhs, const SphereColliderComponent& rhs)
+bool CollisionSystem::Intersects(const ColliderComponent& lhs,const ColliderComponent& rhs)
 {
     if (!lhs.IsEnabled() || !rhs.IsEnabled())
         return false;
 
-    return lhs.GetWorldBounds().Intersects(rhs.GetWorldBounds());
+    const auto* lhsSphere = dynamic_cast<const SphereColliderComponent*>(&lhs);
+    const auto* rhsSphere = dynamic_cast<const SphereColliderComponent*>(&rhs);
+
+    if (lhsSphere && rhsSphere)
+        return lhsSphere->GetWorldBounds().Intersects(rhsSphere->GetWorldBounds());
+
+    const auto* lhsBox = dynamic_cast<const BoxColliderComponent*>(&lhs);
+    const auto* rhsBox = dynamic_cast<const BoxColliderComponent*>(&rhs);
+
+    if (lhsBox && rhsBox)
+        return lhsBox->GetWorldBounds().Intersects(rhsBox->GetWorldBounds());
+
+    if (lhsSphere && rhsBox)
+        return lhsSphere->GetWorldBounds().Intersects(rhsBox->GetWorldBounds());
+
+    if (lhsBox && rhsSphere)
+        return rhsSphere->GetWorldBounds().Intersects(lhsBox->GetWorldBounds());
+
+    return false;
 }
 
-bool CollisionSystem::Intersects(const BoxColliderComponent& lhs, const BoxColliderComponent& rhs)
-{
-    if (!lhs.IsEnabled() || !rhs.IsEnabled())
-        return false;
-
-    return lhs.GetWorldBounds().Intersects(rhs.GetWorldBounds());
-}
-
-bool CollisionSystem::SweepIntersects(
+bool CollisionSystem::SweepSphereBox(
     const Vector3& startCenter,
     const SphereColliderComponent& sphere,
     const BoxColliderComponent& box,
     float& outHitT,
-    Vector3& outHitCenter)
+    Vector3& outHitCenter) 
 {
     if (!sphere.IsEnabled() || !box.IsEnabled())
         return false;
 
     const BoundingSphere sphereBounds = sphere.GetWorldBounds();
-
     const BoundingBox boxBounds = box.GetWorldBounds();
-
     const Vector3 endCenter(sphereBounds.Center.x, sphereBounds.Center.y, sphereBounds.Center.z);
-
     const float radius = sphereBounds.Radius;
-
     const Vector3 boxCenter(boxBounds.Center.x, boxBounds.Center.y, boxBounds.Center.z);
-
     const Vector3 boxExtents(boxBounds.Extents.x, boxBounds.Extents.y, boxBounds.Extents.z);
 
     // Sphere 반지름만큼 AABB 확장
@@ -141,4 +133,23 @@ bool CollisionSystem::SweepIntersects(
     outHitCenter = startCenter + delta * tMin;
 
     return true;
+}
+
+bool CollisionSystem::SweepIntersects(
+    const Vector3& startCenter,
+    const ColliderComponent& movingCollider,
+    const ColliderComponent& targetCollider,
+    float& outHitT,
+    Vector3& outHitCenter)
+{
+    if (!movingCollider.IsEnabled() || !targetCollider.IsEnabled())
+        return false;
+
+    const auto* sphere = dynamic_cast<const SphereColliderComponent*>(&movingCollider);
+    const auto* box = dynamic_cast<const BoxColliderComponent*>(&targetCollider);
+
+    if (sphere && box)
+        return SweepSphereBox(startCenter, *sphere, *box, outHitT, outHitCenter);
+
+    return false;
 }

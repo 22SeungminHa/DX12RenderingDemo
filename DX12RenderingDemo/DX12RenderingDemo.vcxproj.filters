@@ -159,7 +159,7 @@
     <ClInclude Include="GlassComponent.h">
       <Filter>소스 파일\Object\Component</Filter>
     </ClInclude>
-    <ClInclude Include="GlassFragmentComponent.h">
+    <ClInclude Include="FragmentMotionComponent.h">
       <Filter>소스 파일\Object\Component</Filter>
     </ClInclude>
     <ClInclude Include="GlassFracture.h">
@@ -174,13 +174,16 @@
     <ClInclude Include="MapObjectLoader.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CrystalGlassComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="ColliderComponent.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="ProjectileComponent.h">
+    <ClInclude Include="ProjectileObject.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CrystalObject.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ObstacleObject.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -290,7 +293,7 @@
     <ClCompile Include="MeshRenderer.cpp">
       <Filter>소스 파일\Object\Component</Filter>
     </ClCompile>
-    <ClCompile Include="GlassFragmentComponent.cpp">
+    <ClCompile Include="FragmentMotionComponent.cpp">
       <Filter>소스 파일\Object\Component</Filter>
     </ClCompile>
     <ClCompile Include="GlassComponent.cpp">
@@ -308,13 +311,16 @@
     <ClCompile Include="MapObjectLoader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CrystalGlassComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="ColliderComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="ProjectileComponent.cpp">
+    <ClCompile Include="ProjectileObject.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CrystalObject.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ObstacleObject.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

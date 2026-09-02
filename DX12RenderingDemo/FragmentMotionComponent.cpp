@@ -1,7 +1,7 @@
-#include "GlassFragmentComponent.h"
+#include "FragmentMotionComponent.h"
 #include "GameObject.h"
 
-void GlassFragmentComponent::Update(float deltaTime)
+void FragmentMotionComponent::Update(float deltaTime)
 {
     GameObject* owner = GetOwner();
 

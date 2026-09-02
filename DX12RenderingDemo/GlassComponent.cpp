@@ -3,7 +3,8 @@
 #include "GameObject.h"
 #include "Material.h"
 #include "Mesh.h"
-#include "GlassFragmentComponent.h"
+#include "FragmentMotionComponent.h"
+#include "ColliderComponent.h"
 
 #include <random>
 
@@ -60,34 +61,19 @@ bool GlassComponent::GeneratePendingFragments(const Vector2& impactPoint, UINT r
     for (const GlassFragmentData& fragment : fragments)
     {
         GlassFragmentGeometry geometry = GlassFracture::BuildFragmentGeometry(fragment, width_, height_, depth_);
-
         if (geometry.vertices.empty() || geometry.indices.empty())
             continue;
 
-        Vector3 direction(
-            geometry.localPosition.x - impactPoint.x,
-            geometry.localPosition.y - impactPoint.y,
-            depthImpulseDistribution(randomEngine)
-        );
-
+        Vector3 direction(geometry.localPosition.x - impactPoint.x, geometry.localPosition.y - impactPoint.y, depthImpulseDistribution(randomEngine));
         if (direction.LengthSquared() > 0.000001f)
             direction.Normalize();
         else
             direction = Vector3(0.0f, 0.0f, 1.0f);
 
         PendingFragment pendingFragment{};
-
         pendingFragment.velocity = direction * (baseFragmentSpeed * speedScaleDistribution(randomEngine));
-
-        pendingFragment.angularVelocity =
-            Vector3(
-                angularVelocityDistribution(randomEngine),
-                angularVelocityDistribution(randomEngine),
-                angularVelocityDistribution(randomEngine)
-            );
-
+        pendingFragment.angularVelocity = Vector3(angularVelocityDistribution(randomEngine), angularVelocityDistribution(randomEngine), angularVelocityDistribution(randomEngine) );
         pendingFragment.geometry = std::move(geometry);
-
         pendingFragments_.push_back(std::move(pendingFragment));
     }
 
@@ -157,7 +143,6 @@ bool GlassComponent::CommitPendingFragments(
 
         slice.vertexOffset = static_cast<UINT>(combinedVertices.size());
         slice.vertexCount = static_cast<UINT>(geometry.vertices.size());
-
         slice.indexOffset = static_cast<UINT>(combinedIndices.size());
         slice.indexCount = static_cast<UINT>(geometry.indices.size());
 
@@ -167,15 +152,7 @@ bool GlassComponent::CommitPendingFragments(
         slices.push_back(slice);
     }
 
-    auto runtimeBuffer =
-        std::make_shared<RuntimeMeshBufferLit>(
-            device,
-            cmdList,
-            combinedVertices,
-            combinedIndices,
-            transientUploadResources
-        );
-
+    auto runtimeBuffer = std::make_shared<RuntimeMeshBufferLit>(device, cmdList, combinedVertices, combinedIndices, transientUploadResources);
     if (!runtimeBuffer->IsValid())
         return false;
 
@@ -186,22 +163,14 @@ bool GlassComponent::CommitPendingFragments(
         const PendingFragment& fragment = pendingFragments_[i];
         const FragmentMeshSlice& slice = slices[i];
 
-        auto fragmentMesh =
-            std::make_shared<RuntimeMeshLit>(
-                runtimeBuffer,
-                slice.vertexOffset,
-                slice.vertexCount,
-                slice.indexOffset,
-                slice.indexCount
-            );
+        auto fragmentMesh = std::make_shared<RuntimeMeshLit>(runtimeBuffer, slice.vertexOffset, slice.vertexCount, slice.indexOffset, slice.indexCount);
 
         GameObject* fragmentObject = scene.CreateChildObject(owner_, fragmentMesh, material_, fragment.geometry.localPosition);
-
         if (!fragmentObject)
             continue;
+        fragmentObject->SetObjectType(ObjectType::GlassFragment);
 
-        auto* fragmentComponent = fragmentObject->AddComponent<GlassFragmentComponent>();
-
+        auto* fragmentComponent = fragmentObject->AddComponent<FragmentMotionComponent>();
         fragmentComponent->SetVelocity(fragment.velocity);
         fragmentComponent->SetAngularVelocity(fragment.angularVelocity);
 
@@ -209,4 +178,32 @@ bool GlassComponent::CommitPendingFragments(
     }
 
     return createdFragmentCount > 0;
+}
+
+void GlassComponent::OnCollision(const CollisionEvent& event)
+{
+    if (!owner_ || !event.other || event.other->GetObjectType() != ObjectType::Projectile)
+        return;
+
+    auto* boxCollider = dynamic_cast<BoxColliderComponent*>(event.selfCollider);
+    if (!boxCollider)
+        return;
+
+    const Matrix inverseWorld = owner_->GetWorldMatrix().Invert();
+    const Vector3 localImpactPoint = Vector3::Transform(event.hitPoint, inverseWorld);
+    const Vector3 localSize = boxCollider->GetLocalSize();
+    const Vector2 impactPoint(
+        std::clamp(localImpactPoint.x, -localSize.x * 0.5f, localSize.x * 0.5f),
+        std::clamp(localImpactPoint.y, -localSize.y * 0.5f, localSize.y * 0.5f));
+
+    if (!Break(impactPoint))
+        return;
+
+    boxCollider->SetEnabled(false);
+
+    LOG(
+        "Projectile hit obstacle glass / Impact: ("
+        << impactPoint.x << ", "
+        << impactPoint.y << ")"
+    );
 }

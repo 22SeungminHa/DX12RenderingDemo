@@ -89,3 +89,12 @@ void GameObject::SetMaterial(const std::shared_ptr<Material>& material)
 
     renderer->SetMaterial(material);
 }
+
+void GameObject::OnCollision(const CollisionEvent& event)
+{
+    for (auto& component : components_)
+    {
+        if (component)
+            component->OnCollision(event);
+    }
+}

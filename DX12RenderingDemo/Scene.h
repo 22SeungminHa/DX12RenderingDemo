@@ -37,6 +37,7 @@ public:
 	virtual void AnimateObject(GameObject* object, float deltaTime);
 
 	GameObject* CreateGameObject();
+
 	GameObject* CreateObject(
 		const std::shared_ptr<Mesh>& mesh,
 		const std::shared_ptr<Material>& material,
@@ -135,6 +136,20 @@ public:
 			ForEachComponentRecursive<T>(object.get(), func);
 	}
 
+	template<typename Func>
+	void ForEachObject(
+		ObjectType type,
+		Func&& func)
+	{
+		for (auto& object : objects_)
+		{
+			ForEachObjectRecursive(
+				object.get(),
+				type,
+				func);
+		}
+	}
+
 	DirectionalLight* AddDirectionalLight()
 	{
 		auto light = std::make_unique<DirectionalLight>();
@@ -150,6 +165,29 @@ public:
 		return directionalLights_;
 	}
 
+	template<typename T, typename... Args>
+	T* CreateGameObject(Args&&... args)
+	{
+		static_assert(
+			std::is_base_of_v<GameObject, T>,
+			"T must derive from GameObject"
+			);
+
+		auto object =
+			std::make_unique<T>(
+				std::forward<Args>(args)...);
+
+		T* ptr = object.get();
+
+		ptr->SetObjectCBIndex(
+			nextObjectCBIndex_++);
+
+		objects_.push_back(
+			std::move(object));
+
+		return ptr;
+	}
+
 private:
 	template<typename T, typename Func>
 	void ForEachComponentRecursive(GameObject* object, Func& func)
@@ -162,5 +200,26 @@ private:
 
 		for (const auto& child : object->GetChildren())
 			ForEachComponentRecursive<T>(child.get(), func);
+	}
+
+	template<typename Func>
+	void ForEachObjectRecursive(
+		GameObject* object,
+		ObjectType type,
+		Func& func)
+	{
+		if (!object)
+			return;
+
+		if (object->GetObjectType() == type)
+			func(*object);
+
+		for (const auto& child : object->GetChildren())
+		{
+			ForEachObjectRecursive(
+				child.get(),
+				type,
+				func);
+		}
 	}
 };

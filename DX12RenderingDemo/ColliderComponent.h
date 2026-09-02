@@ -46,26 +46,22 @@ private:
     Vector3 center_ = Vector3::Zero;
 };
 
-class MapColliderComponent : public BoxColliderComponent
-{
-};
-
 class CollisionSystem
 {
 public:
     static bool Intersects(
-        const SphereColliderComponent& sphere,
-        const BoxColliderComponent& box);
-
-    static bool Intersects(
-        const SphereColliderComponent& lhs,
-        const SphereColliderComponent& rhs);
-
-    static bool Intersects(
-        const BoxColliderComponent& lhs,
-        const BoxColliderComponent& rhs);
+        const ColliderComponent& lhs,
+        const ColliderComponent& rhs);
 
     static bool SweepIntersects(
+        const Vector3& startCenter,
+        const ColliderComponent& movingCollider,
+        const ColliderComponent& targetCollider,
+        float& outHitT,
+        Vector3& outHitCenter);
+
+private:
+    static bool SweepSphereBox(
         const Vector3& startCenter,
         const SphereColliderComponent& sphere,
         const BoxColliderComponent& box,

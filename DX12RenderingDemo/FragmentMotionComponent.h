@@ -1,7 +1,7 @@
 #pragma once
 #include "Component.h"
 
-class GlassFragmentComponent : public Component
+class FragmentMotionComponent : public Component
 {
 public:
     void Update(float deltaTime) override;
