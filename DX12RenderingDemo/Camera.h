@@ -2,6 +2,12 @@
 #include "UploadBuffer.h"
 #include "EngineTypes.h"
 
+enum class CameraMode
+{
+    AutoForward,
+    Free
+};
+
 class Camera
 {
 public:
@@ -43,6 +49,15 @@ public:
 
     Vector3 ScreenPointToWorldDirection(const Vector2& screenPosition) const;
 
+    void Update(float deltaTime);
+
+    void SetMode(CameraMode mode) { mode_ = mode; }
+    CameraMode GetMode() const { return mode_; }
+    void ToggleMode();
+
+    void SetAutoForwardSpeed(float speed);
+    float GetAutoForwardSpeed() const { return autoForwardSpeed_; }
+
 protected:
     void UpdateViewMatrix();
 
@@ -58,4 +73,7 @@ protected:
     float pitch_ = 0.0f;
 
     CameraDesc desc_;
+
+    CameraMode mode_ = CameraMode::AutoForward;
+    float autoForwardSpeed_ = 5.0f;
 };

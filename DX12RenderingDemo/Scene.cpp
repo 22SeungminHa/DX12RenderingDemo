@@ -54,17 +54,41 @@ void Scene::ReleaseUploadResources()
 	OnReleaseUploadResources();
 }
 
-void Scene::ProcessInput(const InputSystem& input, float deltaTime)
+void Scene::ProcessInput(
+	const InputSystem& input,
+	float deltaTime)
 {
 	OnProcessInput(input, deltaTime);
 
-	if (!activeCamera_) return;
+	if (!activeCamera_)
+		return;
+
+	if (input.WasKeyPressed('C'))
+	{
+		activeCamera_->ToggleMode();
+
+		if (activeCamera_->GetMode() ==
+			CameraMode::AutoForward)
+		{
+			LOG("Camera Mode: AutoForward");
+		}
+		else
+		{
+			LOG("Camera Mode: Free");
+		}
+	}
+
+	if (activeCamera_->GetMode() !=
+		CameraMode::Free)
+	{
+		return;
+	}
 
 	constexpr float moveSpeed = 20.0f;
 	constexpr float mouseSensitivity = 0.005f;
-	constexpr float zoomSpeed = 0.03f;
 
-	const float moveDistance = moveSpeed * deltaTime;
+	const float moveDistance =
+		moveSpeed * deltaTime;
 
 	if (input.IsKeyDown('W'))
 		activeCamera_->MoveForward(moveDistance);
@@ -80,7 +104,8 @@ void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 
 	if (input.IsRightMouseDown())
 	{
-		POINT delta = input.GetMouseDelta();
+		POINT delta =
+			input.GetMouseDelta();
 
 		activeCamera_->Rotate(
 			delta.x * -mouseSensitivity,
@@ -91,8 +116,15 @@ void Scene::ProcessInput(const InputSystem& input, float deltaTime)
 
 void Scene::Animate(float deltaTime)
 {
-	for (auto& object : objects_) {
-		AnimateObject(object.get(), deltaTime);
+	if (activeCamera_)
+		activeCamera_->Update(deltaTime);
+
+	for (auto& object : objects_)
+	{
+		AnimateObject(
+			object.get(),
+			deltaTime
+		);
 	}
 }
 
@@ -292,5 +324,29 @@ void Scene::PrepareRenderResources(
 		device,
 		cmdList,
 		transientUploadResources
+	);
+}
+
+void Scene::DestroyGameObject(GameObject* object)
+{
+	if (!object)
+		return;
+
+	object->MarkForDestroy();
+}
+
+void Scene::FlushDestroyedGameObjects()
+{
+	for (auto& object : objects_)
+		if (object)
+			object->RemovePendingDestroyChildren();
+
+	objects_.erase(
+		std::remove_if(objects_.begin(), objects_.end(),
+		[](const std::unique_ptr<GameObject>& object)
+		{
+			return !object || object->IsPendingDestroy();
+		}),
+		objects_.end()
 	);
 }

@@ -16,6 +16,11 @@ public:
     virtual void Animate(float deltaTime);
     virtual void OnPrepareRender();
 
+    void MarkForDestroy() { pendingDestroy_ = true; }
+    bool IsPendingDestroy() const { return pendingDestroy_; }
+
+    void RemovePendingDestroyChildren();
+
     // Hierarchy
     void AddChild(std::unique_ptr<GameObject> child);
     void RemoveChild(GameObject* child);
@@ -44,6 +49,7 @@ public:
     const Vector3& GetPosition() const { return transform_.position; }
     const Vector3& GetRotation() const { return transform_.rotation; }
     const Vector3& GetScale() const { return transform_.scale; }
+    Vector3 GetWorldPosition() const { return Vector3::Transform(Vector3::Zero, GetWorldMatrix()); }
 
     Matrix GetWorldMatrix() const { return transform_.GetWorldMatrix(); }
 
@@ -60,6 +66,8 @@ protected:
     std::vector<std::unique_ptr<GameObject>> children_;
 
     UINT objectCBIndex_ = 0;
+
+    bool pendingDestroy_ = false;
 
 public:
     // Components

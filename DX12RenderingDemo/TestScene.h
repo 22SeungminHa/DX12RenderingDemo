@@ -49,6 +49,8 @@ private:
 
     void CheckProjectileCollisions();
 
+    void RemoveObjectsBehindCamera();
+
     std::shared_ptr<Mesh> projectileMesh_;
     std::shared_ptr<Material> projectileMaterial_;
 };

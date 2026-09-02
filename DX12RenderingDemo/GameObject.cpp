@@ -27,6 +27,23 @@ void GameObject::OnPrepareRender()
         if (component) component->OnPrepareRender();
 }
 
+void GameObject::RemovePendingDestroyChildren()
+{
+    for (auto& child : children_)
+    {
+        if (child)
+            child->RemovePendingDestroyChildren();
+    }
+
+    children_.erase(std::remove_if(children_.begin(), children_.end(),
+        [](const std::unique_ptr<GameObject>& child)
+        {
+            return !child || child->IsPendingDestroy();
+        }),
+        children_.end()
+    );
+}
+
 void GameObject::AddChild(std::unique_ptr<GameObject> child)
 {
     if (!child) return;

@@ -77,6 +77,8 @@ public:
 		ID3D12GraphicsCommandList* cmdList,
 		std::vector<ComPtr<ID3D12Resource>>& transientUploadResources);
 
+	void DestroyGameObject(GameObject* object);
+
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
 	void SetSkybox(const std::wstring& name = L"Skybox") { skybox_.SetCubemap(name); }
 	const SkyboxDesc& GetSkybox() const { return skybox_; }
@@ -102,6 +104,8 @@ protected:
 
 	void CreateCamera();
 	void ResizeCamera(UINT width, UINT height);
+
+	void FlushDestroyedGameObjects();
 
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;

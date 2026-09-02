@@ -13,6 +13,7 @@
 #include "CrystalGlassComponent.h"
 #include "ColliderComponent.h"
 #include "ProjectileComponent.h"
+#include "GlassFragmentComponent.h"
 
 void TestScene::OnLoad(
     ID3D12Device* device,
@@ -50,19 +51,8 @@ void TestScene::OnLoad(
     LoadObstacles(device, cmdList, rootSignature, assetManager);
     LoadCrystals(device, cmdList, rootSignature, assetManager);
 
-    projectileMesh_ =
-        assetManager.LoadSphereMesh(
-            device,
-            cmdList
-        );
-
-    projectileMaterial_ =
-        assetManager.LoadMaterialFromFile(
-            device,
-            cmdList,
-            rootSignature,
-            AssetPath::Material(L"Default_Marble")
-        );
+    projectileMesh_ = assetManager.LoadSphereMesh(device, cmdList);
+    projectileMaterial_ = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, AssetPath::Material(L"Default_Marble"));
 
     if (!projectileMesh_)
         LOG("Projectile sphere mesh load failed");
@@ -71,6 +61,12 @@ void TestScene::OnLoad(
         LOG("Projectile material load failed");
 
     SetSkybox();
+
+    if (Camera* camera = GetActiveCamera())
+    {
+        camera->SetMode(CameraMode::AutoForward);
+        camera->SetAutoForwardSpeed(5.0f);
+    }
 }
 
 void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager)
@@ -83,12 +79,7 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
         return;
     }
 
-    auto obstacleMaterial =
-        assetManager.LoadMaterialFromFile(
-            device,
-            cmdList,
-            rootSignature,
-            AssetPath::Material(L"Obstacle_Glass"));
+    auto obstacleMaterial = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, AssetPath::Material(L"Obstacle_Glass"));
 
     if (!obstacleMaterial)
     {
@@ -124,11 +115,9 @@ void TestScene::LoadObstacles(ID3D12Device* device, ID3D12GraphicsCommandList* c
             continue;
 
         auto* glassDestruction = glassObject->AddComponent<GlassComponent>();
-
         glassDestruction->Initialize(obstacleMaterial, width, height, depth);
 
         auto* collider = glassObject->AddComponent<BoxColliderComponent>();
-
         collider->SetLocalSize(Vector3(width, height, depth));
 
         ++loadedCount;
@@ -158,13 +147,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
         return;
     }
 
-    auto crystalMesh =
-        FBXLoader::LoadLitMeshFromFile(
-            device,
-            cmdList,
-            assetManager,
-            AssetPath::FBX(L"Crystal")
-        );
+    auto crystalMesh = FBXLoader::LoadLitMeshFromFile(device, cmdList, assetManager, AssetPath::FBX(L"Crystal"));
 
     if (!crystalMesh)
     {
@@ -172,14 +155,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
         return;
     }
 
-    auto crashedModelData =
-        FBXLoader::LoadLitModel(
-            device,
-            cmdList,
-            rootSignature,
-            assetManager,
-            AssetPath::FBX(L"CrashedCrystal")
-        );
+    auto crashedModelData = FBXLoader::LoadLitModel(device, cmdList, rootSignature, assetManager, AssetPath::FBX(L"CrashedCrystal"));
 
     if (!crashedModelData)
     {
@@ -189,13 +165,7 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
     auto crashedCrystalModel = std::make_shared<FBXNodeData>(std::move(*crashedModelData));
 
-    auto crystalMaterial =
-        assetManager.LoadMaterialFromFile(
-            device,
-            cmdList,
-            rootSignature,
-            AssetPath::Material(L"Crystal_Glass")
-        );
+    auto crystalMaterial = assetManager.LoadMaterialFromFile(device, cmdList, rootSignature, AssetPath::Material(L"Crystal_Glass"));
 
     if (!crystalMaterial)
     {
@@ -207,34 +177,19 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 
     for (const MapCrystalData& crystal : crystals)
     {
-        GameObject* crystalObject =
-            CreateObject(
-                crystalMesh,
-                crystalMaterial,
-                crystal.position,
-                Vector3(0.013f)
-            );
+        GameObject* crystalObject = CreateObject(crystalMesh, crystalMaterial, crystal.position, Vector3(0.013f));
 
         if (!crystalObject)
             continue;
 
-        auto* crystalGlass =
-            crystalObject->AddComponent<CrystalGlassComponent>();
+        auto* crystalGlass = crystalObject->AddComponent<CrystalGlassComponent>();
 
-        crystalGlass->Initialize(
-            crystalMaterial,
-            crashedCrystalModel
-        );
+        crystalGlass->Initialize(crystalMaterial, crashedCrystalModel);
 
-        auto* collider =
-            crystalObject->AddComponent<BoxColliderComponent>();
+        auto* collider = crystalObject->AddComponent<BoxColliderComponent>();
 
         if (crystalMesh->HasLocalBounds())
-        {
-            collider->SetLocalBounds(
-                crystalMesh->GetLocalBounds()
-            );
-        }
+            collider->SetLocalBounds(crystalMesh->GetLocalBounds());
 
         ++loadedCount;
 
@@ -253,8 +208,8 @@ void TestScene::LoadCrystals(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 CameraDesc TestScene::SetupCameraDesc() const
 {
     CameraDesc desc{};
-    desc.eye = { 0.0f, 5.15715f, -34.2166f };
-    desc.target = { 0.0f, 5.0818f, -33.2204f };
+    desc.eye = { 0.0f, 5.0f, -35.0f };
+    desc.target = { 0.0f, 5.0f, -35.0f };
     desc.nearZ = 1.0f;
     desc.farZ = 500.0f;
     desc.fovY = 60.0f;
@@ -291,15 +246,8 @@ void TestScene::OnProcessInput(
 
     if (input.WasLeftMousePressed())
     {
-        const POINT mousePosition =
-            input.GetMousePosition();
-
-        FireProjectile(
-            Vector2(
-                static_cast<float>(mousePosition.x),
-                static_cast<float>(mousePosition.y)
-            )
-        );
+        const POINT mousePosition = input.GetMousePosition();
+        FireProjectile(Vector2(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y)));
     }
 }
 
@@ -308,6 +256,10 @@ void TestScene::Animate(float deltaTime)
     Scene::Animate(deltaTime);
 
     CheckProjectileCollisions();
+
+    RemoveObjectsBehindCamera();
+
+    FlushDestroyedGameObjects();
 }
 
 void TestScene::OnPrepareRenderResources(
@@ -342,36 +294,19 @@ void TestScene::FireProjectile(
     constexpr float spawnDistance = 1.5f;
     constexpr float launchSpeed = 25.0f;
 
-    const Vector3 direction =
-        camera->ScreenPointToWorldDirection(
-            screenPosition
-        );
+    const Vector3 direction = camera->ScreenPointToWorldDirection(screenPosition);
 
-    const Vector3 spawnPosition =
-        camera->GetPosition() +
-        direction * spawnDistance;
+    const Vector3 spawnPosition = camera->GetPosition() + direction * spawnDistance;
 
-    GameObject* projectile =
-        CreateObject(
-            projectileMesh_,
-            projectileMaterial_,
-            spawnPosition,
-            Vector3(projectileRadius)
-        );
+    GameObject* projectile = CreateObject(projectileMesh_, projectileMaterial_, spawnPosition, Vector3(projectileRadius));
 
     if (!projectile)
         return;
 
-    auto* projectileComponent =
-        projectile->AddComponent<ProjectileComponent>();
+    auto* projectileComponent = projectile->AddComponent<ProjectileComponent>();
+    projectileComponent->Initialize(direction * launchSpeed);
 
-    projectileComponent->Initialize(
-        direction * launchSpeed
-    );
-
-    auto* collider =
-        projectile->AddComponent<SphereColliderComponent>();
-
+    auto* collider = projectile->AddComponent<SphereColliderComponent>();
     collider->SetLocalRadius(1.0f);
 }
 
@@ -442,7 +377,6 @@ void TestScene::CheckProjectileCollisions()
                 if (crystal->Break(*this))
                 {
                     boxCollider.SetEnabled(false);
-
                     LOG("Projectile hit crystal");
                 }
 
@@ -450,4 +384,68 @@ void TestScene::CheckProjectileCollisions()
             }
         });
     });
+}
+
+void TestScene::RemoveObjectsBehindCamera()
+{
+    Camera* camera = GetActiveCamera();
+
+    if (!camera || camera->GetMode() != CameraMode::AutoForward)
+        return;
+
+    const Vector3 cameraPosition = camera->GetPosition();
+    const Vector3 cameraForward = camera->GetForward();
+    constexpr float removeDistanceBehind = 1.0f;
+
+    std::vector<GameObject*> candidates;
+
+    auto addCandidate =
+        [&](GameObject* object)
+        {
+            if (!object || std::find(candidates.begin(), candidates.end(), object) != candidates.end())
+                return;
+
+            candidates.push_back(object);
+        };
+
+    // 쇠구슬
+    ForEachComponent<ProjectileComponent>(
+        [&](ProjectileComponent& projectile)
+        {
+            addCandidate(projectile.GetOwner());
+        });
+
+    // 장애물 유리
+    ForEachComponent<GlassComponent>(
+        [&](GlassComponent& glass)
+        {
+            addCandidate(glass.GetOwner());
+        });
+
+    // 크리스탈
+    ForEachComponent<CrystalGlassComponent>(
+        [&](CrystalGlassComponent& crystal)
+        {
+            addCandidate(crystal.GetOwner());
+        });
+
+    // 크리스탈/장애물 유리 파편
+    ForEachComponent<GlassFragmentComponent>(
+        [&](GlassFragmentComponent& fragment)
+        {
+            addCandidate(fragment.GetOwner());
+        });
+
+    for (GameObject* object : candidates)
+    {
+        if (!object || object->IsPendingDestroy())
+            continue;
+
+        const Vector3 worldPosition = object->GetWorldPosition();
+        const Vector3 cameraToObject = worldPosition - cameraPosition;
+        const float forwardDistance = cameraToObject.Dot(cameraForward);
+
+        if (forwardDistance < -removeDistanceBehind)
+            DestroyGameObject(object);
+    }
 }
