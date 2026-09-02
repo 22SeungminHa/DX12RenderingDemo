@@ -23,7 +23,7 @@ public:
 
     void OnCollision(const CollisionEvent& event) override;
 
-    bool Break(Scene& scene);
+    bool Break(Scene& scene, const Vector3& impactPoint);
     bool IsBroken() const { return isBroken_; }
 
 private:

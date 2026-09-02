@@ -42,18 +42,24 @@ public:
     Transform* GetTransform() { return &transform_; }
     const Transform* GetTransform() const { return &transform_; }
 
-    void SetPosition(const Vector3& position) { transform_.position = position; }
+    void SetPosition(const Vector3& position) { transform_.SetPosition(position); }
     void SetPosition(float x, float y, float z) { SetPosition(Vector3(x, y, z)); }
-    void SetRotation(const Vector3& rotation) { transform_.rotation = rotation; }
-    void SetRotationDegrees(float pitch, float yaw, float roll) { SetRotation(Vector3(XMConvertToRadians(pitch), XMConvertToRadians(yaw), XMConvertToRadians(roll))); }
-    void SetScale(const Vector3& scale) { transform_.scale = scale; }
-    void SetScale(float x, float y, float z) { SetScale(Vector3(x, y, z)); }
+    void SetRotation(const Quaternion& rotation) { transform_.SetRotation(rotation); }
 
-    void Translate(const Vector3& offset) { transform_.position += offset; }
+    void SetRotationDegrees(float pitch, float yaw, float roll)
+    {
+        transform_.SetRotationEuler(Vector3(XMConvertToRadians(pitch), XMConvertToRadians(yaw), XMConvertToRadians(roll)));
+    }
+    void SetScale(const Vector3& scale) { transform_.SetScale(scale); }
+    void SetScale(float x, float y, float z) { SetScale(Vector3(x, y, z)); }
+    void Translate(const Vector3& offset) { transform_.Translate(offset); }
+    void TranslateWorld(const Vector3& offset) { transform_.TranslateWorld(offset); }
+
     void Rotate(const Vector3& axis, float angle);
+    void Rotate(const Quaternion& deltaRotation) { transform_.Rotate(deltaRotation); }
 
     const Vector3& GetPosition() const { return transform_.position; }
-    const Vector3& GetRotation() const { return transform_.rotation; }
+    const Quaternion& GetRotation() const { return transform_.rotation; }
     const Vector3& GetScale() const { return transform_.scale; }
 
     Vector3 GetWorldPosition() const { return Vector3::Transform(Vector3::Zero, GetWorldMatrix()); }

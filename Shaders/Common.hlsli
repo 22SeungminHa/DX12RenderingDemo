@@ -90,6 +90,14 @@ float3 CalculateFogColor(float screenY)
     return lerp(gFogMiddleColor.rgb, gFogBottomColor.rgb, localT);
 }
 
+float CalculateVerticalFogBoost(float screenY)
+{
+    float t = saturate(screenY / max(gViewportHeight, 1.0f));
+    float bottomFactor = smoothstep(0.75f, 1.0f, t);
+
+    return lerp(1.0f, 2.0f, bottomFactor);
+}
+
 struct VS_INPUT
 {
     float3 position : POSITION;

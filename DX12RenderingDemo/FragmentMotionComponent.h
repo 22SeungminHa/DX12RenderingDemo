@@ -10,7 +10,12 @@ public:
     void SetAngularVelocity(const Vector3& angularVelocity) { angularVelocity_ = angularVelocity; }
     void SetGravity(const Vector3& gravity) { gravity_ = gravity; }
 
+    void SetActive(bool active) { active_ = active; }
+    bool IsActive() const { return active_; }
+
 private:
+    bool active_ = true;
+
     Vector3 velocity_ = Vector3::Zero;
 
     // rad / sec

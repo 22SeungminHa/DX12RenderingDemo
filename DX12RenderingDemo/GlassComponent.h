@@ -17,7 +17,7 @@ public:
 
     bool Break(
         const Vector2& impactPoint,
-        UINT randomRayCount = 8,
+        UINT randomRayCount = 9,
         UINT ringCount = 4
     );
 
@@ -39,6 +39,8 @@ private:
 
         Vector3 velocity = Vector3::Zero;
         Vector3 angularVelocity = Vector3::Zero;
+
+        bool shouldMove = true;
     };
 
     bool GeneratePendingFragments(

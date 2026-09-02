@@ -39,13 +39,19 @@ void CrystalObject::Initialize(
         collider_->SetLocalBounds(mesh->GetLocalBounds());
 }
 
-bool CrystalObject::Break(Scene& scene)
+bool CrystalObject::Break(Scene& scene, const Vector3& impactPoint) 
 {
     if (isBroken_ || !material_ || !crashedModel_)
         return false;
 
     std::vector<GameObject*> pieces;
-    GameObject* crashedRoot = scene.CreateFBXChildObject(this, *crashedModel_, material_, &pieces);
+    GameObject* crashedRoot = scene.CreateFBXChildObject(
+        this,
+        *crashedModel_,
+        material_,
+        &pieces,
+        true
+    );
 
     if (!crashedRoot || pieces.empty())
         return false;
@@ -54,9 +60,19 @@ bool CrystalObject::Break(Scene& scene)
 
     static std::mt19937 randomEngine{ std::random_device{}() };
 
-    std::uniform_real_distribution<float> horizontalVelocity(-4.0f, 4.0f);
-    std::uniform_real_distribution<float> verticalVelocity(3.0f, 7.0f);
-    std::uniform_real_distribution<float> angularVelocity(-6.0f, 6.0f);
+    std::uniform_real_distribution<float>
+        horizontalVelocity(-2.5f, 2.5f);
+
+    std::uniform_real_distribution<float>
+        verticalVelocity(1.5f, 4.0f);
+
+    std::uniform_real_distribution<float>
+        angularVelocity(-3.0f, 3.0f);
+
+    std::bernoulli_distribution remainRandom(0.5);
+
+    const float alwaysRemainOffset = 0.65f;
+    const float randomRemainOffset = 0.4f;
 
     for (GameObject* piece : pieces)
     {
@@ -65,10 +81,28 @@ bool CrystalObject::Break(Scene& scene)
 
         piece->SetObjectType(ObjectType::GlassFragment);
 
+        const float pieceY = piece->GetWorldPosition().y;
+
+        bool remain = false;
+
+        if (pieceY < impactPoint.y - alwaysRemainOffset)
+        {
+            // 충돌점보다 충분히 아래쪽 조각은 항상 남긴다.
+            remain = true;
+        }
+        else if (pieceY < impactPoint.y - randomRemainOffset)
+        {
+            // 경계 영역의 조각은 50% 확률로 남긴다.
+            remain = remainRandom(randomEngine);
+        }
+
+        if (remain)
+            continue;
+
         auto* fragment = piece->AddComponent<FragmentMotionComponent>();
 
-        fragment->SetVelocity(Vector3(horizontalVelocity(randomEngine), verticalVelocity(randomEngine), horizontalVelocity(randomEngine)));
-        fragment->SetAngularVelocity(Vector3(angularVelocity(randomEngine), angularVelocity(randomEngine), angularVelocity(randomEngine)));
+        fragment->SetVelocity(Vector3(horizontalVelocity(randomEngine), verticalVelocity(randomEngine), horizontalVelocity(randomEngine) ));
+        fragment->SetAngularVelocity(Vector3(angularVelocity(randomEngine), angularVelocity(randomEngine), angularVelocity(randomEngine) ));
     }
 
     isBroken_ = true;
@@ -83,7 +117,7 @@ void CrystalObject::OnCollision(const CollisionEvent& event)
     if (!event.other || !event.scene || event.other->GetObjectType() != ObjectType::Projectile)
         return;
 
-    if (!Break(*event.scene))
+    if (!Break(*event.scene, event.hitPoint))
         return;
 
     if (collider_)

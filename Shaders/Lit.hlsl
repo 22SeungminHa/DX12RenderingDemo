@@ -68,10 +68,13 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
     }
 
     float3 finalColor = ambient + diffuse + specular;
-
     float fogFactor = CalculateFogFactor(input.positionW);
-    float3 fogColor = CalculateFogColor(input.position.y);
+    float verticalFogBoost = CalculateVerticalFogBoost(input.position.y);
 
+    fogFactor = saturate(fogFactor * verticalFogBoost);
+
+    float3 fogColor = CalculateFogColor(input.position.y);
+    
     finalColor = lerp(finalColor, fogColor, fogFactor);
     
     return float4(finalColor, baseColor.a * gAlpha);

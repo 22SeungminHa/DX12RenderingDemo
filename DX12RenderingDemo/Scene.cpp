@@ -225,7 +225,8 @@ GameObject* Scene::CreateFBXChildObject(
 	GameObject* parent,
 	const FBXNodeData& modelData,
 	const std::shared_ptr<Material>& materialOverride,
-	std::vector<GameObject*>* outMeshObjects)
+	std::vector<GameObject*>* outMeshObjects,
+	bool centerMeshPivot) 
 {
 	if (!parent)
 		return nullptr;
@@ -243,7 +244,8 @@ GameObject* Scene::CreateFBXChildObject(
 		fbxRootPtr,
 		modelData,
 		materialOverride,
-		outMeshObjects
+		outMeshObjects,
+		centerMeshPivot
 	);
 
 	return fbxRootPtr;
@@ -253,19 +255,56 @@ void Scene::BuildFBXNode(
 	GameObject* parent,
 	const FBXNodeData& nodeData,
 	const std::shared_ptr<Material>& materialOverride,
-	std::vector<GameObject*>* outMeshObjects)
+	std::vector<GameObject*>* outMeshObjects,
+	bool centerMeshPivot)
 {
 	for (const auto& meshData : nodeData.meshes)
 	{
+		const auto material =
+			materialOverride
+			? materialOverride
+			: meshData.material;
+
+		if (centerMeshPivot &&
+			meshData.mesh &&
+			meshData.mesh->HasLocalBounds())
+		{
+			const BoundingBox& bounds =
+				meshData.mesh->GetLocalBounds();
+
+			const Vector3 center(
+				bounds.Center.x,
+				bounds.Center.y,
+				bounds.Center.z
+			);
+
+			auto pivot = std::make_unique<GameObject>();
+			pivot->SetObjectCBIndex(nextObjectCBIndex_++);
+			pivot->SetPosition(center);
+
+			GameObject* pivotPtr = pivot.get();
+
+			auto meshObject = std::make_unique<GameObject>();
+			meshObject->SetObjectCBIndex(nextObjectCBIndex_++);
+			meshObject->SetPosition(-center);
+			meshObject->SetMesh(meshData.mesh);
+			meshObject->SetMaterial(material);
+
+			pivotPtr->AddChild(std::move(meshObject));
+
+			parent->AddChild(std::move(pivot));
+
+			if (outMeshObjects)
+				outMeshObjects->push_back(pivotPtr);
+
+			continue;
+		}
+
 		auto child = std::make_unique<GameObject>();
 
 		child->SetObjectCBIndex(nextObjectCBIndex_++);
 		child->SetMesh(meshData.mesh);
-		child->SetMaterial(
-			materialOverride
-			? materialOverride
-			: meshData.material
-		);
+		child->SetMaterial(material);
 
 		GameObject* childPtr = child.get();
 
@@ -280,7 +319,9 @@ void Scene::BuildFBXNode(
 		auto child = std::make_unique<GameObject>();
 
 		child->SetObjectCBIndex(nextObjectCBIndex_++);
-		child->GetTransform()->SetLocalMatrix(childNode.localMatrix);
+		child->GetTransform()->SetLocalMatrix(
+			childNode.localMatrix
+		);
 
 		GameObject* childPtr = child.get();
 
@@ -290,7 +331,8 @@ void Scene::BuildFBXNode(
 			childPtr,
 			childNode,
 			materialOverride,
-			outMeshObjects
+			outMeshObjects,
+			centerMeshPivot
 		);
 	}
 }

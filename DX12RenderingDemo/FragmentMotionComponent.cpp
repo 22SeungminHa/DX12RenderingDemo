@@ -3,6 +3,9 @@
 
 void FragmentMotionComponent::Update(float deltaTime)
 {
+    if (!active_)
+        return;
+
     GameObject* owner = GetOwner();
 
     if (!owner)
@@ -10,6 +13,19 @@ void FragmentMotionComponent::Update(float deltaTime)
 
     velocity_ += gravity_ * deltaTime;
 
-    owner->Translate(velocity_ * deltaTime);
-    owner->SetRotation(owner->GetRotation() + angularVelocity_ * deltaTime);
+    owner->TranslateWorld(
+        velocity_ * deltaTime
+    );
+
+    const Vector3 rotationStep =
+        angularVelocity_ * deltaTime;
+
+    const Quaternion deltaRotation =
+        Quaternion::CreateFromYawPitchRoll(
+            rotationStep.y,
+            rotationStep.x,
+            rotationStep.z
+        );
+
+    owner->Rotate(deltaRotation);
 }

@@ -64,14 +64,16 @@ public:
 		GameObject* parent,
 		const FBXNodeData& modelData,
 		const std::shared_ptr<Material>& materialOverride = nullptr,
-		std::vector<GameObject*>* outMeshObjects = nullptr
+		std::vector<GameObject*>* outMeshObjects = nullptr,
+		bool centerMeshPivot = false
 	);
 
 	void BuildFBXNode(
 		GameObject* parent,
 		const FBXNodeData& nodeData,
 		const std::shared_ptr<Material>& materialOverride = nullptr,
-		std::vector<GameObject*>* outMeshObjects = nullptr
+		std::vector<GameObject*>* outMeshObjects = nullptr,
+		bool centerMeshPivot = false
 	);
 
 	void PrepareRenderResources(

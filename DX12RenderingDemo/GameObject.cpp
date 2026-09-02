@@ -67,7 +67,20 @@ void GameObject::RemoveChild(GameObject* child)
 
 void GameObject::Rotate(const Vector3& axis, float angle)
 {
-    transform_.rotation += axis * XMConvertToRadians(angle);
+    Vector3 normalizedAxis = axis;
+
+    if (normalizedAxis.LengthSquared() <= 0.000001f)
+        return;
+
+    normalizedAxis.Normalize();
+
+    const Quaternion deltaRotation =
+        Quaternion::CreateFromAxisAngle(
+            normalizedAxis,
+            XMConvertToRadians(angle)
+        );
+
+    transform_.Rotate(deltaRotation);
 }
 
 void GameObject::SetMesh(const std::shared_ptr<Mesh>& mesh)
