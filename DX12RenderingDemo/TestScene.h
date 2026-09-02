@@ -24,6 +24,7 @@ public:
 
     virtual CameraDesc SetupCameraDesc() const override;
     virtual SceneLightDesc SetupLightDesc() const override;
+    virtual FogDesc SetupFogDesc() const override;
 
     virtual void Animate(float deltaTime) override;
 

@@ -30,6 +30,15 @@ cbuffer cbCameraInfo : register(b1)
     float gSpecularPower;
     uint gDirectionalLightCount;
     float2 gPad2;
+    
+    float4 gFogTopColor;
+    float4 gFogMiddleColor;
+    float4 gFogBottomColor;
+
+    float gFogStart;
+    float gFogEnd;
+    float gViewportHeight;
+    uint gFogEnabled;
 };
 
 cbuffer cbMaterialInfo : register(b2)
@@ -51,6 +60,35 @@ TextureCube gSkyboxMap : register(t2);
 Texture2D gRefractionSceneMap : register(t4);
 
 SamplerState gSampler : register(s0);
+
+float CalculateFogFactor(float3 positionW)
+{
+    if (gFogEnabled == 0)
+        return 0.0f;
+
+    float distanceToCamera = distance(gEyePosW, positionW);
+    float fogRange = max(gFogEnd - gFogStart, 0.0001f);
+
+    return saturate((distanceToCamera - gFogStart) / fogRange);
+}
+
+float3 CalculateFogColor(float screenY)
+{
+    float t = saturate(screenY / max(gViewportHeight, 1.0f));
+
+    if (t < 0.5f)
+    {
+        float localT = t / 0.5f;
+        localT = smoothstep(0.0f, 1.0f, localT);
+
+        return lerp(gFogTopColor.rgb, gFogMiddleColor.rgb, localT);
+    }
+
+    float localT = (t - 0.5f) / 0.5f;
+    localT = smoothstep(0.0f, 1.0f, localT);
+
+    return lerp(gFogMiddleColor.rgb, gFogBottomColor.rgb, localT);
+}
 
 struct VS_INPUT
 {

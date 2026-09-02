@@ -212,6 +212,17 @@ void Renderer::BindCameraData(Scene* scene, Camera* camera)
     passCB.ambientColor = lightDesc.ambientColor;
     passCB.specularPower = lightDesc.specularPower;
 
+    const FogDesc& fogDesc = scene->GetFogDesc();
+
+    passCB.fogTopColor = fogDesc.topColor;
+    passCB.fogMiddleColor = fogDesc.middleColor;
+    passCB.fogBottomColor = fogDesc.bottomColor;
+
+    passCB.fogStart = fogDesc.startDistance;
+    passCB.fogEnd = fogDesc.endDistance;
+    passCB.viewportHeight = viewport.Height;
+    passCB.fogEnabled = fogDesc.enabled ? 1u : 0u;
+
     UINT lightCount = 0;
 
     for (const auto& light : scene->GetDirectionalLights())

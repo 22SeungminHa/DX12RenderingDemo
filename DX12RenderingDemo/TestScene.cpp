@@ -257,6 +257,22 @@ SceneLightDesc TestScene::SetupLightDesc() const
     return desc;
 }
 
+FogDesc TestScene::SetupFogDesc() const
+{
+    FogDesc desc{};
+
+    desc.enabled = true;
+
+    desc.topColor = { 0.015f, 0.003f, 0.012f, 1.0f };
+    desc.middleColor = { 0.15f, 0.21f, 0.53f, 1.0f };
+    desc.bottomColor = { 0.46f, 0.78f, 0.87f, 1.0f };
+
+    desc.startDistance = 0.0f;
+    desc.endDistance = 50.0f;
+
+    return desc;
+}
+
 void TestScene::OnProcessInput(const InputSystem& input, float deltaTime)
 {
     if (input.WasKeyPressed('C'))

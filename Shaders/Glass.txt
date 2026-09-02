@@ -77,6 +77,10 @@ float4 EvaluateGlass(VS_OUTPUT input)
 
     float3 finalColor = refractionColor * glassTint + specular + fresnelColor + reflectionColor * reflectionStrength;
 
+    float fogFactor = CalculateFogFactor(input.positionW);
+
+    glassAlpha *= (1.0f - fogFactor);
+
     return float4(finalColor, glassAlpha);
 }
 

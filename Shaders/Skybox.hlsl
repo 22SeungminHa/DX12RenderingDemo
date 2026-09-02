@@ -22,5 +22,10 @@ VS_SKYBOX_OUTPUT VSSkybox(VS_SKYBOX_INPUT input)
 
 float4 PSSkybox(VS_SKYBOX_OUTPUT input) : SV_TARGET
 {
-    return gSkyboxMap.Sample(gSampler, normalize(input.direction));
+    float4 skyboxColor = gSkyboxMap.Sample(gSampler, normalize(input.direction) );
+
+    if (gFogEnabled != 0)
+        skyboxColor.rgb = CalculateFogColor(input.position.y);
+    
+    return skyboxColor;
 }

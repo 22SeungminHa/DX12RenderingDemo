@@ -22,6 +22,7 @@ public:
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
 	const SceneLightDesc& GetLightDesc() const { return lightDesc_; }
+	const FogDesc& GetFogDesc() const { return fogDesc_; }
 
 	void Load(
 		ID3D12Device* device,
@@ -102,6 +103,7 @@ protected:
 
 	virtual CameraDesc SetupCameraDesc() const { return CameraDesc{}; }
 	virtual SceneLightDesc SetupLightDesc() const { return SceneLightDesc{}; }
+	virtual FogDesc SetupFogDesc() const { return FogDesc{}; }
 
 	void CreateCamera();
 	void ResizeCamera(UINT width, UINT height);
@@ -123,6 +125,8 @@ protected:
 	SkyboxDesc skybox_;
 
 	SceneLightDesc lightDesc_;
+	FogDesc fogDesc_;
+
 	std::vector<std::unique_ptr<DirectionalLight>> directionalLights_;
 
 	UINT clientWidth_ = 0;
@@ -222,4 +226,7 @@ private:
 				func);
 		}
 	}
+
+	void RebuildObjectCBIndices();
+	void RebuildObjectCBIndicesRecursive(GameObject* object);
 };

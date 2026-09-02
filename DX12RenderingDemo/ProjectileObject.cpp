@@ -81,7 +81,6 @@ void ProjectileObject::Bounce(const Vector3& hitCenter, const Vector3& hitNormal
     normal.Normalize();
 
     const float velocityAlongNormal = velocity_.Dot(normal);
-
     if (velocityAlongNormal >= 0.0f)
         return;
 
@@ -90,7 +89,6 @@ void ProjectileObject::Bounce(const Vector3& hitCenter, const Vector3& hitNormal
     ReduceSpeed(bounceSpeedMultiplier_);
 
     constexpr float collisionSkin = 0.01f;
-
     SetPosition(hitCenter + normal * collisionSkin);
 }
 

@@ -87,6 +87,38 @@ struct CameraDesc
     float fovY = 90.0f;
 };
 
+struct FogDesc
+{
+    bool enabled = false;
+
+    Vector4 topColor =
+    {
+        0.015f,
+        0.003f,
+        0.012f,
+        1.0f
+    };
+
+    Vector4 middleColor =
+    {
+        0.15f,
+        0.21f,
+        0.53f,
+        1.0f
+    };
+
+    Vector4 bottomColor =
+    {
+        0.46f,
+        0.78f,
+        0.87f,
+        1.0f
+    };
+
+    float startDistance = 100.0f;
+    float endDistance = 300.0f;
+};
+
 constexpr UINT kMaxDirectionalLights = 3;
 
 struct SceneLightDesc
@@ -124,6 +156,15 @@ struct PassCB
     float specularPower = 128.0f;
     UINT directionalLightCount = 0;
     Vector2 pad1 = Vector2::Zero;
+
+    Vector4 fogTopColor = Vector4::Zero;
+    Vector4 fogMiddleColor = Vector4::Zero;
+    Vector4 fogBottomColor = Vector4::Zero;
+
+    float fogStart = 0.0f;
+    float fogEnd = 0.0f;
+    float viewportHeight = 1.0f;
+    UINT fogEnabled = 0;
 };
 
 struct MaterialCB

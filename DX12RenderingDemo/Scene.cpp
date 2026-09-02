@@ -23,6 +23,7 @@ void Scene::Load(
 	nextObjectCBIndex_ = 0;
 
 	lightDesc_ = SetupLightDesc();
+	fogDesc_ = SetupFogDesc();
 
 	CreateCamera();
 
@@ -322,10 +323,36 @@ void Scene::FlushDestroyedGameObjects()
 
 	objects_.erase(
 		std::remove_if(objects_.begin(), objects_.end(),
-		[](const std::unique_ptr<GameObject>& object)
-		{
-			return !object || object->IsPendingDestroy();
-		}),
+			[](const std::unique_ptr<GameObject>& object)
+			{
+				return !object || object->IsPendingDestroy();
+			}),
 		objects_.end()
 	);
+
+	RebuildObjectCBIndices();
+}
+
+void Scene::RebuildObjectCBIndices()
+{
+	nextObjectCBIndex_ = 0;
+
+	for (auto& object : objects_)
+	{
+		RebuildObjectCBIndicesRecursive(object.get());
+	}
+}
+
+void Scene::RebuildObjectCBIndicesRecursive(
+	GameObject* object)
+{
+	if (!object)
+		return;
+
+	object->SetObjectCBIndex(nextObjectCBIndex_++);
+
+	for (const auto& child : object->GetChildren())
+	{
+		RebuildObjectCBIndicesRecursive(child.get());
+	}
 }
