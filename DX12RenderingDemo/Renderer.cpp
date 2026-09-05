@@ -16,6 +16,11 @@ Renderer::~Renderer() {}
 void Renderer::Initialize(HWND hwnd, UINT width, UINT height)
 {
     d3dCore_.Initialize(hwnd, width, height);
+
+    timestampFrequency_ = d3dCore_.GetTimestampFrequency();
+
+    if (timestampFrequency_ == 0)
+        LOG("GPU Timestamp frequency query failed");
     
     CreateRootSignature();
     CreateFrameResources();
@@ -332,9 +337,9 @@ Camera* Renderer::BeginFrame(Scene* scene)
     AdvanceFrameResource();
     WaitForCurrentFrameResource();
 
-    // 이 FrameResource를 마지막으로 사용했던 GPU 작업은
-    // 위 Wait에서 완료되었으므로 이제 안전하게 해제 가능.
-    currentFrameResource_->transientUploadResources_.clear();
+    ReadGlassGpuTimestamp();
+
+    currentFrameResource_-> transientUploadResources_.clear();
 
     d3dCore_.ResetCommandList(currentFrameResource_->cmdAllocator_.Get());
 
@@ -368,7 +373,15 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
     
     RenderItems(renderQueueBuilder_.GetOpaqueQueue(), camera);
     RenderItems(renderQueueBuilder_.GetTransparentQueue(), camera);
-    RenderGlassItems(renderQueueBuilder_.GetGlassQueue(), camera);
+
+    const auto& glassQueue = renderQueueBuilder_.GetGlassQueue();
+
+    if (!glassQueue.empty())
+    {
+        BeginGlassGpuTimestamp();
+        RenderGlassItems(glassQueue, camera);
+        EndGlassGpuTimestamp();
+    }
 
     if (postProcessRenderer_)
         postProcessRenderer_->EndSceneRender(cmdList);
@@ -541,4 +554,77 @@ void Renderer::ReleaseSkyboxUploadResources()
 {
     if (skyboxRenderer_)
         skyboxRenderer_->ReleaseUploadResources();
+}
+
+void Renderer::BeginGlassGpuTimestamp()
+{
+    if (!currentFrameResource_ || !currentFrameResource_->glassTimestampQueryHeap_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    if (!cmdList)
+        return;
+
+    cmdList->EndQuery(currentFrameResource_-> glassTimestampQueryHeap_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
+}
+
+void Renderer::EndGlassGpuTimestamp()
+{
+    if (!currentFrameResource_ || !currentFrameResource_->glassTimestampQueryHeap_ || !currentFrameResource_->glassTimestampReadback_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    if (!cmdList)
+        return;
+
+    cmdList->EndQuery(currentFrameResource_-> glassTimestampQueryHeap_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
+
+    cmdList->ResolveQueryData(
+        currentFrameResource_->
+        glassTimestampQueryHeap_.Get(),
+        D3D12_QUERY_TYPE_TIMESTAMP,
+        0,
+        2,
+        currentFrameResource_->
+        glassTimestampReadback_.Get(),
+        0
+    );
+
+    currentFrameResource_-> glassTimestampPending_ = true;
+}
+
+void Renderer::ReadGlassGpuTimestamp()
+{
+    if (!currentFrameResource_ || !currentFrameResource_->glassTimestampPending_ || !currentFrameResource_->glassTimestampReadback_ || timestampFrequency_ == 0)
+        return;
+
+    UINT64* timestamps = nullptr;
+
+    D3D12_RANGE readRange{};
+    readRange.Begin = 0;
+    readRange.End = sizeof(UINT64) * 2;
+
+    HRESULT hr = currentFrameResource_->glassTimestampReadback_->Map(0, &readRange, reinterpret_cast<void**>(&timestamps));
+
+    if (SUCCEEDED(hr) && timestamps)
+    {
+        const UINT64 beginTimestamp = timestamps[0];
+        const UINT64 endTimestamp = timestamps[1];
+
+        if (endTimestamp >= beginTimestamp)
+        {
+            const UINT64 elapsedTicks = endTimestamp - beginTimestamp;
+            lastGlassGpuTimeMs_ = static_cast<double>(elapsedTicks) * 1000.0 / static_cast<double>(timestampFrequency_);
+        }
+
+        D3D12_RANGE writtenRange{};
+        writtenRange.Begin = 0;
+        writtenRange.End = 0;
+
+        currentFrameResource_->glassTimestampReadback_->Unmap(0, &writtenRange );
+    }
+
+    currentFrameResource_-> glassTimestampPending_ = false;
 }

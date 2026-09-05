@@ -58,15 +58,7 @@ void SceneManager::ProcessSceneChange(
 
 	ReleaseCurrentScene();
 
-	CreateScene(
-		nextSceneType_,
-		device,
-		cmdList,
-		rootSignature,
-		assetManager,
-		width,
-		height
-	);
+	CreateScene(nextSceneType_, device, cmdList, rootSignature, assetManager, width, height);
 
 	sceneChangeRequested_ = false;
 	nextSceneType_ = SCENE_TYPE::None;

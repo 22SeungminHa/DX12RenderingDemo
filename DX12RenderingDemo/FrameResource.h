@@ -18,6 +18,11 @@ public:
 
     std::vector<ComPtr<ID3D12Resource>> transientUploadResources_;
 
+    ComPtr<ID3D12QueryHeap> glassTimestampQueryHeap_;
+    ComPtr<ID3D12Resource> glassTimestampReadback_;
+
+    bool glassTimestampPending_ = false;
+
     UINT64 fenceValue_ = 0;
 };
 

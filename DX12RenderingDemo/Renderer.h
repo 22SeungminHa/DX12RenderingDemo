@@ -46,6 +46,9 @@ private:
 
     RefractionMode refractionMode_ = RefractionMode::PerGlassCapture;
 
+    UINT64 timestampFrequency_ = 0;
+    double lastGlassGpuTimeMs_ = 0.0;
+
 public:
     Renderer();
     ~Renderer();
@@ -76,6 +79,7 @@ public:
     ID3D12GraphicsCommandList* GetRenderCommandList() const { return d3dCore_.GetRenderCommandList(); }
     ID3D12GraphicsCommandList* GetUploadCommandList() const { return d3dCore_.GetUploadCommandList(); }
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
+    double GetLastGlassGpuTimeMs() const { return lastGlassGpuTimeMs_; }
 
 private:
     // Core Resources
@@ -112,4 +116,8 @@ private:
     void RenderSceneToTexture(Scene* scene, Camera* camera);
     void RenderToBackBuffer(Camera* camera);
     void EndFrame();
+
+    void BeginGlassGpuTimestamp();
+    void EndGlassGpuTimestamp();
+    void ReadGlassGpuTimestamp();
 };

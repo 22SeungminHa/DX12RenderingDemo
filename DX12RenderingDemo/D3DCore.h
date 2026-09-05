@@ -48,6 +48,7 @@ public:
 	ID3D12GraphicsCommandList* GetRenderCommandList() const { return renderCmdList_.Get(); }
 	ID3D12GraphicsCommandList* GetUploadCommandList() const { return uploadCmdList_.Get(); }
 	ID3D12CommandQueue* GetCommandQueue() const { return cmdQueue_.Get(); }
+	UINT64 GetTimestampFrequency() const;
 
 	// Render Target / Depth Stencil Accessors
 	ID3D12Resource* GetCurrentRenderTarget() const { return renderTargetBuffers_[currentBackBufferIndex_].Get(); }

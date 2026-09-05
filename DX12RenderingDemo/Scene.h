@@ -23,6 +23,7 @@ public:
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }
 	const SceneLightDesc& GetLightDesc() const { return lightDesc_; }
 	const FogDesc& GetFogDesc() const { return fogDesc_; }
+	const std::vector<std::unique_ptr<DirectionalLight>>& GetDirectionalLights() const { return directionalLights_; }
 
 	void Load(
 		ID3D12Device* device,
@@ -112,10 +113,7 @@ protected:
 
 	void FlushDestroyedGameObjects();
 
-	virtual bool IsFreeCameraControlEnabled() const
-	{
-		return true;
-	}
+	virtual bool IsFreeCameraControlEnabled() const { return true; }
 
 protected:
 	std::vector<std::unique_ptr<GameObject>> objects_;
@@ -143,17 +141,10 @@ public:
 	}
 
 	template<typename Func>
-	void ForEachObject(
-		ObjectType type,
-		Func&& func)
+	void ForEachObject(ObjectType type, Func&& func)
 	{
 		for (auto& object : objects_)
-		{
-			ForEachObjectRecursive(
-				object.get(),
-				type,
-				func);
-		}
+			ForEachObjectRecursive(object.get(), type, func);
 	}
 
 	DirectionalLight* AddDirectionalLight()
@@ -164,11 +155,6 @@ public:
 		directionalLights_.push_back(std::move(light));
 
 		return ptr;
-	}
-
-	const std::vector<std::unique_ptr<DirectionalLight>>& GetDirectionalLights() const
-	{
-		return directionalLights_;
 	}
 
 	template<typename T, typename... Args>
@@ -209,10 +195,7 @@ private:
 	}
 
 	template<typename Func>
-	void ForEachObjectRecursive(
-		GameObject* object,
-		ObjectType type,
-		Func& func)
+	void ForEachObjectRecursive(GameObject* object, ObjectType type, Func& func)
 	{
 		if (!object)
 			return;
@@ -221,12 +204,7 @@ private:
 			func(*object);
 
 		for (const auto& child : object->GetChildren())
-		{
-			ForEachObjectRecursive(
-				child.get(),
-				type,
-				func);
-		}
+			ForEachObjectRecursive(child.get(), type, func);
 	}
 
 	void RebuildObjectCBIndices();

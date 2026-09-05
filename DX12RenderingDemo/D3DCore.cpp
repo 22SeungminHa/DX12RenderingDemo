@@ -338,6 +338,22 @@ void D3DCore::MoveToNextFrame()
     currentBackBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 }
 
+UINT64 D3DCore::GetTimestampFrequency() const
+{
+    if (!cmdQueue_)
+        return 0;
+
+    UINT64 frequency = 0;
+
+    if (FAILED(
+        cmdQueue_->GetTimestampFrequency(
+            &frequency)))
+    {
+        return 0;
+    }
+
+    return frequency;
+}
 
 void D3DCore::ExecuteCommandList()
 {
