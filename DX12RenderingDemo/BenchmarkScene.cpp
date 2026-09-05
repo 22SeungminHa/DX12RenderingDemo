@@ -49,8 +49,13 @@ void BenchmarkScene::CreateLights()
 CameraDesc BenchmarkScene::SetupCameraDesc() const
 {
     CameraDesc desc{};
-    desc.eye = { 0.0f, 0.0f, -22.0f };
+
+    desc.eye = { 0.0f, 0.0f, -15.0f };
     desc.target = { 0.0f, 0.0f, 0.0f };
+
+    //desc.eye = { 6.62168f, 0.834289f, -2.49053f };
+    //desc.target = { 5.99946f, 0.385866f, -1.84885f };
+
     desc.nearZ = 1.0f;
     desc.farZ = 100.0f;
     desc.fovY = 60.0f;
@@ -206,6 +211,25 @@ void BenchmarkScene::UpdateMeasurement(Renderer& renderer)
 
     const double gpuTimeMs = renderer.GetLastGlassGpuTimeMs();
 
+    const BenchmarkCase& benchmarkCase =
+        kBenchmarkCases[currentBenchmarkCaseIndex_];
+
+    if (benchmarkCase.mode ==
+        RefractionMode::PartialPerGlassCapture)
+    {
+        partialCopyAreaPixelsSum_ +=
+            renderer.GetPartialCopyAreaPixels();
+
+        partialCopyCountSum_ +=
+            renderer.GetPartialCopyCount();
+
+        partialFullCopyFallbackCountSum_ +=
+            renderer.GetPartialFullCopyFallbackCount();
+
+        partialFullScreenPixels_ =
+            renderer.GetPartialFullScreenPixels();
+    }
+
     measurementSamplesMs_.push_back(gpuTimeMs);
     measurementSumMs_ += gpuTimeMs;
     measurementMinMs_ = std::min(measurementMinMs_, gpuTimeMs);
@@ -241,6 +265,10 @@ void BenchmarkScene::BeginCurrentBenchmarkCase(Renderer& renderer)
     measurementSumMs_ = 0.0;
     measurementMinMs_ = std::numeric_limits<double>::max();
     measurementMaxMs_ = 0.0;
+    partialCopyAreaPixelsSum_ = 0;
+    partialCopyCountSum_ = 0;
+    partialFullCopyFallbackCountSum_ = 0;
+    partialFullScreenPixels_ = 0;
 
     measurementSamplesMs_.clear();
     measurementSamplesMs_.reserve(kMeasurementSampleCount);
@@ -329,6 +357,89 @@ void BenchmarkScene::CompleteCurrentBenchmarkCase(Renderer& renderer)
     LOG("GPU P95: " << p95Ms << " ms");
     LOG("GPU STDDEV: " << stdDevMs << " ms");
 
+    if (benchmarkCase.mode ==
+        RefractionMode::PartialPerGlassCapture)
+    {
+        const double averageCopyAreaPixels =
+            partialCopyCountSum_ > 0
+            ? static_cast<double>(partialCopyAreaPixelsSum_) /
+            static_cast<double>(partialCopyCountSum_)
+            : 0.0;
+
+        const double averageCopyAreaRatio =
+            partialFullScreenPixels_ > 0
+            ? averageCopyAreaPixels /
+            static_cast<double>(partialFullScreenPixels_) *
+            100.0
+            : 0.0;
+
+        const double averagePartialCopiesPerFrame =
+            measurementSampleCount_ > 0
+            ? static_cast<double>(partialCopyCountSum_) /
+            static_cast<double>(measurementSampleCount_)
+            : 0.0;
+
+        const double averageFallbacksPerFrame =
+            measurementSampleCount_ > 0
+            ? static_cast<double>(
+                partialFullCopyFallbackCountSum_) /
+            static_cast<double>(measurementSampleCount_)
+            : 0.0;
+
+        const UINT64 effectiveCopiedPixels =
+            partialCopyAreaPixelsSum_ +
+            partialFullCopyFallbackCountSum_ *
+            partialFullScreenPixels_;
+
+        const UINT64 totalCopyCount =
+            partialCopyCountSum_ +
+            partialFullCopyFallbackCountSum_;
+
+        const UINT64 fullCopyBaselinePixels =
+            totalCopyCount *
+            partialFullScreenPixels_;
+
+        const double effectiveCopyRatio =
+            fullCopyBaselinePixels > 0
+            ? static_cast<double>(effectiveCopiedPixels) /
+            static_cast<double>(fullCopyBaselinePixels) *
+            100.0
+            : 0.0;
+
+        const double copyAreaReduction =
+            100.0 - effectiveCopyRatio;
+
+        LOG("Partial Copy Statistics");
+        LOG("Full Screen Area: "
+            << partialFullScreenPixels_
+            << " pixels");
+
+        LOG("Average Partial Copy Area: "
+            << averageCopyAreaPixels
+            << " pixels");
+
+        LOG("Average Partial Copy Area Ratio: "
+            << averageCopyAreaRatio
+            << "%");
+
+        LOG("Average Partial Copies / Frame: "
+            << averagePartialCopiesPerFrame);
+
+        LOG("Full Copy Fallback Total: "
+            << partialFullCopyFallbackCountSum_);
+
+        LOG("Average Full Copy Fallback / Frame: "
+            << averageFallbacksPerFrame);
+
+        LOG("Effective Copy Area Ratio vs Full PerGlass: "
+            << effectiveCopyRatio
+            << "%");
+
+        LOG("Copy Area Reduction vs Full PerGlass: "
+            << copyAreaReduction
+            << "%");
+    }
+
     ++currentBenchmarkCaseIndex_;
 
     // ´ÙÀ½ Case
@@ -357,6 +468,9 @@ const char* BenchmarkScene::GetRefractionModeName(RefractionMode mode)
     case RefractionMode::PerGlassCapture:
         return "PerGlassCapture";
 
+    case RefractionMode::PartialPerGlassCapture:
+        return "PartialPerGlassCapture";
+
     case RefractionMode::AccumulationBuffer:
         return "AccumulationBuffer";
 
@@ -381,9 +495,45 @@ void BenchmarkScene::PrintBenchmarkSummary() const
             << " | MAX: " << result.maxMs << " ms");
 
     LOG("----------------------------------------");
-    LOG("AccumulationBuffer vs PerGlassCapture");
+    LOG("PartialPerGlassCapture vs PerGlassCapture");
 
     const UINT glassCounts[] = { 100, 200, 300 };
+
+    for (UINT glassCount : glassCounts)
+    {
+        double perGlassMs = 0.0;
+        double partialPerGlassMs = 0.0;
+
+        for (const BenchmarkResult& result : benchmarkResults_)
+        {
+            if (result.glassCount != glassCount)
+                continue;
+
+            if (result.mode == RefractionMode::PerGlassCapture)
+                perGlassMs = result.averageMs;
+
+            if (result.mode == RefractionMode::PartialPerGlassCapture)
+                partialPerGlassMs = result.averageMs;
+        }
+
+        if (perGlassMs <= 0.0 || partialPerGlassMs <= 0.0)
+            continue;
+
+        const double improvementPercent =
+            (perGlassMs - partialPerGlassMs) / perGlassMs * 100.0;
+
+        const double speedup =
+            perGlassMs / partialPerGlassMs;
+
+        LOG("Glass " << glassCount
+            << " | PerGlass: " << perGlassMs << " ms"
+            << " | Partial: " << partialPerGlassMs << " ms"
+            << " | Improvement: " << improvementPercent << "%"
+            << " | Speedup: " << speedup << "x");
+    }
+
+    LOG("----------------------------------------");
+    LOG("AccumulationBuffer vs PerGlassCapture");
 
     for (UINT glassCount : glassCounts)
     {

@@ -97,22 +97,32 @@ private:
 
     std::vector<BenchmarkResult> benchmarkResults_;
 
+    UINT64 partialCopyAreaPixelsSum_ = 0;
+    UINT64 partialCopyCountSum_ = 0;
+    UINT64 partialFullCopyFallbackCountSum_ = 0;
+
+    UINT64 partialFullScreenPixels_ = 0;
+
     static constexpr UINT kWarmupFrameCount = 120;
     static constexpr UINT kMeasurementSampleCount = 300;
 
-    static constexpr std::array<BenchmarkCase, 9> kBenchmarkCases =
+    static constexpr std::array<BenchmarkCase, 12> kBenchmarkCases =
     { {
-        { RefractionMode::SingleCapture,      100 },
-        { RefractionMode::SingleCapture,      200 },
-        { RefractionMode::SingleCapture,      300 },
+        { RefractionMode::SingleCapture,          100 },
+        { RefractionMode::SingleCapture,          200 },
+        { RefractionMode::SingleCapture,          300 },
 
-        { RefractionMode::PerGlassCapture,    100 },
-        { RefractionMode::PerGlassCapture,    200 },
-        { RefractionMode::PerGlassCapture,    300 },
+        { RefractionMode::PerGlassCapture,        100 },
+        { RefractionMode::PerGlassCapture,        200 },
+        { RefractionMode::PerGlassCapture,        300 },
 
-        { RefractionMode::AccumulationBuffer, 100 },
-        { RefractionMode::AccumulationBuffer, 200 },
-        { RefractionMode::AccumulationBuffer, 300 }
+        { RefractionMode::PartialPerGlassCapture, 100 },
+        { RefractionMode::PartialPerGlassCapture, 200 },
+        { RefractionMode::PartialPerGlassCapture, 300 },
+
+        { RefractionMode::AccumulationBuffer,     100 },
+        { RefractionMode::AccumulationBuffer,     200 },
+        { RefractionMode::AccumulationBuffer,     300 }
     } };
 
     static constexpr UINT kColumns = 10;

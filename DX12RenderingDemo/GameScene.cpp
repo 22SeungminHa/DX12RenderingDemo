@@ -839,8 +839,7 @@ GameObject* GameScene::SpawnMapSegment(
     activeMaps_.push_back(
         std::move(segment));
 
-    LOG(
-        "Spawn Map_"
+    LOG("Spawn Map_"
         << (mapIndex + 1)
         << " / Sequence: "
         << sequence

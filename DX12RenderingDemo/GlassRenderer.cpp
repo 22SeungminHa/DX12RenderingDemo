@@ -83,6 +83,68 @@ void GlassRenderer::CaptureRefractionScene(ID3D12GraphicsCommandList* cmdList, R
     sceneColor.Transition(cmdList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
+void GlassRenderer::CaptureRefractionScenePartial(
+    ID3D12GraphicsCommandList* cmdList,
+    RenderTexture& sceneColor,
+    const D3D12_RECT& screenBounds)
+{
+    if (!cmdList ||
+        !sceneColor.GetResource() ||
+        !refractionSceneColor_.GetResource())
+    {
+        return;
+    }
+
+    if (screenBounds.right <= screenBounds.left ||
+        screenBounds.bottom <= screenBounds.top)
+    {
+        return;
+    }
+
+    sceneColor.Transition(
+        cmdList,
+        D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+    refractionSceneColor_.Transition(
+        cmdList,
+        D3D12_RESOURCE_STATE_COPY_DEST);
+
+    D3D12_TEXTURE_COPY_LOCATION srcLocation{};
+    srcLocation.pResource = sceneColor.GetResource();
+    srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    srcLocation.SubresourceIndex = 0;
+
+    D3D12_TEXTURE_COPY_LOCATION dstLocation{};
+    dstLocation.pResource = refractionSceneColor_.GetResource();
+    dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dstLocation.SubresourceIndex = 0;
+
+    D3D12_BOX srcBox{};
+    srcBox.left = static_cast<UINT>(screenBounds.left);
+    srcBox.top = static_cast<UINT>(screenBounds.top);
+    srcBox.front = 0;
+
+    srcBox.right = static_cast<UINT>(screenBounds.right);
+    srcBox.bottom = static_cast<UINT>(screenBounds.bottom);
+    srcBox.back = 1;
+
+    cmdList->CopyTextureRegion(
+        &dstLocation,
+        static_cast<UINT>(screenBounds.left),
+        static_cast<UINT>(screenBounds.top),
+        0,
+        &srcLocation,
+        &srcBox);
+
+    refractionSceneColor_.Transition(
+        cmdList,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    sceneColor.Transition(
+        cmdList,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
 void GlassRenderer::BeginAccumulation(ID3D12GraphicsCommandList* cmdList, Camera* camera, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle)
 {
     if (!cmdList || !camera || !glassAccumColor_.GetResource() || !glassRevealage_.GetResource())

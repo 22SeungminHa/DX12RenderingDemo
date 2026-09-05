@@ -83,7 +83,8 @@ public:
 		UINT vertexOffset,
 		UINT vertexCount,
 		UINT indexOffset,
-		UINT indexCount
+		UINT indexCount,
+		const BoundingBox& localBounds
 	);
 
 	virtual ~RuntimeMeshLit() {}

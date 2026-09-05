@@ -7,7 +7,7 @@ NormalMap=GlassPattern4.dds
 
 BaseColorTint=1.0,1.0,1.0,1.0
 Alpha=1.0
-FresnelPower=3.0
+FresnelPower=5.0
 SpecularStrength=1.5
-RefractionStrength=0.05
-ReflectionStrength=0.7
+RefractionStrength=0.1
+ReflectionStrength=5.0

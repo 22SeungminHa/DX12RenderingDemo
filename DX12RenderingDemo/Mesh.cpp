@@ -168,13 +168,13 @@ RuntimeMeshLit::RuntimeMeshLit(
     UINT vertexOffset,
     UINT vertexCount,
     UINT indexOffset,
-    UINT indexCount)
+    UINT indexCount,
+    const BoundingBox& localBounds)
     : Mesh()
 {
     if (!buffer || !buffer->IsValid() || vertexCount == 0 || indexCount == 0)
         return;
 
-    // 같은 GPU Resource의 ComPtr를 공유한다.
     vertexBuffer_ = buffer->GetVertexBuffer();
     indexBuffer_ = buffer->GetIndexBuffer();
 
@@ -184,16 +184,28 @@ RuntimeMeshLit::RuntimeMeshLit(
     stride_ = sizeof(LitVertex);
     primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-    const UINT64 vertexOffsetBytes = static_cast<UINT64>(vertexOffset) * sizeof(LitVertex);
-    const UINT64 indexOffsetBytes = static_cast<UINT64>(indexOffset) * sizeof(UINT);
+    const UINT64 vertexOffsetBytes =
+        static_cast<UINT64>(vertexOffset) * sizeof(LitVertex);
 
-    vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress() + vertexOffsetBytes;
+    const UINT64 indexOffsetBytes =
+        static_cast<UINT64>(indexOffset) * sizeof(UINT);
+
+    vertexBufferView_.BufferLocation =
+        vertexBuffer_->GetGPUVirtualAddress() + vertexOffsetBytes;
+
     vertexBufferView_.StrideInBytes = sizeof(LitVertex);
-    vertexBufferView_.SizeInBytes = sizeof(LitVertex) * vertexCount;
+    vertexBufferView_.SizeInBytes =
+        sizeof(LitVertex) * vertexCount;
 
-    indexBufferView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress() + indexOffsetBytes;
+    indexBufferView_.BufferLocation =
+        indexBuffer_->GetGPUVirtualAddress() + indexOffsetBytes;
+
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-    indexBufferView_.SizeInBytes = sizeof(UINT) * indexCount;
+    indexBufferView_.SizeInBytes =
+        sizeof(UINT) * indexCount;
+
+    localBounds_ = localBounds;
+    hasLocalBounds_ = true;
 }
 
 SkyboxMesh::SkyboxMesh(
@@ -299,6 +311,8 @@ CubeMesh::CubeMesh(
         {{ 1,-1, 1}, Vector4::One, { 0,-1, 0}, { 1, 0, 0}, {1,1}},
     };
 
+    BuildLocalBounds(vertices);
+
     std::vector<UINT> indices =
     {
          0,  1,  2,   0,  2,  3,
@@ -399,6 +413,8 @@ GlassMesh::GlassMesh(
         {{ hx,-hy, hz}, Vector4::One, { 0,-1, 0}, { 1, 0, 0}, {1,1}},
     };
 
+    BuildLocalBounds(vertices);
+
     std::vector<UINT> indices =
     {
          0,  1,  2,   0,  2,  3,
@@ -495,6 +511,8 @@ SphereMesh::SphereMesh(
             );
         }
     }
+
+    BuildLocalBounds(vertices);
 
     const UINT ringVertexCount = sliceCount + 1;
 

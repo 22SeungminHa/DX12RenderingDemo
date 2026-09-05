@@ -208,7 +208,10 @@ bool GlassComponent::CommitPendingFragments(
         const PendingFragment& fragment = pendingFragments_[i];
         const FragmentMeshSlice& slice = slices[i];
 
-        auto fragmentMesh = std::make_shared<RuntimeMeshLit>(runtimeBuffer, slice.vertexOffset, slice.vertexCount, slice.indexOffset, slice.indexCount);
+        const BoundingBox fragmentBounds =
+            CalculateFragmentBounds(fragment.geometry);
+
+        auto fragmentMesh = std::make_shared<RuntimeMeshLit>(runtimeBuffer, slice.vertexOffset, slice.vertexCount, slice.indexOffset, slice.indexCount, fragmentBounds);
 
         GameObject* fragmentObject = scene.CreateChildObject(owner_, fragmentMesh, material_, fragment.geometry.localPosition);
         if (!fragmentObject)

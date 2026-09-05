@@ -28,6 +28,10 @@ public:
     void Resize(UINT width, UINT height);
 
     void CaptureRefractionScene(ID3D12GraphicsCommandList* cmdList, RenderTexture& sceneColor);
+    void CaptureRefractionScenePartial(
+        ID3D12GraphicsCommandList* cmdList,
+        RenderTexture& sceneColor,
+        const D3D12_RECT& screenBounds);
 
     D3D12_GPU_DESCRIPTOR_HANDLE GetRefractionSceneSrv() const { return refractionSceneColor_.GetSrv(); }
 

@@ -473,6 +473,10 @@ void Renderer::RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera
         RenderPerGlassCapture(queue, camera);
         break;
 
+    case RefractionMode::PartialPerGlassCapture:
+        RenderPartialPerGlassCapture(queue, camera);
+        break;
+
     case RefractionMode::AccumulationBuffer:
         RenderAccumulation(queue, camera);
         break;
@@ -494,6 +498,72 @@ void Renderer::RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, C
     for (const RenderItemDesc& item : queue)
     {
         glassRenderer_->CaptureRefractionScene(cmdList, sceneColor);
+
+        cmdList->SetGraphicsRootDescriptorTable(
+            static_cast<UINT>(RootParam::SceneColorTexture),
+            glassRenderer_->GetRefractionSceneSrv());
+
+        RenderItem(item, camera);
+    }
+}
+
+void Renderer::RenderPartialPerGlassCapture(
+    const std::vector<RenderItemDesc>& queue,
+    Camera* camera)
+{
+    if (!glassRenderer_ || !postProcessRenderer_)
+        return;
+
+    auto* cmdList = d3dCore_.GetRenderCommandList();
+
+    RenderTexture& sceneColor =
+        postProcessRenderer_->GetSceneColorTarget();
+
+    partialCopyAreaPixels_ = 0;
+    partialCopyCount_ = 0;
+    partialFullCopyFallbackCount_ = 0;
+
+    const D3D12_RESOURCE_DESC sceneDesc =
+        sceneColor.GetResource()->GetDesc();
+
+    partialFullScreenPixels_ =
+        sceneDesc.Width *
+        static_cast<UINT64>(sceneDesc.Height);
+
+    for (const RenderItemDesc& item : queue)
+    {
+        const LONG copyWidth =
+            item.screenBounds.right - item.screenBounds.left;
+
+        const LONG copyHeight =
+            item.screenBounds.bottom - item.screenBounds.top;
+
+        const bool canUsePartialCopy =
+            item.hasScreenBounds &&
+            copyWidth > 0 &&
+            copyHeight > 0;
+
+        if (canUsePartialCopy)
+        {
+            partialCopyAreaPixels_ +=
+                static_cast<UINT64>(copyWidth) *
+                static_cast<UINT64>(copyHeight);
+
+            ++partialCopyCount_;
+
+            glassRenderer_->CaptureRefractionScenePartial(
+                cmdList,
+                sceneColor,
+                item.screenBounds);
+        }
+        else
+        {
+            ++partialFullCopyFallbackCount_;
+
+            glassRenderer_->CaptureRefractionScene(
+                cmdList,
+                sceneColor);
+        }
 
         cmdList->SetGraphicsRootDescriptorTable(
             static_cast<UINT>(RootParam::SceneColorTexture),

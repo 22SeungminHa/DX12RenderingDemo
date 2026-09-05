@@ -44,13 +44,19 @@ private:
     std::unique_ptr<PostProcessRenderer> postProcessRenderer_;
     std::unique_ptr<GlassRenderer> glassRenderer_;
 
-    RefractionMode refractionMode_ = RefractionMode::PerGlassCapture;
+    RefractionMode refractionMode_ = RefractionMode::PartialPerGlassCapture;
 
     UINT64 timestampFrequency_ = 0;
     double lastGlassGpuTimeMs_ = 0.0;
     UINT64 glassGpuSampleSerial_ = 0;
 
     bool glassGpuMeasurementEnabled_ = false;
+
+    UINT64 partialCopyAreaPixels_ = 0;
+    UINT64 partialFullScreenPixels_ = 0;
+
+    UINT partialCopyCount_ = 0;
+    UINT partialFullCopyFallbackCount_ = 0;
 
 public:
     Renderer();
@@ -86,10 +92,13 @@ public:
     RefractionMode GetRefractionMode() const { return refractionMode_; }
     bool IsGlassGpuMeasurementEnabled() const { return glassGpuMeasurementEnabled_; }
     UINT64 GetGlassGpuSampleSerial() const { return glassGpuSampleSerial_; }
+    UINT64 GetPartialCopyAreaPixels() const { return partialCopyAreaPixels_; }
+    UINT64 GetPartialFullScreenPixels() const { return partialFullScreenPixels_; }
+    UINT GetPartialCopyCount() const { return partialCopyCount_; }
+    UINT GetPartialFullCopyFallbackCount() const { return partialFullCopyFallbackCount_; }
 
     void SetGlassGpuMeasurementEnabled(bool enabled) { glassGpuMeasurementEnabled_ = enabled; }
     void SetRefractionMode(RefractionMode mode) { if (mode != RefractionMode::End) refractionMode_ = mode; }
-
 private:
     // Core Resources
     void CreateRootSignature();
@@ -112,6 +121,7 @@ private:
     void RenderGlassItems(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderSingleCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderPerGlassCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
+    void RenderPartialPerGlassCapture(const std::vector<RenderItemDesc>& queue, Camera* camera);
     void RenderAccumulation(const std::vector<RenderItemDesc>& queue, Camera* camera);
 
     // GPU Binding

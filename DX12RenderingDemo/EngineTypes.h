@@ -46,6 +46,7 @@ enum class RefractionMode
 {
     SingleCapture,
     PerGlassCapture,
+    PartialPerGlassCapture,
     AccumulationBuffer,
 
     End

@@ -11,6 +11,9 @@ struct RenderItemDesc
     GameObject* object = nullptr;
     MeshRenderer* meshRenderer = nullptr;
     float distanceToCamera = 0.0f;
+
+    D3D12_RECT screenBounds{};
+    bool hasScreenBounds = false;
 };
 
 class RenderQueueBuilder
@@ -26,6 +29,11 @@ public:
 private:
     void CollectRenderItems(GameObject* object, Camera* camera);
     void SortBackToFront(std::vector<RenderItemDesc>& queue);
+    bool CalculateScreenBounds(
+        GameObject* object,
+        MeshRenderer* meshRenderer,
+        Camera* camera,
+        D3D12_RECT& outBounds) const;
 
 private:
     std::vector<RenderItemDesc> opaqueQueue_;
