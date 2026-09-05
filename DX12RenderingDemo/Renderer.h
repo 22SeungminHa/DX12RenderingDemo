@@ -48,6 +48,9 @@ private:
 
     UINT64 timestampFrequency_ = 0;
     double lastGlassGpuTimeMs_ = 0.0;
+    UINT64 glassGpuSampleSerial_ = 0;
+
+    bool glassGpuMeasurementEnabled_ = false;
 
 public:
     Renderer();
@@ -80,6 +83,12 @@ public:
     ID3D12GraphicsCommandList* GetUploadCommandList() const { return d3dCore_.GetUploadCommandList(); }
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
     double GetLastGlassGpuTimeMs() const { return lastGlassGpuTimeMs_; }
+    RefractionMode GetRefractionMode() const { return refractionMode_; }
+    bool IsGlassGpuMeasurementEnabled() const { return glassGpuMeasurementEnabled_; }
+    UINT64 GetGlassGpuSampleSerial() const { return glassGpuSampleSerial_; }
+
+    void SetGlassGpuMeasurementEnabled(bool enabled) { glassGpuMeasurementEnabled_ = enabled; }
+    void SetRefractionMode(RefractionMode mode) { if (mode != RefractionMode::End) refractionMode_ = mode; }
 
 private:
     // Core Resources

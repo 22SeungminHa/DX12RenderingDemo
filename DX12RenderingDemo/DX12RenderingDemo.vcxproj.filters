@@ -186,6 +186,9 @@
     <ClInclude Include="MapObjectLoader.h">
       <Filter>소스 파일\Assets</Filter>
     </ClInclude>
+    <ClInclude Include="BenchmarkScene.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shader.cpp">
@@ -322,6 +325,9 @@
     </ClCompile>
     <ClCompile Include="MapObjectLoader.cpp">
       <Filter>소스 파일\Assets</Filter>
+    </ClCompile>
+    <ClCompile Include="BenchmarkScene.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

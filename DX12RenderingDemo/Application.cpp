@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "Application.h"
+#include "BenchmarkScene.h"
 
 Application::Application()
 {
@@ -35,7 +36,7 @@ void Application::OnCreate(HINSTANCE instance, HWND hwnd)
 	inputSystem_->Initialize(hwnd_);
 	InitializeDefaultTextures();
 
-	sceneManager_->RequestChangeScene(SCENE_TYPE::Game);
+	sceneManager_->RequestChangeScene(SceneType::Benchmark);
 
 	timer_.Reset();
 }
@@ -168,22 +169,7 @@ LRESULT CALLBACK Application::OnProcessMessage(HWND hwnd, UINT msg, WPARAM wPara
 		if (msg == WM_KEYUP && wParam == VK_ESCAPE)
 			::PostQuitMessage(0);
 
-		//if (msg == WM_KEYUP && wParam == VK_SPACE && sceneManager_) {
-		//	SCENE_TYPE type = sceneManager_->GetCurrentSceneType();
-		//	if (type == SCENE_TYPE::TEST) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST2);
-		//	else if (type == SCENE_TYPE::TEST2) sceneManager_->RequestChangeScene(SCENE_TYPE::TEST);
-		//}
-
 		break;
-
-	//case WM_ACTIVATE:
-	//{
-	//	if (LOWORD(wParam) == WA_INACTIVE)
-	//		timer_.Stop();
-	//	else if (!isMinimized_)
-	//		timer_.Start();
-	//	break;
-	//}
 	}
 
 	return 0;
@@ -245,7 +231,8 @@ void Application::FrameAdvance()
 	if (isMinimized_)
 		return;
 
-	if (resizePending_) {
+	if (resizePending_)
+	{
 		resizePending_ = false;
 		HandleResize(pendingResizeWidth_, pendingResizeHeight_);
 		return; // resize한 프레임은 바로 종료
@@ -253,10 +240,63 @@ void Application::FrameAdvance()
 
 	ProcessSceneChange();
 
-	if (inputSystem_) inputSystem_->Update();
+	if (inputSystem_)
+		inputSystem_->Update();
 
 	Scene* currentScene = sceneManager_ ? sceneManager_->GetCurrentScene() : nullptr;
-	if (!currentScene) return;
+
+	if (!currentScene)
+		return;
+
+	if (inputSystem_ && renderer_ && currentScene->GetSceneType() == SceneType::Benchmark)
+	{
+		auto* benchmarkScene = dynamic_cast<BenchmarkScene*>(currentScene);
+
+		if (benchmarkScene)
+		{
+			// Refraction Mode
+			if (!benchmarkScene->IsMeasurementActive())
+			{
+				// Refraction Mode
+				if (inputSystem_->WasKeyPressed('1'))
+				{
+					renderer_->SetRefractionMode(RefractionMode::SingleCapture);
+					LOG("Refraction Mode: SingleCapture");
+				}
+
+				if (inputSystem_->WasKeyPressed('2'))
+				{
+					renderer_->SetRefractionMode(RefractionMode::PerGlassCapture);
+					LOG("Refraction Mode: PerGlassCapture");
+				}
+
+				if (inputSystem_->WasKeyPressed('3'))
+				{
+					renderer_->SetRefractionMode(RefractionMode::AccumulationBuffer);
+					LOG("Refraction Mode: AccumulationBuffer");
+				}
+
+				// Glass Count
+				if (inputSystem_->WasKeyPressed('4'))
+					benchmarkScene->SetGlassObjectCount(100);
+
+				if (inputSystem_->WasKeyPressed('5'))
+					benchmarkScene->SetGlassObjectCount(200);
+
+				if (inputSystem_->WasKeyPressed('6'))
+					benchmarkScene->SetGlassObjectCount(300);
+			}
+
+			// Measurement
+			if (inputSystem_->WasKeyPressed('B'))
+			{
+				if (benchmarkScene->IsMeasurementActive())
+					benchmarkScene->CancelMeasurement(*renderer_);
+				else
+					benchmarkScene->StartMeasurement(*renderer_);
+			}
+		}
+	}
 
 	const float dt = timer_.GetTimeElapsed();
 
@@ -265,7 +305,14 @@ void Application::FrameAdvance()
 
 	if (renderer_) renderer_->Render(currentScene);
 
-	if (hwnd_) {
+	if (renderer_ && currentScene->GetSceneType() == SceneType::Benchmark)
+	{
+		auto* benchmarkScene = static_cast<BenchmarkScene*>(currentScene);
+		benchmarkScene->UpdateMeasurement(*renderer_);
+	}
+
+	if (hwnd_)
+	{
 		timer_.GetFrameRate(frameRate_ + kTitlePrefixLength, static_cast<int>(kRemain));
 		::SetWindowText(hwnd_, frameRate_);
 	}

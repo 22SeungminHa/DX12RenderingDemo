@@ -51,12 +51,12 @@ enum class RefractionMode
     End
 };
 
-enum class SCENE_TYPE
+enum class SceneType
 {
     None,
     Title,
     Game,
-    Rendering,
+    Benchmark,
 
     End
 };

@@ -378,9 +378,13 @@ void Renderer::RenderSceneToTexture(Scene* scene, Camera* camera)
 
     if (!glassQueue.empty())
     {
-        BeginGlassGpuTimestamp();
+        if (glassGpuMeasurementEnabled_)
+            BeginGlassGpuTimestamp();
+
         RenderGlassItems(glassQueue, camera);
-        EndGlassGpuTimestamp();
+
+        if (glassGpuMeasurementEnabled_)
+            EndGlassGpuTimestamp();
     }
 
     if (postProcessRenderer_)
@@ -613,10 +617,11 @@ void Renderer::ReadGlassGpuTimestamp()
         const UINT64 beginTimestamp = timestamps[0];
         const UINT64 endTimestamp = timestamps[1];
 
-        if (endTimestamp >= beginTimestamp)
+        if (endTimestamp > beginTimestamp)
         {
             const UINT64 elapsedTicks = endTimestamp - beginTimestamp;
             lastGlassGpuTimeMs_ = static_cast<double>(elapsedTicks) * 1000.0 / static_cast<double>(timestampFrequency_);
+            ++glassGpuSampleSerial_;
         }
 
         D3D12_RANGE writtenRange{};

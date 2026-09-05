@@ -17,7 +17,7 @@ public:
 	Scene(UINT width, UINT height);
 	virtual ~Scene();
 
-	virtual SCENE_TYPE GetSceneType() const = 0;
+	virtual SceneType GetSceneType() const = 0;
 
 	Camera* GetActiveCamera() const { return activeCamera_; }
 	const std::vector<std::unique_ptr<GameObject>>& GetObjects() const { return objects_; }

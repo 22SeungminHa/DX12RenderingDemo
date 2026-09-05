@@ -11,10 +11,10 @@ public:
 
 public:
     Scene* GetCurrentScene() const { return currentScene_.get(); }
-    SCENE_TYPE GetCurrentSceneType() const { return currentScene_ ? currentScene_->GetSceneType() : SCENE_TYPE::None; }
+    SceneType GetCurrentSceneType() const { return currentScene_ ? currentScene_->GetSceneType() : SceneType::None; }
     bool HasSceneChange() const { return sceneChangeRequested_; }
 
-    void RequestChangeScene(SCENE_TYPE nextScene);
+    void RequestChangeScene(SceneType nextScene);
     void ProcessSceneChange(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
@@ -29,19 +29,19 @@ public:
 
 private:
     void CreateScene(
-        SCENE_TYPE sceneType,
+        SceneType sceneType,
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         ID3D12RootSignature* rootSignature,
         AssetManager& assetManager,
         UINT width,
         UINT height);
-    std::unique_ptr<Scene> CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height);
+    std::unique_ptr<Scene> CreateSceneByType(SceneType sceneType, UINT width, UINT height);
 
 private:
     std::unique_ptr<Scene> currentScene_;
-    SCENE_TYPE currentSceneType_ = SCENE_TYPE::None;
-    SCENE_TYPE nextSceneType_ = SCENE_TYPE::None;
+    SceneType currentSceneType_ = SceneType::None;
+    SceneType nextSceneType_ = SceneType::None;
 
     bool sceneChangeRequested_ = false;
 };

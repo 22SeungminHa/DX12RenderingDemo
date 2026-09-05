@@ -1,19 +1,25 @@
 #include "SceneManager.h"
 #include "Scene.h"
 #include "GameScene.h"
+#include "BenchmarkScene.h"
 
-std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)
+std::unique_ptr<Scene> SceneManager::CreateSceneByType(SceneType sceneType, UINT width, UINT height)
 {
-	switch (sceneType) {
-	case SCENE_TYPE::Game:
+	switch (sceneType)
+	{
+	case SceneType::Game:
 		return std::make_unique<GameScene>(width, height);
+
+	case SceneType::Benchmark:
+		return std::make_unique< BenchmarkScene>(width, height);
+
 	default:
 		return nullptr;
 	}
 }
 
 void SceneManager::CreateScene(
-	SCENE_TYPE sceneType,
+	SceneType sceneType,
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,
 	ID3D12RootSignature* rootSignature,
@@ -33,11 +39,11 @@ void SceneManager::CreateScene(
 		);
 	}
 	else {
-		currentSceneType_ = SCENE_TYPE::None;
+		currentSceneType_ = SceneType::None;
 	}
 }
 
-void SceneManager::RequestChangeScene(SCENE_TYPE nextScene)
+void SceneManager::RequestChangeScene(SceneType nextScene)
 {
 	if (currentScene_ && nextScene == currentSceneType_)
 		return;
@@ -61,7 +67,7 @@ void SceneManager::ProcessSceneChange(
 	CreateScene(nextSceneType_, device, cmdList, rootSignature, assetManager, width, height);
 
 	sceneChangeRequested_ = false;
-	nextSceneType_ = SCENE_TYPE::None;
+	nextSceneType_ = SceneType::None;
 }
 
 void SceneManager::ReleaseCurrentScene()
@@ -71,7 +77,7 @@ void SceneManager::ReleaseCurrentScene()
 		currentScene_.reset();
 	}
 
-	currentSceneType_ = SCENE_TYPE::None;
+	currentSceneType_ = SceneType::None;
 }
 
 void SceneManager::ReleaseCurrentSceneUploadResources()

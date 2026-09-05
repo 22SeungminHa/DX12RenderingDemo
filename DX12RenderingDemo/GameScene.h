@@ -52,7 +52,7 @@ public:
     GameScene(UINT width, UINT height) : Scene(width, height) {};
     virtual ~GameScene() = default;
 
-    virtual SCENE_TYPE GetSceneType() const override { return SCENE_TYPE::Game; }
+    virtual SceneType GetSceneType() const override { return SceneType::Game; }
 
     virtual void OnLoad(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList, ID3D12RootSignature* rootSignature, AssetManager& assetManager) override;
 
