@@ -66,7 +66,7 @@
     <ClInclude Include="SceneManager.h">
       <Filter>소스 파일\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="TestScene.h">
+    <ClInclude Include="GameScene.h">
       <Filter>소스 파일\Scene</Filter>
     </ClInclude>
     <ClInclude Include="GameObject.h">
@@ -165,26 +165,26 @@
     <ClInclude Include="GlassFracture.h">
       <Filter>소스 파일\Object\Component</Filter>
     </ClInclude>
-    <ClInclude Include="DirectionalLight.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>소스 파일\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="MapObjectLoader.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="ColliderComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ProjectileObject.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Object\Component</Filter>
     </ClInclude>
     <ClInclude Include="CrystalObject.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Object</Filter>
     </ClInclude>
     <ClInclude Include="ObstacleObject.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>소스 파일\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileObject.h">
+      <Filter>소스 파일\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionalLight.h">
+      <Filter>소스 파일\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="MapObjectLoader.h">
+      <Filter>소스 파일\Assets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -221,7 +221,7 @@
     <ClCompile Include="SceneManager.cpp">
       <Filter>소스 파일\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="TestScene.cpp">
+    <ClCompile Include="GameScene.cpp">
       <Filter>소스 파일\Scene</Filter>
     </ClCompile>
     <ClCompile Include="GameObject.cpp">
@@ -302,26 +302,26 @@
     <ClCompile Include="GlassFracture.cpp">
       <Filter>소스 파일\Object\Component</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLight.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>소스 파일\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="MapObjectLoader.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="ColliderComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ProjectileObject.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Object\Component</Filter>
     </ClCompile>
     <ClCompile Include="CrystalObject.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Object</Filter>
     </ClCompile>
     <ClCompile Include="ObstacleObject.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileObject.cpp">
+      <Filter>소스 파일\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionalLight.cpp">
+      <Filter>소스 파일\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="MapObjectLoader.cpp">
+      <Filter>소스 파일\Assets</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

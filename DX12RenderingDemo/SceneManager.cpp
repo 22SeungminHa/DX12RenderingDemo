@@ -1,12 +1,12 @@
 #include "SceneManager.h"
 #include "Scene.h"
-#include "TestScene.h"
+#include "GameScene.h"
 
 std::unique_ptr<Scene> SceneManager::CreateSceneByType(SCENE_TYPE sceneType, UINT width, UINT height)
 {
 	switch (sceneType) {
-	case SCENE_TYPE::Test:
-		return std::make_unique<TestScene>(width, height);
+	case SCENE_TYPE::Game:
+		return std::make_unique<GameScene>(width, height);
 	default:
 		return nullptr;
 	}

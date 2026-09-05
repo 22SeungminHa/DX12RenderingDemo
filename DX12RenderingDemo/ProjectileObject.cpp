@@ -99,7 +99,7 @@ void ProjectileObject::BounceUpOnCrystal()
 
 void ProjectileObject::ReduceSpeed(float multiplier)
 {
-    velocity_.x *= multiplier * 0.5;
+    velocity_.x *= multiplier * 0.5f;
     velocity_.y *= multiplier;
-    velocity_.z *= multiplier * 0.5;
+    velocity_.z *= multiplier * 0.5f;
 }

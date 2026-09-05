@@ -65,7 +65,7 @@ bool CrystalObject::Break(Scene& scene, const Vector3& impactPoint)
     const int quarterTurn = quarterTurnDistribution(randomEngine);
     crashedRoot->Rotate(Vector3::Up, static_cast<float>(quarterTurn * 180));
 
-    const float alwaysRemainOffset = 0.7f;
+    const float alwaysRemainOffset = 0.6f;
     const float randomRemainOffset = 0.0f;
 
     for (GameObject* piece : pieces)

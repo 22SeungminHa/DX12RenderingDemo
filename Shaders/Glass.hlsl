@@ -78,8 +78,13 @@ float4 EvaluateGlass(VS_OUTPUT input)
     float3 finalColor = refractionColor * glassTint + specular + fresnelColor + reflectionColor * reflectionStrength;
 
     float fogFactor = CalculateFogFactor(input.positionW);
+    float verticalFogBoost = CalculateVerticalFogBoost(input.position.y);
 
-    glassAlpha *= (1.0f - fogFactor);
+    fogFactor = saturate(fogFactor * verticalFogBoost);
+
+    float3 fogColor = CalculateFogColor(input.position.y);
+
+    finalColor = lerp(finalColor, fogColor, fogFactor);
 
     return float4(finalColor, glassAlpha);
 }

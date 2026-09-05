@@ -67,7 +67,19 @@ float4 PSLit(VS_OUTPUT input) : SV_TARGET
         specular += float3(1.0f, 1.0f, 1.0f) * light.color.rgb * specFactor * gSpecularStrength * 0.35f;
     }
 
-    float3 finalColor = ambient + diffuse + specular;
+    float ndotv = saturate(dot(normalW, viewDir));
+
+    float fresnel = pow(1.0f - ndotv, max(gFresnelPower, 1.0f));
+
+    float3 reflectDir = reflect(-viewDir, normalW);
+    float3 reflectionColor = gSkyboxMap.Sample(gSampler, reflectDir).rgb;
+
+    float reflectionAmount = saturate(gReflectionStrength) * lerp(0.65f, 1.0f, fresnel);
+
+    float3 surfaceColor = ambient + diffuse + specular;
+
+    float3 finalColor = lerp(surfaceColor, reflectionColor, reflectionAmount);
+
     float fogFactor = CalculateFogFactor(input.positionW);
     float verticalFogBoost = CalculateVerticalFogBoost(input.position.y);
 

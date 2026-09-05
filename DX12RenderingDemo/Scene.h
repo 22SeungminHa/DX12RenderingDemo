@@ -84,7 +84,7 @@ public:
 	void DestroyGameObject(GameObject* object);
 
 	void SetSkybox(const SkyboxDesc& skybox) { skybox_ = skybox; }
-	void SetSkybox(const std::wstring& name = L"Skybox") { skybox_.SetCubemap(name); }
+	void SetSkybox(const std::wstring& name = L"Skybox4") { skybox_.SetCubemap(name); }
 	const SkyboxDesc& GetSkybox() const { return skybox_; }
 
 protected:

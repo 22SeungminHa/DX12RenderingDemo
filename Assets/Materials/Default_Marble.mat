@@ -2,8 +2,10 @@ Name=Default_Marble
 Shader=LitShader
 RenderMode=Opaque
 
-BaseColorMap=Metal_2.dds
-NormalMap=Metal_2_N.dds
+BaseColorMap=Metal_1.dds
+NormalMap=Metal_1_N.dds
 
-BaseColorTint=1.0,1.0,1.0,1.0
+BaseColorTint=0.30,0.32,0.35,1.0
 SpecularStrength=1.5
+ReflectionStrength=0.7
+FresnelPower=3.0

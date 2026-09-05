@@ -1,14 +1,12 @@
-Name=Default_Glass
+Name=Crystal
 Shader=GlassShader
 RenderMode=Transparent
 
 BaseColorMap=Default_Glass_BaseColor.dds
-NormalMap=GlassPattern4.dds
+NormalMap=GlassPattern.dds
 
-BaseColorTint = 0.35,0.75,1.0,1.0
-Alpha=0.75
+BaseColorTint=0.16,0.58,0.84,1.0
+Alpha=1.0
 FresnelPower=3.0
 SpecularStrength=1.5
-ReflectionStrength=0.5
-RefractionStrength=0.05
-Thickness=2.0
+RefractionStrength=0.01

@@ -56,8 +56,7 @@ enum class SCENE_TYPE
     None,
     Title,
     Game,
-    Loading,
-    Test,
+    Rendering,
 
     End
 };
